@@ -227,7 +227,13 @@ function createClient(): XhsClient {
       },
       body: JSON.stringify({}),
     });
-    const json: any = await res.json().catch(async () => JSON.parse(await res.text())) ;
+    const text = await res.text();
+    let json: any;
+    try {
+      json = text ? JSON.parse(text) : {};
+    } catch {
+      json = { rawText: text };
+    }
     if (!json || json.code !== 0 || !json.data) {
       throw new XhsError(
         `小红书游客激活失败: ${json?.msg || json?.sub_msg || "no data"}`,
