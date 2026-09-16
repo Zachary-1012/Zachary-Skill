@@ -621,7 +621,7 @@ VIEWS.events = function (content, params) {
               <div style="font-weight:650">${linkOrText(e.name, e.sourceUrl)} <span class="badge neutral">${esc(e.category)}</span> ${e.preheat ? `<span class="badge accent">${esc(e.preheat)}</span>` : ""}</div>
               <div class="ev-meta">${esc(e.startDate)}${e.endDate && e.endDate !== e.startDate ? ` ~ ${esc(e.endDate)}` : ""}${e.region ? ` · ${esc(e.region)}` : ""}</div>
               ${e.expectedImpact ? `<div class="ev-meta">${esc(e.expectedImpact)}</div>` : ""}
-            </div></div></div>`).join("")}</div>`
+            </div></div>`).join("")}</div>`
         : empty(d.note || "窗口内暂无节点"));
   };
   $("#btn-go").addEventListener("click", () => run().catch((e) => ($("#out").innerHTML = note("err", esc(e.message)))));
