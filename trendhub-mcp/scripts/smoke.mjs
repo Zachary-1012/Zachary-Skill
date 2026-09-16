@@ -16,7 +16,7 @@ import { ROOT, INDEX_JS } from "./lib-trendhub.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 void HERE;
-const EXPECTED_TOOLS = 16;
+const EXPECTED_TOOLS = 19;
 const HANDSHAKE_TIMEOUT_MS = 20_000;
 
 const arg = process.argv[2];
@@ -33,7 +33,7 @@ const started = Date.now();
 const child = spawn(process.execPath, [entry], {
   cwd: ROOT,
   stdio: ["pipe", "pipe", "pipe"],
-  env: { ...process.env, TRENTHUB_AUTOUPDATE: "0" }, // 验证握手时关闭后台更新，避免任何干扰
+  env: { ...process.env, TRENHUB_AUTOUPDATE: "0" },
 });
 
 let stdoutBuf = "";
@@ -42,7 +42,6 @@ let settled = false;
 
 child.stdout.on("data", (b) => {
   stdoutBuf += b.toString();
-  // MCP stdio 传输为换行分隔的 JSON（NDJSON）
   let idx;
   while ((idx = stdoutBuf.indexOf("\n")) >= 0) {
     const line = stdoutBuf.slice(0, idx).trim();
@@ -52,7 +51,6 @@ child.stdout.on("data", (b) => {
     try {
       msg = JSON.parse(line);
     } catch {
-      // stdout 出现非 JSON 行：对 launcher 而言意味着后台输出污染了 MCP 通道，必须报错
       fail(`stdout 出现非 JSON-RPC 内容（会破坏 MCP 通信）：${line.slice(0, 200)}`);
       return;
     }
@@ -83,7 +81,6 @@ function send(obj) {
   child.stdin.write(`${JSON.stringify(obj)}\n`);
 }
 
-// 连续发送 initialize -> initialized 通知 -> tools/list（顺序即协议要求顺序）
 send({
   jsonrpc: "2.0",
   id: 1,
@@ -112,7 +109,6 @@ function succeed(names) {
     /* 忽略 */
   }
   const ms = Date.now() - started;
-  // 该前缀是 README/SKILL/manifest 与 Public Install E2E 使用的机器可读成功标志；勿随意改空格。
   console.log(`SMOKE OK tools=${EXPECTED_TOOLS} entry=${entryRel} in ${ms}ms`);
   console.log(`tools: ${names.join(", ")}`);
   process.exit(0);
