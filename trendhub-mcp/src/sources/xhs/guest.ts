@@ -1,366 +1,263 @@
 /**
- * Xiaohongshu (小红书) web client — guest activation + optional logged-in cookie.
+ * 小红书 Web 游客会话与签名 HTTP 客户端（零登录、零 Key、无浏览器、纯本地）。
  *
- * Independent implementation (no third-party code copied). Flow, verified
- * against the live web API:
- *   1. Generate a local visitor `a1` + `webId` cookies (no network).
- *   2. POST as.xiaohongshu.com /api/sec/v1/scripting (UNSIGNED) to obtain a
- *      secPoisonId (the anti-bot "shield" token).
- *   3. POST edith.xiaohongshu.com /api/sns/web/v1/login/activate (SIGNED,
- *      body {}) which returns a guest user_id + web_session.
- *   4. Signed data calls (homefeed) then work for the guest session.
+ * 游客激活是小红书 Web 端公开的会话初始化协议（多开源项目交叉验证的协议事实，
+ * 此处独立实现；x-s 签名算法见 ./signing.js 的 MIT 署名）：
+ *   1) 本地生成设备指纹 cookie a1 / webId（a1 = 时间戳十六进制 + 随机段 + CRC32，截断 52 位）；
+ *   2) POST as.xiaohongshu.com/api/sec/v1/scripting 取 sec_poison_id；
+ *   3) POST edith.xiaohongshu.com/api/sns/web/v1/login/activate 取游客 web_session（匿名 user_id）。
  *
- * Zero-config guest mode can read the public homefeed (hot recommendations).
- * The official search hotlist and keyword search require a real XHS_COOKIE
- * (guest gets -104 "no permission"); such cases are surfaced as `missing`,
- * never faked.
+ * 可选登录态：设置环境变量 XHS_COOKIE（小红书网页端完整 Cookie，需同时含 a1 与 web_session）
+ * 后直接使用真人会话，可解锁官方热搜词榜与关键词搜索；不设置则仅游客会话
+ * （首页热门推荐流开放；热搜词榜 / 关键词搜索 / 分品类频道对游客返回 -104，会被如实标记）。
  */
-
-import { signMainApi, USER_AGENT } from "./signing.js";
+import crypto from "node:crypto";
+import { config } from "../../config.js";
+import { signMainApi, USER_AGENT, buildGetUri, type SignFormat } from "./signing.js";
 
 export const XHS_HOME = "https://www.xiaohongshu.com";
 export const XHS_EDITH = "https://edith.xiaohongshu.com";
 export const XHS_AS = "https://as.xiaohongshu.com";
 export { USER_AGENT };
 
-// ─── CRC32 (for visitor a1 / webId, matches web client) ─────────────────────
+export type XhsMode = "guest" | "cookie";
 
-const CRC32_POLY = 0xedb88320;
-let crcTable: Uint32Array | null = null;
-function crc32Table(): Uint32Array {
-  if (crcTable) return crcTable;
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ CRC32_POLY : c >>> 1;
-    t[n] = c >>> 0;
-  }
-  crcTable = t;
-  return t;
-}
-function crc32Signed(input: string): number {
-  const table = crc32Table();
-  let c = 0xffffffff;
-  for (let i = 0; i < input.length; i++) {
-    c = (table[(c ^ input.charCodeAt(i)) & 0xff] ^ (c >>> 8)) >>> 0;
-  }
-  const u = (c ^ 0xffffffff) >>> 0;
-  return u > 0x7fffffff ? u - 0x100000000 : u;
-}
-
-function base36(n: number): string {
-  // unsigned representation then base36, matching the web b1.a1 cookie check
-  const u = n < 0 ? n + 0x100000000 : n;
-  return u.toString(36);
-}
-
-function randomDigits(len: number): string {
-  let s = "";
-  for (let i = 0; i < len; i++) s += Math.floor(Math.random() * 10);
-  return s;
-}
-function randomHex(len: number): string {
-  let s = "";
-  const h = "0123456789abcdef";
-  for (let i = 0; i < len; i++) s += h[Math.floor(Math.random() * 16)];
-  return s;
-}
-
-/** Generate a visitor `a1` cookie value (YYYYMMDDHH + 13 digits + crc base36). */
-export function generateA1(now: Date = new Date()): string {
-  const p = (n: number) => String(n).padStart(2, "0");
-  const prefix =
-    `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}` +
-    `${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
-  const middle = randomDigits(13);
-  const body = prefix + middle;
-  const crc = base36(crc32Signed(body));
-  return `${body}${crc}`;
-}
-
-/** Generate a `webId` cookie value (32-char lowercase hex). */
-export function generateWebId(): string {
-  return randomHex(32);
-}
-
-export function parseCookieString(raw: string): Record<string, string> {
-  const out: Record<string, string> = {};
-  if (!raw) return out;
-  for (const part of raw.split(";")) {
-    const idx = part.indexOf("=");
-    if (idx === -1) continue;
-    const k = part.slice(0, idx).trim();
-    const v = part.slice(idx + 1).trim();
-    if (k) out[k] = v;
-  }
-  return out;
-}
-
-/** search_id used by /search/notes (UUID v4 shape). */
-export function generateSearchId(): string {
-  const b = randomHex(32);
-  return (
-    b.slice(0, 8) + "-" + b.slice(8, 12) + "-4" + b.slice(13, 16) +
-    "-a" + b.slice(17, 20) + "-" + b.slice(20, 32)
-  );
+export interface XhsSession {
+  jar: Record<string, string>;
+  mode: XhsMode;
+  userId: string | null;
 }
 
 export class XhsError extends Error {
-  code?: number | string;
-  status?: number;
-  constructor(message: string, code?: number | string, status?: number) {
+  constructor(
+    message: string,
+    readonly code?: number | string,
+    readonly status?: number
+  ) {
     super(message);
     this.name = "XhsError";
-    this.code = code;
-    this.status = status;
   }
 }
 
-interface Jar {
-  a1: string;
-  webId: string;
-  web_session?: string;
-  [k: string]: string | undefined;
+const A1_CHARSET = "abcdefghijklmnopqrstuvwxyz1234567890";
+
+/** 标准 CRC32（无符号），用于设备 a1 自校验，属公开的通用校验算法，独立实现。 */
+function crc32(input: string): number {
+  const table: number[] = [];
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  let crc = 0xffffffff;
+  for (const b of Buffer.from(input, "utf-8")) crc = table[(crc ^ b) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
 }
 
-interface GuestState {
-  userId?: string;
-  activatedAt: number;
+/** 生成符合 Web 端规则的 52 位设备指纹 a1。 */
+function generateA1(): string {
+  const ts = Date.now().toString(16);
+  let rand = "";
+  for (let i = 0; i < 30; i++) rand += A1_CHARSET[Math.floor(Math.random() * A1_CHARSET.length)];
+  const source = ts + rand + "50000";
+  return (source + crc32(source)).slice(0, 52);
 }
 
-const GUEST_TTL_MS = 25 * 60 * 1000; // refresh guest session every 25 minutes
-
-interface XhsClient {
-  /** True when a real user cookie (a1 + web_session) was supplied. */
-  hasLoginCookie(): boolean;
-  /** Activate a guest session on demand; no-op (and throws) for login cookies. */
-  activate(): Promise<void>;
-  /** Low-level signed JSON request; retries activation once on guest expiry. */
-  request<T = any>(opts: {
-    method: "GET" | "POST";
-    url: string;
-    params?: Record<string, string | number | string[]>;
-    body?: Record<string, unknown>;
-    /** Force the AES XYW_ signature (used when XYS_ gets HTTP 406). */
-    xyw?: boolean;
-  }): Promise<T>;
+function generateWebId(a1: string): string {
+  return crypto.createHash("md5").update(a1).digest("hex");
 }
 
-let singleton: XhsClient | null = null;
-
-/**
- * Get the process-wide XHS client. The cookie is read lazily from
- * process.env.XHS_COOKIE on first use (so tests can set the env late).
- */
-export function xhsClient(): XhsClient {
-  if (singleton) return singleton;
-  singleton = createClient();
-  return singleton;
+/** 将 "k=v; k2=v2" 的 Cookie 头解析为键值映射。 */
+export function parseCookieString(raw: string): Record<string, string> {
+  const jar: Record<string, string> = {};
+  for (const part of raw.split(";")) {
+    const i = part.indexOf("=");
+    if (i > 0) {
+      const k = part.slice(0, i).trim();
+      const v = part.slice(i + 1).trim();
+      if (k) jar[k] = v;
+    }
+  }
+  return jar;
 }
 
-function createClient(): XhsClient {
-  let jar: Jar = { a1: generateA1(), webId: generateWebId() };
-  let guest: GuestState = { activatedAt: 0 };
-  let activating: Promise<void> | null = null;
+function toCookieString(jar: Record<string, string>): string {
+  return Object.entries(jar).map(([k, v]) => `${k}=${v}`).join("; ");
+}
 
-  function loginCookie(): Record<string, string> | null {
+function baseHeaders(jar: Record<string, string>): Record<string, string> {
+  return {
+    "User-Agent": USER_AGENT,
+    Accept: "application/json, text/plain, */*",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Content-Type": "application/json;charset=UTF-8",
+    "sec-ch-ua": '"Microsoft Edge";v="142", "Not?A_Brand";v="8", "Chromium";v="142"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    origin: XHS_HOME,
+    referer: XHS_HOME + "/",
+    cookie: toCookieString(jar),
+  };
+}
+
+/** 搜索接口所需的 search_id（与 Web 端一致的 base36 时间戳+随机数）。 */
+export function generateSearchId(): string {
+  const e = BigInt(Date.now()) << 64n;
+  const t = BigInt(Math.floor(Math.random() * 2147483646));
+  return (e + t).toString(36).toUpperCase();
+}
+
+class XhsClient {
+  private session: XhsSession | null = null;
+  private sessionAt = 0;
+  /** 游客会话保守有效期；过期或失效时自动重新激活。 */
+  private readonly ttlMs = 25 * 60 * 1000;
+
+  /** 是否配置了可用的真人登录 Cookie（同时含 a1 与 web_session）。 */
+  hasLoginCookie(): boolean {
     const raw = process.env.XHS_COOKIE?.trim();
-    if (!raw) return null;
-    const parsed = parseCookieString(raw);
-    if (parsed.a1 && parsed.web_session) return parsed;
-    return null;
+    if (!raw) return false;
+    const jar = parseCookieString(raw);
+    return Boolean(jar.a1 && jar.web_session);
   }
 
-  function effectiveCookies(): Record<string, string> {
-    const login = loginCookie();
-    if (login) return login;
-    const c: Record<string, string> = { a1: jar.a1, webId: jar.webId };
-    if (jar.web_session) c.web_session = jar.web_session;
-    return c;
+  async getSession(force = false): Promise<XhsSession> {
+    // 1) 真人登录态优先（每次读取环境变量，便于运行期注入后即时生效）
+    const envCookie = process.env.XHS_COOKIE?.trim();
+    if (envCookie) {
+      const jar = parseCookieString(envCookie);
+      if (jar.a1 && jar.web_session) return { jar, mode: "cookie", userId: null };
+    }
+    // 2) 游客会话缓存
+    if (
+      !force &&
+      this.session &&
+      this.session.mode === "guest" &&
+      Date.now() - this.sessionAt < this.ttlMs
+    ) {
+      return this.session;
+    }
+    const s = await this.activateGuest();
+    this.session = s;
+    this.sessionAt = Date.now();
+    return s;
   }
 
-  function cookieHeader(): string {
-    return Object.entries(effectiveCookies())
-      .map(([k, v]) => `${k}=${v}`)
-      .join("; ");
-  }
+  private async activateGuest(): Promise<XhsSession> {
+    const a1 = generateA1();
+    const jar: Record<string, string> = {
+      a1,
+      webId: generateWebId(a1),
+      xsecappid: "xhs-pc-web",
+      webBuild: "6.7.4",
+      abRequestId: crypto.randomUUID(),
+    };
 
-  async function fetchSecPoisonId(): Promise<string> {
-    // Step 1: as.xiaohongshu.com scripting endpoint — UNSIGNED.
-    const res = await fetch(`${XHS_AS}/api/sec/v1/scripting`, {
+    // scripting → sec_poison_id（安全引导接口，不签名；失败不致命，activate 仍可能通过）
+    try {
+      const r = await this.fetchWithTimeout(XHS_AS + "/api/sec/v1/scripting", {
+        method: "POST",
+        headers: baseHeaders(jar),
+        body: JSON.stringify({ callFrom: "web", callback: "seccallback" }),
+      });
+      const t = await r.text();
+      const m = t.match(/"secPoisonId"\s*:\s*"([^"]+)"/);
+      if (m) jar.sec_poison_id = m[1];
+    } catch {
+      // 尽力而为，继续激活
+    }
+
+    // activate → 游客 web_session
+    const uri = "/api/sns/web/v1/login/activate";
+    const body = {};
+    const sg = signMainApi("POST", uri, jar, undefined, body);
+    const r = await this.fetchWithTimeout(XHS_EDITH + uri, {
       method: "POST",
-      headers: baseHeaders("application/json;charset=UTF-8", false),
-      body: JSON.stringify({ callFrom: "web", callback: "seccallback" }),
+      headers: { ...baseHeaders(jar), ...sg },
+      body: JSON.stringify(body),
     });
-    const text = await res.text();
-    const m = text.match(/"secPoisonId"\s*:\s*"([^"]+)"/);
-    if (!m) {
+    const j = (await r.json().catch(() => null)) as
+      | { code?: number; msg?: string; data?: { session?: string; user_id?: string } }
+      | null;
+    const sess = j?.data?.session;
+    if (!sess) {
       throw new XhsError(
-        `小红书风控脚本令牌获取失败 (status=${res.status})`,
-        "SHIELD_FAILED",
-        res.status
+        `游客会话激活失败：${j?.msg ? j.msg : "响应中无 session"}`,
+        j?.code,
+        r.status
       );
     }
-    return m[1];
+    jar.web_session = String(sess);
+    return { jar, mode: "guest", userId: j.data?.user_id ? String(j.data.user_id) : null };
   }
 
-  async function activateOnce(): Promise<void> {
-    const poison = await fetchSecPoisonId();
-    const cookies = effectiveCookies();
-    const uri = "/api/sns/web/v1/login/activate";
-    const headers = signMainApi(
-      "POST",
-      uri,
-      cookies,
-      undefined,
-      {},
-      undefined,
-      `${XHS_HOME}/explore`,
-      "xys"
-    );
-    const res = await fetch(`${XHS_EDITH}${uri}`, {
-      method: "POST",
-      headers: {
-        ...baseHeaders("application/json;charset=UTF-8", true),
-        ...headers,
-        "x-mns": poison,
-      },
-      body: JSON.stringify({}),
-    });
+  private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), config.timeoutMs);
+    try {
+      return await fetch(url, { ...init, signal: ctrl.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * 发起签名请求并返回 { status, json }。
+   * - GET 数据端点返回 406 时自动改用 XYW_ 签名重试一次；
+   * - 游客会话失效（-100/-101 或 HTTP 461/471）时重新激活并重试一次；
+   * - -104（账号无权限，游客访问热搜/搜索）等业务码原样返回，由上层判定并如实标记。
+   */
+  async request(
+    method: "GET" | "POST",
+    uri: string,
+    opts: {
+      params?: Record<string, string | number | string[]>;
+      body?: Record<string, unknown>;
+      retried?: boolean;
+    } = {}
+  ): Promise<{ status: number; json: any }> {
+    const sess = await this.getSession();
+
+    const sendOne = async (fmt: SignFormat) => {
+      const sg = signMainApi(
+        method,
+        uri,
+        sess.jar,
+        method === "GET" ? opts.params : undefined,
+        method === "POST" ? opts.body : undefined,
+        undefined,
+        undefined,
+        fmt
+      );
+      const fullUri = method === "GET" ? buildGetUri(uri, opts.params) : uri;
+      const init: RequestInit = { method, headers: { ...baseHeaders(sess.jar), ...sg } };
+      if (method === "POST") init.body = JSON.stringify(opts.body ?? {});
+      return this.fetchWithTimeout(XHS_EDITH + fullUri, init);
+    };
+
+    let res = await sendOne("xys");
+    if (res.status === 406) {
+      await res.text().catch(() => {});
+      res = await sendOne("xyw");
+    }
+
     const text = await res.text();
     let json: any;
     try {
-      json = text ? JSON.parse(text) : {};
+      json = JSON.parse(text);
     } catch {
-      json = { rawText: text };
+      throw new XhsError(`小红书返回非 JSON（HTTP ${res.status}）：${text.slice(0, 160)}`, undefined, res.status);
     }
-    if (!json || json.code !== 0 || !json.data) {
-      throw new XhsError(
-        `小红书游客激活失败: ${json?.msg || json?.sub_msg || "no data"}`,
-        json?.code,
-        res.status
-      );
+
+    const sessionDead = json?.code === -100 || json?.code === -101 || res.status === 461 || res.status === 471;
+    if (sessionDead && sess.mode === "guest" && !opts.retried) {
+      this.session = null;
+      return this.request(method, uri, { ...opts, retried: true });
     }
-    const session = json.data.session ?? json.data.web_session;
-    if (session) jar.web_session = String(session);
-    if (json.data.user_id) guest.userId = String(json.data.user_id);
-    guest.activatedAt = Date.now();
+    return { status: res.status, json };
   }
-
-  async function activate(): Promise<void> {
-    if (loginCookie()) return; // real accounts need no guest activation
-    if (activating) return activating;
-    const fresh = !guest.activatedAt || Date.now() - guest.activatedAt > GUEST_TTL_MS;
-    if (!fresh) return;
-    activating = activateOnce()
-      .catch((err) => {
-        // allow a retry next time
-        guest.activatedAt = 0;
-        throw err;
-      })
-      .finally(() => {
-        activating = null;
-      });
-    return activating;
-  }
-
-  function baseHeaders(contentType: string, withCookie: boolean): Record<string, string> {
-    const h: Record<string, string> = {
-      Accept: "application/json, text/plain, */*",
-      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-      "Content-Type": contentType,
-      Origin: XHS_HOME,
-      Referer: `${XHS_HOME}/`,
-      "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="142", "Microsoft Edge";v="142"',
-      "Sec-Ch-Ua-Mobile": "?0",
-      "Sec-Ch-Ua-Platform": '"Windows"',
-      "Sec-Fetch-Dest": "empty",
-      "Sec-Fetch-Mode": "cors",
-      "Sec-Fetch-Site": "same-site",
-      "User-Agent": USER_AGENT,
-    };
-    if (withCookie) h.Cookie = cookieHeader();
-    return h;
-  }
-
-  async function request<T>(opts: {
-    method: "GET" | "POST";
-    url: string;
-    params?: Record<string, string | number | string[]>;
-    body?: Record<string, unknown>;
-    xyw?: boolean;
-  }): Promise<T> {
-    const isLogin = Boolean(loginCookie());
-    if (!isLogin) await activate();
-
-    const doRequest = async (format: "xys" | "xyw"): Promise<{ res: Response; json: any }> => {
-      const target = new URL(opts.url);
-      const uri = target.pathname;
-      const cookies = effectiveCookies();
-      const signHeaders = signMainApi(
-        opts.method,
-        opts.url,
-        cookies,
-        opts.method === "GET" ? opts.params : undefined,
-        opts.method === "POST" ? opts.body : undefined,
-        undefined,
-        `${XHS_HOME}/explore`,
-        format
-      );
-      let url = opts.url;
-      if (opts.method === "GET" && opts.params) {
-        const usp = new URLSearchParams();
-        for (const [k, v] of Object.entries(opts.params)) {
-          usp.set(k, Array.isArray(v) ? v.join(",") : String(v));
-        }
-        url = `${opts.url}?${usp.toString()}`;
-      }
-      const res = await fetch(url, {
-        method: opts.method,
-        headers: {
-          ...baseHeaders("application/json;charset=UTF-8", true),
-          ...signHeaders,
-        },
-        body: opts.method === "POST" ? JSON.stringify(opts.body ?? {}) : undefined,
-      });
-      const text = await res.text();
-      let json: any;
-      try {
-        json = text ? JSON.parse(text) : {};
-      } catch {
-        json = { rawText: text };
-      }
-      return { res, json };
-    };
-
-    let { res, json } = await doRequest(opts.xyw ? "xyw" : "xys");
-
-    // XYS_ rejected with 406 → transparently retry with AES XYW_ signature.
-    if (res.status === 406 && !opts.xyw) {
-      const retry = await doRequest("xyw");
-      res = retry.res;
-      json = retry.json;
-    }
-
-    // Guest session expired → re-activate once and replay.
-    if (!isLogin && (json?.code === -100 || json?.code === -101)) {
-      guest.activatedAt = 0;
-      jar = { a1: generateA1(), webId: generateWebId() };
-      await activate();
-      const replay = await doRequest(opts.xyw ? "xyw" : "xys");
-      res = replay.res;
-      json = replay.json;
-    }
-
-    if (!res.ok && json?.code === undefined) {
-      throw new XhsError(`小红书 HTTP ${res.status}`, "HTTP_" + res.status, res.status);
-    }
-    return json as T;
-  }
-
-  return {
-    hasLoginCookie: () => Boolean(loginCookie()),
-    activate,
-    request,
-  };
 }
+export const xhsClient = new XhsClient();
