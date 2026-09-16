@@ -1,0 +1,28 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+  categories:
+    - title: "🚀 Capabilities"
+      labels:
+        - enhancement
+        - feature
+    - title: "🛡️ Security & Reliability"
+      labels:
+        - security
+        - reliability
+    - title: "🧪 Verification & CI"
+      labels:
+        - ci
+        - test
+    - title: "🐛 Fixes"
+      labels:
+        - bug
+        - fix
+    - title: "📚 Documentation & Governance"
+      labels:
+        - documentation
+        - governance
+    - title: "Other Changes"
+      labels:
+        - "*"
