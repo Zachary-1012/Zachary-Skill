@@ -6,6 +6,7 @@
 
 - Windows：`C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp`（建议用正斜杠 `/`）
 - macOS：`/Users/你/Zachary-Skill/trendhub-mcp`
+- Linux：`/home/你/Zachary-Skill/trendhub-mcp`
 
 启动入口（stdio）：`node /ABS/PATH/dist/src/index.js`
 本地 HTTP（需要 URL 时）：先 `npm run start:http`，地址 `http://127.0.0.1:8333/mcp`
@@ -105,7 +106,7 @@ DeepSeek 官方 App/网页本身不直接挂 MCP；用一个支持 MCP 的开源
 ## 7. 其它任何支持 MCP 的 AI（通用）
 
 - **stdio 客户端**：command=`node`，args=`["/ABS/PATH/dist/src/index.js"]`，环境变量无需配置。
-- **HTTP/SSE 客户端**：运行 `npm run start:http`（可 `node dist/src/index.js --http --port=9000` 改端口），填 `http://127.0.0.1:8333/mcp`。HTTP 仅监听本机回环地址，不对局域网/公网开放。
+- **HTTP/SSE 客户端**：运行 `npm run start:http`（可 `node dist/src/index.js --http --port=9000` 改端口），填 `http://127.0.0.1:8333/mcp`。HTTP 默认仅监听本机回环（127.0.0.1）；需要让手机/平板或其他电脑接入时，用环境变量 `TRENTHUB_HOST=0.0.0.0` 限定在受信任局域网或 Tailscale 私有组网（见第 10 节），**切勿**把端口直接映射到公网。
 
 ## 8. 本地可视化控制台（可选，给人用）
 
@@ -137,13 +138,54 @@ npm run ui
 
 ---
 
-## 验证是否接好
+## 10. 手机 / 平板（iOS、安卓）与跨设备接入
+
+先说清边界：TrendHub 是一个需要在本机运行的 Node 进程。**Windows / macOS / Linux 电脑**可直接本地安装、用 stdio 接入（见上文 1–9）；**手机/平板系统不允许普通 App 在本地常驻运行 Node + npm**，因此移动端不能像电脑那样零部署本地安装，标准做法是：**在一台常开的电脑或小主机上运行 TrendHub 的 HTTP 模式，手机经私有网络以 URL 接入**。
+
+### 支持矩阵
+
+| 设备 | 本地 stdio（子进程） | HTTP URL 接入 | 说明 |
+| --- | --- | --- | --- |
+| Windows 电脑 | 支持 | 支持 | 完全本地，推荐 |
+| macOS 电脑 | 支持 | 支持 | 完全本地，推荐 |
+| Linux 电脑 / 小主机 | 支持 | 支持 | 适合做常开主机供手机连 |
+| 安卓手机 / 平板 | 进阶（Termux，见方案 B） | 支持（推荐方案 A） | 需支持 MCP URL 的客户端 |
+| iPhone / iPad | 不支持本地常驻 | 支持（方案 A） | iOS 沙箱无法本地跑 Node |
+
+### 方案 A（推荐）：常开主机 + 私有组网，手机用 URL 接入
+
+1. 在一台常开的 Windows / macOS / Linux 机器上完成安装与构建（见 README 快速开始）。
+2. 让 HTTP 服务监听所有网卡（默认只听 127.0.0.1，手机连不上）：
+   - Windows PowerShell：`$env:TRENTHUB_HOST='0.0.0.0'; npm run start:http`
+   - macOS / Linux：`TRENTHUB_HOST=0.0.0.0 npm run start:http`
+   - 同一 WiFi 用局域网即可；外出跨网络请在主机和手机各装一个 **Tailscale**（免费、加密、需登录同一私有网络），主机仍按上面 `0.0.0.0` 启动。
+3. 在主机上查接入地址：局域网用 `ipconfig`（Windows）或 `ip addr` / `ifconfig`（Mac/Linux）找形如 `192.168.x.x` 的 IPv4；Tailscale 用其 App 中显示的 `100.x.x.x` 地址。
+4. 在手机上**支持「自定义 MCP 服务器 URL / Streamable HTTP」的 AI 客户端**里新增服务器，URL 填 `http://192.168.x.x:8333/mcp`（局域网）或 `http://100.x.x.x:8333/mcp`（Tailscale），再把模型设为你自己的 GPT / 豆包 / DeepSeek / Claude 等（填你自己的 Key、走你自己的额度）。ChatBox、LobeHub 等通用客户端的移动版通常支持 MCP URL；各官方 App 是否开放第三方 MCP URL 随版本变化，不支持时改用通用客户端。
+5. 人也可以直接用手机浏览器打开控制台看榜、复制素材：`http://主机IP:8333/`（纯数据页面，不接模型）。
+
+> 让主机长期后台运行（可选）：Linux/macOS 用 systemd / launchd / `nohup`，Windows 用「任务计划程序」设开机启动。这不是必须项。
+
+### 安全红线（务必遵守）
+
+- HTTP 端点**本身没有登录鉴权**，谁能访问该地址谁就能调用取数。**绝对不要**把 8333 端口直接做公网端口映射 / 转发到互联网。
+- 跨网络只用 **Tailscale 这类私有、加密、需登录同一网络的组网**，或在受信任的局域网内使用，不需要、也不应该开放公网。
+- 即便开放到私有网络，插件依然**零模型 Key、零遥测、零数据回传**；私有组网只是把「本机回环」扩展到「你自己的私有设备网络」，仍然不是面向公众的互联网信息服务。
+
+### 方案 B（进阶）：安卓用 Termux 本地运行
+
+安卓可安装 Termux，在其中执行 `pkg install nodejs git`，之后与电脑相同地 `git clone` → `npm install` → `npm run build` → `TRENTHUB_HOST=0.0.0.0 npm run start:http`，再让本机或局域网内支持 MCP URL 的客户端 / 浏览器连 `http://127.0.0.1:8333/mcp`。该方式门槛较高、需自行保持 Termux 后台存活，普通同事建议用方案 A。iOS / iPadOS 没有等价的本地常驻 Node 环境，请走方案 A。
+
+---
+
+## 11. 验证是否接好
 
 接好后对 AI 说一句：**「列出 trendhub 的所有平台」** 或 **「用 trendhub 拉一下 Hacker News 现在的热榜」**。能返回平台清单 / 真实榜单即成功。命令行也可随时跑 `npm run selftest` 检查数据源健康度。
 
-## 常见问题
+## 12. 常见问题
 
 - **启动报错 `node` 找不到**：把 `command` 换成 node 绝对路径（`where node` / `which node`）。
 - **工具列表为空**：确认已 `npm run build` 且 `dist/src/index.js` 存在；重启客户端。
 - **个别平台 missing**：多为当前网络访问不到（如海外访问知乎/百度），属预期降级，换网络或 `git pull` 更新。
 - **stdio 启动慢 / 日志噪音**：首次拉取依赖网络，属正常；`Redis ECONNREFUSED` 是聚合源自动回退内存缓存的提示，不影响结果。
+- **手机连不上主机**：确认主机已用 `TRENTHUB_HOST=0.0.0.0` 启动、手机与主机在同一局域网（或都连着 Tailscale 并用 `100.x` 地址）、主机防火墙已放行 8333 入站；先用手机浏览器打开 `http://主机IP:8333/` 验证网络可达，再在 AI 客户端填 `…/mcp` 的 URL。
+- **Linux 无图形界面 / 打不开浏览器**：`--ui` 自动开浏览器失败无妨，手动用浏览器访问 `http://127.0.0.1:8333/` 即可；纯 AI 接入用默认 stdio 或 `npm run start:http`，不需要桌面环境。
