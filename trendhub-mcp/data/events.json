@@ -1,0 +1,30 @@
+{
+  "_comment": "TrendHub 节点趋势日历种子。确切日期用 startDate；日期未官宣用 startDate/endDate 窗口表示并在 expectedImpact 注明‘预计’。sourceUrl 指向官方入口，具体日期以官方为准，持续维护。时间为事件当地日期(YYYY-MM-DD)。",
+  "events": [
+    { "name": "苹果秋季新品发布会（iPhone 年度新机）", "category": "tech-event", "startDate": "2026-09-08", "endDate": "2026-09-15", "region": "US/全球", "expectedImpact": "预计9月上中旬；新机/AI功能发布，消费电子与配件内容高峰", "sourceUrl": "https://www.apple.com/apple-events/" },
+    { "name": "中国国庆黄金周", "category": "holiday-cn", "startDate": "2026-10-01", "endDate": "2026-10-07", "region": "CN", "expectedImpact": "出行、旅游、餐饮、影视、婚庆消费高峰", "sourceUrl": "https://www.gov.cn" },
+    { "name": "美股 Q3 财报季", "category": "earnings", "startDate": "2026-10-10", "endDate": "2026-11-15", "region": "US/全球", "expectedImpact": "科技巨头财报集中披露，AI/云/广告业绩驱动板块与舆论", "sourceUrl": "https://www.sec.gov" },
+    { "name": "美国中期选举", "category": "policy", "startDate": "2026-11-03", "endDate": "2026-11-03", "region": "US", "expectedImpact": "政治、政策、市场波动；社媒话题峰值", "sourceUrl": "https://www.fec.gov" },
+    { "name": "双十一购物节（双11）", "category": "ecommerce", "startDate": "2026-10-20", "endDate": "2026-11-11", "region": "CN/全球", "expectedImpact": "全年最大电商大促，预热期约3周，带货/种草内容高峰", "sourceUrl": "https://www.tmall.com" },
+    { "name": "gamescom 科隆游戏展", "category": "tech-event", "startDate": "2026-08-26", "endDate": "2026-08-30", "region": "DE/全球", "expectedImpact": "年度游戏大作发布（窗口参考，2027届通常8月下旬）", "sourceUrl": "https://www.gamescom.global" },
+    { "name": "黑色星期五 Black Friday", "category": "ecommerce", "startDate": "2026-11-27", "endDate": "2026-11-27", "region": "US/全球", "expectedImpact": "海外年末大促开启，跨境电商/折扣内容高峰", "sourceUrl": "https://www.blackfriday.com" },
+    { "name": "网络星期一 Cyber Monday", "category": "ecommerce", "startDate": "2026-11-30", "endDate": "2026-11-30", "region": "US/全球", "expectedImpact": "海外线上促销峰值", "sourceUrl": null },
+    { "name": "圣诞节", "category": "holiday-global", "startDate": "2026-12-25", "endDate": "2026-12-25", "region": "全球", "expectedImpact": "礼品、装饰、年末总结/预测内容", "sourceUrl": null },
+    { "name": "元旦 / 跨年", "category": "holiday-global", "startDate": "2027-01-01", "endDate": "2027-01-01", "region": "全球", "expectedImpact": "年度复盘、新年趋势预测、Flag类内容", "sourceUrl": null },
+    { "name": "CES 国际消费电子展", "category": "tech-event", "startDate": "2027-01-05", "endDate": "2027-01-10", "region": "US/全球", "expectedImpact": "预计1月上旬；年度科技风向标，AI硬件/机器人/汽车电子", "sourceUrl": "https://www.ces.tech" },
+    { "name": "中国春节（农历新年）", "category": "holiday-cn", "startDate": "2027-02-06", "endDate": "2027-02-12", "region": "CN/全球华人", "expectedImpact": "春节档电影、年货、红包、团圆消费；2027春节为2月6日", "sourceUrl": null },
+    { "name": "MWC 世界移动通信大会", "category": "tech-event", "startDate": "2027-02-22", "endDate": "2027-02-25", "region": "ES/全球", "expectedImpact": "预计2月底；手机/通信/AI终端发布", "sourceUrl": "https://www.mwcbarcelona.com" },
+    { "name": "美股 Q4 财报季", "category": "earnings", "startDate": "2027-01-15", "endDate": "2027-02-20", "region": "US/全球", "expectedImpact": "全年业绩与指引，决定开年市场主线", "sourceUrl": "https://www.sec.gov" },
+    { "name": "中国两会", "category": "policy", "startDate": "2027-03-03", "endDate": "2027-03-15", "region": "CN", "expectedImpact": "预计3月初-中；年度政策目标与产业方向，政策红利主题", "sourceUrl": "https://www.gov.cn" },
+    { "name": "英伟达 GTC 开发者大会", "category": "tech-event", "startDate": "2027-03-15", "endDate": "2027-03-20", "region": "US/全球", "expectedImpact": "预计3月中下旬；AI算力/芯片路线图，AI产业风向标", "sourceUrl": "https://www.nvidia.com/gtc/" },
+    { "name": "Google I/O 开发者大会", "category": "tech-event", "startDate": "2027-05-18", "endDate": "2027-05-20", "region": "US/全球", "expectedImpact": "预计5月中下旬；Gemini/Android/AI新特性（2026届为5月19-20日）", "sourceUrl": "https://io.google" },
+    { "name": "微软 Build 开发者大会", "category": "tech-event", "startDate": "2027-05-25", "endDate": "2027-05-28", "region": "US/全球", "expectedImpact": "预计5月下旬；AI/云/开发者工具（2026届为6月2日）", "sourceUrl": "https://build.microsoft.com" },
+    { "name": "Computex 台北国际电脑展", "category": "tech-event", "startDate": "2027-06-01", "endDate": "2027-06-05", "region": "TW/全球", "expectedImpact": "预计6月初；AI PC、半导体、硬件供应链（2026届为6月2-5日）", "sourceUrl": "https://www.computextaipei.com.tw" },
+    { "name": "苹果 WWDC 全球开发者大会", "category": "tech-event", "startDate": "2027-06-07", "endDate": "2027-06-11", "region": "US/全球", "expectedImpact": "预计6月上旬；iOS/AI/Siri新能力（2026届为6月8-12日）", "sourceUrl": "https://developer.apple.com/wwdc/" },
+    { "name": "618 电商年中大促", "category": "ecommerce", "startDate": "2027-05-20", "endDate": "2027-06-18", "region": "CN", "expectedImpact": "预热约1个月，3C/家电/美妆带货高峰", "sourceUrl": "https://www.jd.com" },
+    { "name": "Viva Technology", "category": "tech-event", "startDate": "2027-06-16", "endDate": "2027-06-19", "region": "FR/全球", "expectedImpact": "预计6月中；欧洲创新与AI展会（2026届为6月17-20日）", "sourceUrl": "https://vivatechnology.com" },
+    { "name": "开学季 Back to School", "category": "seasonal", "startDate": "2027-08-01", "endDate": "2027-09-10", "region": "US/CN/全球", "expectedImpact": "学生数码、文具、教育AI产品营销窗口", "sourceUrl": null },
+    { "name": "美股 Q2 财报季", "category": "earnings", "startDate": "2027-07-15", "endDate": "2027-08-20", "region": "US/全球", "expectedImpact": "二季度业绩，AI资本开支是焦点", "sourceUrl": "https://www.sec.gov" },
+    { "name": "亚马逊 Prime Day", "category": "ecommerce", "startDate": "2027-07-12", "endDate": "2027-07-18", "region": "US/全球", "expectedImpact": "预计7月中；确切日期以亚马逊官宣为准", "sourceUrl": "https://www.amazon.com/primeday" }
+  ]
+}
