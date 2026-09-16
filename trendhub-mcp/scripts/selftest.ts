@@ -14,6 +14,7 @@ import { sentiment } from "../src/analysis/sentiment.js";
 import { listTemplates } from "../src/analysis/produce.js";
 import { listSourceReliability } from "../src/store/reliability.js";
 import { historyDepth } from "../src/store/history.js";
+import { updateFromResults } from "../src/store/snapshot.js";
 
 function fmt(ms: number): string {
   return `${ms}ms`;
@@ -26,8 +27,10 @@ async function main(): Promise<void> {
   const names = platforms.map((p) => p.platform);
 
   // 1) 全注册热榜平台：getMany 内部分批并行；每次结果自动进入 Reliability 观测。
+  // 可用结果同时推进 snapshot/history，使定时 Source Health 也能形成真实的长期趋势证据。
   const hotStarted = Date.now();
   const hotResults = await getMany(names, 20);
+  updateFromResults(hotResults);
   for (const r of hotResults) {
     rows.push({
       name: r.platform.padEnd(24),
