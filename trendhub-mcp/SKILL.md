@@ -41,9 +41,11 @@ description: 全网热点趋势专家，以小红书热点与趋势为主打。�
 - 每条数据以工具返回的 `capturedAt` / `sourceUrl` 为准；跨平台聚类、派生词与规则情感是辅助信号，定性结论由模型结合证据给出并提示不确定性。
 - 成稿中所有具体数字/案例必须来自工具证据，缺失处保留 `[待补充]`。
 
-## 本地服务如何启动
+## 安装与本地服务启动
 
-- stdio 客户端：命令 `node`，参数 `<trendhub-mcp 绝对路径>/dist/src/index.js`。
+- 一键安装：clone 后在 `trendhub-mcp` 目录运行 `node scripts/setup.mjs`（自动选国内外最快 npm 源、装依赖、构建、数秒 smoke 握手；国内网络加 `--cn`、海外加 `--global`）。**安装时不要运行 `npm run selftest`**——它约 2 分钟、会真实抓取全部平台，仅用于排障。
+- stdio 客户端：命令 `node`，参数 `<trendhub-mcp 绝对路径>/scripts/launcher.mjs`（推荐：启动即用 + 后台非阻塞自动更新，重启客户端即生效、失败安全）；不想要自动更新可用 `dist/src/index.js`。
 - 需要 URL 的客户端：先 `npm run start:http`，端点 `http://127.0.0.1:8333/mcp`。
 - 可视化控制台：`npm run ui`，浏览器打开 `http://127.0.0.1:8333/`（含小红书专区，仅本机、不接模型）。
-- 安装与各客户端配置见 `README.md` 与 `docs/setup-clients.md`；健康检查运行 `npm run selftest`。
+- 快速验证安装：`node scripts/smoke.mjs`（数秒、不联网，确认 16 个工具）；手动升级 `node scripts/upgrade.mjs`；设环境变量 `TRENTHUB_AUTOUPDATE=0` 可关闭自动更新。
+- 各客户端（Claude / Cursor / VS Code / ChatGPT / 豆包 / DeepSeek / 移动端 HTTP）配置见 `README.md` 与 `docs/setup-clients.md`。

@@ -10,26 +10,29 @@
 | --- | --- | --- |
 | **TrendHub · 全网热点趋势专家（小红书主打）** | 38 个平台实时热榜（小红书置顶、默认首位）、小红书热门笔记流与话题词派生、Google Trends 走势、未来趋势信号、节点日历、跨平台共振/新晋掉榜分析、话题深度情报、脚本/文案/方案创作简报（16 个 MCP 工具），附 GPT 风格本地可视化控制台 | [trendhub-mcp/README.md](./trendhub-mcp/README.md) |
 
-## 三步安装任意技能（以 TrendHub 为例）
+## 一键安装任意技能（以 TrendHub 为例）
 
 前置：Node.js ≥ 18.14（推荐 20/22 LTS，https://nodejs.org 安装）。**Windows / macOS / Linux 电脑**本地安装即用；**手机 / 平板（iOS、安卓）**受系统限制不能本地跑 Node，需经一台常开主机 + 私有组网以 URL 接入（见 [setup-clients 第 10 节](./trendhub-mcp/docs/setup-clients.md)）。
 
 ```bash
-git clone https://github.com/Zachary-1012/Zachary-Skill.git
+git clone https://github.com/Zachary-1012/Zachary-Skill.git   # 国内 clone 慢可在网页 Code -> Download ZIP
 cd Zachary-Skill/trendhub-mcp
-npm install
-npm run build
-npm run selftest     # 自检数据源，多数 OK 即成功
+node scripts/setup.mjs        # 自动选国内外最快 npm 源、装依赖、构建、数秒握手验证
+# 国内网络慢： node scripts/setup.mjs --cn ；海外： node scripts/setup.mjs --global
 ```
 
-- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置（ChatGPT / Claude / Cursor / VS Code / 豆包 / DeepSeek 等）；电脑端看第 1–9 节，手机/平板与跨设备接入看第 10 节。
+看到 `SMOKE OK tools=16` 即安装就绪（数秒、不联网）；安装时**不必**跑 `npm run selftest`（约 2 分钟、真实抓取全部平台，仅用于排障）。
+
+- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置（ChatGPT / Claude / Cursor / VS Code / 豆包 / DeepSeek 等），接入入口为 `scripts/launcher.mjs`（启动即用、重启客户端自动更新）；电脑端看第 1–9 节，手机/平板与跨设备接入看第 10 节。
 - 只想用界面看榜：在 `trendhub-mcp` 目录运行 `npm run ui`，浏览器自动打开本地控制台（含小红书专区，仅本机、不接模型）。
 
-更新：
+更新（重启客户端即更新）：
+
+接入入口是启动包装器 `scripts/launcher.mjs`：每次客户端启动先秒开当前已装版本、再后台非阻塞检查 GitHub 更新，发现新版才拉取重建，**重启一次客户端即生效**；连不上 GitHub（国内网络常见）、超时或本地有改动时静默跳过、继续用当前版本，绝不影响使用，设 `TRENTHUB_AUTOUPDATE=0` 可关闭。也可手动一键升级：
 
 ```bash
-cd Zachary-Skill && git pull
-cd trendhub-mcp && npm install && npm run build
+cd Zachary-Skill/trendhub-mcp
+node scripts/upgrade.mjs
 ```
 
 ## 设计原则
