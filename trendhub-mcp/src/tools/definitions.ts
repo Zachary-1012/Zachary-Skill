@@ -4,15 +4,18 @@
  */
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getByCategory, getMany, listPlatforms, categories } from "../sources/index.js";
+import { getByCategory, getHot, getMany, listPlatforms, categories } from "../sources/index.js";
 import { crossPlatformOverlap, discoverClusters } from "../analysis/overlap.js";
 import { analyzeTopic } from "../analysis/topic.js";
+import { analyzeTrendIntelligence, benchmarkTrendLead } from "../analysis/intelligence.js";
 import { getContentBrief, getTemplate, listTemplates } from "../analysis/produce.js";
 import { interestOverTime, relatedQueries } from "../sources/googleTrends.js";
 import { futureSignals, futureCategories } from "../sources/rss.js";
 import { upcomingEvents, eventCategories } from "../sources/events.js";
 import { diffPlatform, takeSnapshots, updateFromResults } from "../store/snapshot.js";
-import { fetchXiaohongshu, fetchXiaohongshuHotlist, XHS_PLATFORM } from "../sources/xiaohongshu.js";
+import { historyDepth } from "../store/history.js";
+import { listSourceReliability } from "../store/reliability.js";
+import { XHS_PLATFORM, XHS_HOTLIST_PLATFORM } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
 
@@ -23,6 +26,10 @@ function json(data: unknown) {
 }
 function splitList(s?: string) {
   return s ? s.split(/[,，、\s]+/).map((x) => x.trim()).filter(Boolean) : [];
+}
+function platformNames(input?: string): string[] {
+  const names = splitList(input);
+  return names.length ? names : DEFAULT_PLATFORMS;
 }
 
 export function registerTools(server: McpServer): void {
@@ -36,7 +43,7 @@ export function registerTools(server: McpServer): void {
   /* ---------- 当下热点 ---------- */
   server.tool(
     "get_trending",
-    "获取当下热点榜单。可按 platform（逗号分隔多个平台调用名）或 category（social/video/news/tech/dev/ai/global）查询；都不传则返回跨平台核心榜单。每次查询会在本地积累快照用于趋势变化分析。",
+    "获取当下热点榜单。可按 platform（逗号分隔多个平台调用名）或 category（social/video/news/tech/dev/ai/global）查询；都不传则返回跨平台核心榜单。每次查询会在本地积累快照和有界历史，用于趋势变化、生命周期与 benchmark。",
     {
       platform: z.string().optional().describe("平台调用名，多个用逗号分隔，如 weibo,zhihu,bilibili,hackernews"),
       category: z.string().optional().describe("分类：social/video/news/tech/dev/ai/global"),
@@ -77,11 +84,11 @@ export function registerTools(server: McpServer): void {
     },
     async ({ limit, topic_limit, with_hotlist }) => {
       const n = limit ?? 30;
-      const feed = await fetchXiaohongshu(n);
+      const feed = await getHot(XHS_PLATFORM, n);
       const derivedTopics = extractXhsTopics(feed.items.map((i) => i.title), topic_limit ?? 20);
       const loggedIn = xhsClient.hasLoginCookie();
       let officialHotlist = null;
-      if (with_hotlist !== false && loggedIn) officialHotlist = await fetchXiaohongshuHotlist(20);
+      if (with_hotlist !== false && loggedIn) officialHotlist = await getHot(XHS_HOTLIST_PLATFORM, 20);
       updateFromResults([feed, ...(officialHotlist ? [officialHotlist] : [])]);
       return json({
         generatedAt: new Date().toISOString(),
@@ -127,7 +134,7 @@ export function registerTools(server: McpServer): void {
     "对比历史快照，输出各平台新晋上榜、排名飙升(≥3位)、掉榜的话题。需要先有两次以上快照（get_trending 会自动积累，或用 take_snapshot）。",
     { platforms: z.string().optional().describe("可选，限定平台，逗号分隔；默认核心平台") },
     async ({ platforms }) => {
-      const names = splitList(platforms).length ? splitList(platforms) : DEFAULT_PLATFORMS;
+      const names = platformNames(platforms);
       const diffs = names.map((p) => diffPlatform(p));
       return json({
         generatedAt: new Date().toISOString(),
@@ -150,6 +157,29 @@ export function registerTools(server: McpServer): void {
     "立即对各平台落一次历史快照（也可由系统定时调用以持续监测）。",
     { platforms: z.string().optional().describe("可选，限定平台，逗号分隔") },
     async ({ platforms }) => json({ capturedAt: new Date().toISOString(), report: await takeSnapshots(splitList(platforms)) })
+  );
+
+  /* ---------- Source Reliability ---------- */
+  server.tool(
+    "source_reliability",
+    "量化数据源稳定性：UP/DEGRADED/DOWN/AUTH_REQUIRED/RATE_LIMITED、24h/7d/30d ok/usable rate、P50/P95延迟、连续失败、schema drift 信号与历史深度。默认只读本地观测；refresh=true 时先真实刷新一次指定平台。",
+    {
+      platforms: z.string().optional().describe("平台调用名，逗号分隔；默认核心平台"),
+      refresh: z.boolean().optional().describe("是否先联网刷新一次，默认 false"),
+    },
+    async ({ platforms, refresh }) => {
+      const names = platformNames(platforms);
+      if (refresh === true) {
+        const results = await getMany(names, 10);
+        updateFromResults(results);
+      }
+      return json({
+        generatedAt: new Date().toISOString(),
+        methodology: "quality ok=1/degraded=0.5/missing=0; 7d reliability score weights okRate 55%, usableRate 25%, average quality 20%",
+        privacy: "local operational metadata only; no query text, cookies, user content, hostname or account identifiers are stored",
+        sources: listSourceReliability(names).map((r) => ({ ...r, history: historyDepth(r.platform) })),
+      });
+    },
   );
 
   /* ---------- 趋势走势（Google Trends） ---------- */
@@ -203,6 +233,35 @@ export function registerTools(server: McpServer): void {
       timeframe: z.string().optional().describe("趋势时间窗，默认 today 3-m"),
     },
     async ({ keyword, geo, timeframe }) => json(await analyzeTopic(keyword, { geo, timeframe }))
+  );
+
+  server.tool(
+    "trend_intelligence",
+    "Trend Intelligence Engine：基于本地真实历史计算生命周期(emerging/accelerating/mainstream/saturating/declining)、排名速度、持续性、跨平台扩散、数据源可靠度和置信度。默认先刷新当前核心平台；历史不足会明确返回 insufficient_history。",
+    {
+      keyword: z.string().min(1).describe("要评估生命周期的关键词/话题"),
+      platforms: z.string().optional().describe("可选平台，逗号分隔；默认核心平台"),
+      refresh: z.boolean().optional().describe("是否先刷新当前数据，默认 true"),
+    },
+    async ({ keyword, platforms, refresh }) => {
+      const names = platformNames(platforms);
+      if (refresh !== false) {
+        const results = await getMany(names, 30);
+        updateFromResults(results);
+      }
+      return json(analyzeTrendIntelligence(keyword, names));
+    },
+  );
+
+  server.tool(
+    "benchmark_trend_lead",
+    "真实场景 Lead-time Benchmark：把 TrendHub 本地历史的最早命中，与用户提供的外部事实 reference_time 对比，计算是否提前24h/72h发现。reference_time 必须来自官方公告、主流爆发点或团队约定的外部 ground truth，TrendHub 不会自己编造基准时间。",
+    {
+      keyword: z.string().min(1).describe("Benchmark 话题/关键词"),
+      reference_time: z.string().describe("外部 ground-truth ISO-8601 时间，例如 2026-09-20T09:00:00+08:00"),
+      platforms: z.string().optional().describe("可选平台；默认核心平台"),
+    },
+    async ({ keyword, reference_time, platforms }) => json(benchmarkTrendLead(keyword, reference_time, platformNames(platforms))),
   );
 
   /* ---------- 内容生产（脚本/文案/方案） ---------- */
