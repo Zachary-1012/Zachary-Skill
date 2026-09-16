@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.0.0",
-  "description": "公司级全网热点趋势 MCP 插件：聚合国内外 36 个平台实时热榜、Google Trends 关键词走势与相关词、高质量未来趋势信源、年度节点日历，提供跨平台共振、新晋/飙升/掉榜、话题深度情报与脚本/文案/方案专家创作简报。",
+  "version": "1.1.0",
+  "description": "公司级全网热点趋势 MCP 插件，以小红书热点与趋势为主打：小红书热门笔记流与话题词派生、国内外共 38 个平台实时热榜、Google Trends 关键词走势与相关词、高质量未来趋势信源、年度节点日历，提供跨平台共振、新晋/飙升/掉榜、话题深度情报与脚本/文案/方案专家创作简报，内置零模型 Key 的本地可视化控制台。",
   "publisher": "Zachary",
   "license": "MIT",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -13,24 +13,42 @@
       { "id": "stdio", "default": true, "command": "node", "args": ["dist/src/index.js"] },
       { "id": "http", "command": "node", "args": ["dist/src/index.js", "--http"], "endpoint": "/mcp", "bind": "127.0.0.1", "defaultPort": 8333 }
     ],
+    "console": {
+      "command": "node",
+      "args": ["dist/src/index.js", "--ui"],
+      "npmScript": "npm run ui",
+      "url": "http://127.0.0.1:8333/",
+      "mcpEndpoint": "/mcp",
+      "autoOpenBrowser": true,
+      "requiresLLMKey": false,
+      "deeplink": "http://127.0.0.1:8333/#/<view>?<params>",
+      "note": "本地可视化控制台（GPT 风格）：随插件启动并自动开浏览器，AI 可用深链拉起指定视图；只做数据可视化与手动触发，不接任何大模型、不写成稿。"
+    },
     "build": ["npm install", "npm run build"],
     "selftest": "npm run selftest"
   },
   "aiPolicy": {
     "bringsOwnLLM": true,
     "note": "插件不内置、不要求任何大模型 API Key。分析成文与创作由调用方 AI（ChatGPT/Claude/豆包/DeepSeek/Gemini/Cursor 等）用其自身算力完成；插件只提供实时数据、确定性分析与创作脚手架。",
-    "network": "仅向各公开热榜/RSS/Google Trends 发起只读请求；HTTP 传输仅绑定本机回环地址。"
+    "network": "仅向各公开热榜/RSS/Google Trends 发起只读请求；HTTP 传输与控制台仅绑定本机回环地址 127.0.0.1，不对公网监听。",
+    "telemetry": "none",
+    "dataEgress": "none",
+    "console": "npm run ui 启动本地可视化控制台；控制台零模型 Key、零遥测、零数据回传，趋势判断与脚本/文案/方案成稿仍由调用方 AI 完成。"
   },
   "dataPolicy": {
     "noFabrication": true,
     "missingValueMarkers": ["null", "missing", "degraded"],
     "everyRecordHas": ["capturedAt", "sourceUrl"],
-    "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。"
+    "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
+    "zeroTelemetry": true,
+    "zeroDataEgress": true,
+    "localOnly": true
   },
   "tools": [
     { "name": "list_platforms", "group": "discover", "summary": "列出全部可查询平台" },
     { "name": "list_categories", "group": "discover", "summary": "列出平台/信源/节点/模板分类" },
     { "name": "get_trending", "group": "trending", "summary": "获取当下热点榜单（按平台或分类），并自动积累快照" },
+    { "name": "xhs_hot_topics", "group": "trending", "summary": "小红书主打：热门推荐笔记流（封面/标题/作者/点赞/链接，游客零配置可用）与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索" },
     { "name": "cross_platform_overlap", "group": "trending", "summary": "分析关键词在多少平台同时上榜（跨平台共振）" },
     { "name": "discover_trending_topics", "group": "trending", "summary": "自动聚类发现多平台共振话题" },
     { "name": "trend_change_alerts", "group": "trending", "summary": "新晋/飙升/掉榜话题（对比历史快照）" },
@@ -44,5 +62,5 @@
     { "name": "get_template", "group": "produce", "summary": "获取模板完整结构与 checklist" },
     { "name": "get_content_brief", "group": "produce", "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令" }
   ],
-  "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod)."
+  "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT)."
 }

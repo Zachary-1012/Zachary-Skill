@@ -35,6 +35,20 @@ RUNTIME DEPENDENCIES
    Purpose: runtime schema validation for MCP tool inputs.
    Upstream: https://github.com/colinhacks/zod
 
+VENDED CODE (copied into src/sources/xhs/, MIT-licensed)
+--------------------------------------------------------
+6. Xiaohongshu web request signing (x-s / x-s-common / x-t / trace headers).
+   Files: src/sources/xhs/signing.ts, src/sources/xhs/fingerprint-data.ts
+   License: MIT
+   Derived from (both MIT):
+     - lucasygu/redbook — Copyright (c) 2026 Lucas Gu
+       https://github.com/lucasygu/redbook
+     - Cloxl/xhshow — Copyright (c) 2024 Cloxl
+       https://github.com/Cloxl/xhshow
+   The signer uses only node:crypto plus local fingerprint constants; it adds
+   no network call and no extra runtime dependency. The upstream MIT copyright
+   and permission notices are preserved in the file headers.
+
 DEV DEPENDENCIES
 ----------------
 - TypeScript (Apache-2.0), tsx (MIT), @types/node (MIT).
@@ -51,6 +65,13 @@ DATA SOURCES
   (JSON and RSS) were retired by Google and are intentionally not used.
 - Future-signal headlines come from each publication's public RSS feed;
   headlines/abstracts are © their publishers and are used for trend research.
+- Xiaohongshu (小红书 / RED): the default zero-login path activates an anonymous
+  guest web session and reads the public home-feed of trending notes (titles,
+  authors, covers, and platform-displayed like counts such as "4.1万"/"10万+",
+  which are approximate display strings, not exact integers). The official
+  search hot-word board and keyword search require a real logged-in cookie
+  (XHS_COOKIE); without it those views are explicitly marked unavailable and no
+  data is fabricated. Content is © Xiaohongshu and its respective authors.
 
 RESEARCH-ONLY REFERENCES (no code copied/integrated)
 ----------------------------------------------------
@@ -58,6 +79,12 @@ RESEARCH-ONLY REFERENCES (no code copied/integrated)
   coverage; not bundled.
 - TrendRadar (GPL-3.0): architecture/ideas only. Because GPL-3.0 is copyleft,
   NO TrendRadar code is copied or integrated into this MIT project.
+- ikenxuan/amagi (GPL-3.0) and ylw1997/touchFish (proprietary, all rights
+  reserved): consulted ONLY to understand the public guest-session protocol
+  (device-cookie shape and activation sequence). Because of their licenses, NO
+  code is copied; the signer is vendored from the MIT projects listed above and
+  the guest flow is independently implemented from protocol observations.
+- MediaCrawler (AGPL-3.0): protocol/coverage research only; no code integrated.
 
 NO AFFILIATION
 --------------

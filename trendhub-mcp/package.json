@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.0.0",
-  "description": "TrendHub MCP — 公司级全网热点趋势采集与分析插件（当下热点 / 趋势走势 / 未来趋势 / 节点日历）。任何支持 MCP 的 AI（ChatGPT、豆包、DeepSeek、Claude、Cursor 等）均可调用；算力与分析由调用方 AI 自身完成，本插件不内置任何大模型密钥。",
+  "version": "1.1.0",
+  "description": "TrendHub MCP — 公司级全网热点趋势采集与分析插件（当下热点 / 趋势走势 / 未来趋势 / 节点日历），内置零模型 Key 的本地可视化控制台。任何支持 MCP 的 AI（ChatGPT、豆包、DeepSeek、Claude、Cursor 等）均可调用；算力与分析由调用方 AI 自身完成，本插件不内置任何大模型密钥、零遥测、零数据回传。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"
@@ -9,6 +9,7 @@
   "files": [
     "dist",
     "data",
+    "web",
     "manifest.json",
     "NOTICE"
   ],
@@ -16,8 +17,10 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/index.js",
     "start:http": "node dist/src/index.js --http",
+    "ui": "node dist/src/index.js --ui",
     "dev": "tsx src/index.ts",
     "dev:http": "tsx src/index.ts --http",
+    "dev:ui": "tsx src/index.ts --ui",
     "selftest": "tsx scripts/selftest.ts",
     "snapshot": "tsx scripts/snapshot.ts"
   },
