@@ -46,7 +46,7 @@ async function main(): Promise<void> {
   // 3) 未来信号 RSS
   const t4 = Date.now();
   const fs = await futureSignals({ limit: 30, perSource: 4 });
-  rows.push({ name: "future-rss".padEnd(18), status: fs.dataQuality, detail: `${fmt(Date.now() - t4)} articles=${fs.total} sourcesOk=${fs.sourceStatus.filter((s) => s.ok).length}/${fs.sourceStatus.length}` });
+  rows.push({ name: "future-rss".padEnd(18), status: fs.dataQuality === "ok" ? "OK  " : fs.dataQuality === "degraded" ? "DEGR" : "MISS", detail: `${fmt(Date.now() - t4)} articles=${fs.total} sourcesOk=${fs.sourceStatus.filter((s) => s.ok).length}/${fs.sourceStatus.length}` });
 
   // 4) 节点日历
   const ev = upcomingEvents({ daysAhead: 120 });
