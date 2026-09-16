@@ -60,7 +60,7 @@
 
 ---
 
-## 3. 快速开始（5 分钟）
+## 3. 快速开始（一键安装，约 1–3 分钟，主要取决于网速）
 
 ### 前置
 
@@ -70,23 +70,19 @@
 ### 安装
 
 ```bash
-# 1) 克隆公开仓库
+# 1) 克隆公开仓库（国内 clone 慢可在仓库网页 Code -> Download ZIP 解压）
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 
 # 2) 进入插件目录
 cd Zachary-Skill/trendhub-mcp
 
-# 3) 安装依赖
-npm install
-
-# 4) 构建
-npm run build
-
-# 5) 自检（真实拉取每个数据源，打印可用性报告）
-npm run selftest
+# 3) 一键安装：自动选国内外最快 npm 源 -> 装依赖 -> 构建 -> 数秒握手验证
+node scripts/setup.mjs
+#    国内网络若官方源慢： node scripts/setup.mjs --cn
+#    海外网络：           node scripts/setup.mjs --global
 ```
 
-自检看到大部分平台 `OK` 即成功。少数平台 `MISS` 通常是**当前网络访问不到该平台**（例如海外网络访问知乎/百度），不影响其他工具；在对应地区网络下会恢复。
+安装脚本结尾的 `smoke` 握手看到 `SMOKE OK tools=16` 即成功（数秒、不联网、不抓平台）。**安装时不必跑 `npm run selftest`**：它会真实拉取每个数据源、约 2 分钟，仅用于排障；其中少数平台 `MISS` 通常是当前网络访问不到（如海外访问知乎/百度），不影响其他工具，换到对应地区网络会恢复。
 
 > Windows 在 PowerShell / Git Bash、macOS 在终端（Terminal）、Linux 在任意终端均可，三平台都只需 Node ≥ 18.14。
 
@@ -94,11 +90,13 @@ npm run selftest
 
 | 方式 | 启动 | 适用 |
 | --- | --- | --- |
-| **stdio（默认，推荐给 AI 客户端）** | `npm start` | Claude Desktop、Cursor、VS Code、豆包桌面端、Cherry Studio、ChatBox、LobeHub 等以子进程方式启动 |
+| **stdio（默认，推荐给 AI 客户端）** | `npm start`（启动包装器，后台自动更新） | Claude Desktop、Cursor、VS Code、豆包桌面端、Cherry Studio、ChatBox、LobeHub 等以子进程方式启动 |
 | **本地 HTTP（MCP 端点）** | `npm run start:http`（默认 `http://127.0.0.1:8333/mcp`，可 `--port=xxxx`） | 只接受 URL 形式接入的客户端 |
 | **GPT 风格控制台（含 HTTP）** | `npm run ui`（自动打开 `http://127.0.0.1:8333/`） | 人直接看榜、刷小红书专区、复制选题素材；同一端口也提供 `/mcp` 与只读 `/api/*` |
 
 > 控制台是纯前端 + 本机只读 API，**不内置也不调用任何大模型**；“复制选题素材给 AI”是把真实数据拷成文本，由你粘贴给任意 AI 成文。
+
+> **自动更新（重启客户端即更新）**：`npm start` / `start:http` / `ui` 都经过启动包装器 `scripts/launcher.mjs`——先秒开当前已装版本，再在后台非阻塞检查 GitHub，发现新版才拉取重建，重启一次客户端即生效；连不上 GitHub（国内网络常见）、超时或本地有改动时静默跳过、绝不影响使用，日志在 `logs/autoupdate.log`。设环境变量 `TRENTHUB_AUTOUPDATE=0` 可完全关闭；不想要自动更新可用 `npm run start:plain`（直连 `dist/src/index.js`）。手动升级：`node scripts/upgrade.mjs`。
 
 ---
 
@@ -111,14 +109,15 @@ npm run selftest
   "mcpServers": {
     "trendhub": {
       "command": "node",
-      "args": ["/绝对路径/Zachary-Skill/trendhub-mcp/dist/src/index.js"]
+      "args": ["/绝对路径/Zachary-Skill/trendhub-mcp/scripts/launcher.mjs"]
     }
   }
 }
 ```
 
-> Windows 路径示例：`"C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp/dist/src/index.js"`（用正斜杠 `/` 或双反斜杠 `\\`）。
-> macOS 示例：`"/Users/你/Zachary-Skill/trendhub-mcp/dist/src/index.js"`。
+> Windows 路径示例：`"C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp/scripts/launcher.mjs"`（用正斜杠 `/` 或双反斜杠 `\\`）。
+> macOS 示例：`"/Users/你/Zachary-Skill/trendhub-mcp/scripts/launcher.mjs"`。
+> 上面指向启动包装器（推荐，重启客户端即自动更新）；不想要自动更新时，把 `scripts/launcher.mjs` 换成 `dist/src/index.js` 即可。
 
 各客户端的具体入口见 **[docs/setup-clients.md](./docs/setup-clients.md)**：ChatGPT（桌面端/自定义连接器）、Claude Desktop、Cursor、VS Code（Cline 等）、豆包桌面端、DeepSeek（经 Cherry Studio / ChatBox / LobeHub 挂自己的 Key）、通用 HTTP 接入。
 
@@ -179,7 +178,7 @@ npm run selftest
 - 新增/调整未来信源：编辑 `data/future-sources.json`（也可用环境变量 `TRENTHUB_RSS_SOURCES` 指向自定义 JSON）。
 - 维护节点：编辑 `data/events.json`。
 - 环境变量：`TRENTHUB_TRANSPORT`（stdio/http）、`TRENTHUB_PORT`（HTTP 端口，默认 8333）、`TRENTHUB_HOST`（默认 127.0.0.1）、`TRENTHUB_CACHE_TTL`、`TRENTHUB_TIMEOUT_MS`、`TRENTHUB_RETRIES`、`TRENTHUB_DATA_DIR`、`TRENTHUB_RSS_SOURCES`、**`XHS_COOKIE`（可选，解锁小红书词榜/搜索）**。
-- 平台失效排查：先 `npm run selftest`，再 `git pull` 更新。
+- 平台失效排查：先 `node scripts/smoke.mjs`（确认服务与 16 工具正常，数秒），再 `npm run selftest`（深度体检各数据源，约 2 分钟）；升级用 `node scripts/upgrade.mjs`，或重启客户端由启动包装器自动更新。
 
 ## 10. 目录结构
 
@@ -199,7 +198,7 @@ trendhub-mcp/
 │  └─ index.ts           # stdio / 本地 HTTP / --ui 控制台 入口
 ├─ web/                  # GPT 风格控制台前端（原生单页，零构建、零 CDN）
 ├─ data/                 # 随包种子：events.json / future-sources.json / templates.json
-├─ scripts/              # selftest.ts / snapshot.ts
+├─ scripts/              # setup.mjs 一键安装 / smoke.mjs 数秒握手 / launcher.mjs 启动包装器(自动更新) / upgrade.mjs 手动升级 / lib-trendhub.mjs / selftest.ts 排障体检 / snapshot.ts
 ├─ manifest.json         # 机器可读插件清单（telemetry:none / dataEgress:none）
 ├─ NOTICE / LICENSE
 └─ package.json
