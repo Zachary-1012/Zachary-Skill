@@ -11,6 +11,9 @@
     "scripts",
     "data",
     "web",
+    "docs",
+    "README.md",
+    "SKILL.md",
     "manifest.json",
     "NOTICE"
   ],
