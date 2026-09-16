@@ -1,0 +1,56 @@
+name: Production Remote MCP
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/production-remote-mcp.yml"
+      - "trendhub-mcp/scripts/remote-smoke.mjs"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/production-remote-mcp.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "47 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trendhub-production-remote-mcp
+  cancel-in-progress: true
+
+jobs:
+  production-remote-contract:
+    name: Production Remote MCP contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: trendhub-mcp
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify public production MCP contract
+        run: |
+          npm run smoke:remote -- https://trendhub-remote-production.up.railway.app/mcp | tee /tmp/trendhub-production-remote.txt
+          grep -F "REMOTE SMOKE OK tools=19 platforms=38" /tmp/trendhub-production-remote.txt
+
+      - name: Explain scope
+        if: always()
+        run: |
+          echo "This job validates the public Railway Streamable HTTP endpoint using the official MCP SDK."
+          echo "It requires initialize/tools-list=19 and list_platforms=38 unique public source keys."
+          echo "It performs no write tool calls, sends no cookies, and stores no user telemetry."
