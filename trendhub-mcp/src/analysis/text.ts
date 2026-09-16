@@ -1,6 +1,6 @@
 /**
  * 文本归一化与跨平台话题匹配（确定性、零依赖）。
- * 中文用字符 bigram/trigram + Dice 相似度，拉丁字母用 token；用于“同一话题在多平台共振”。
+ * 中文用字符 bigram/trigram + Dice 相似度，拉丁字母用 token；用于"同一话题在多平台共振"。
  */
 
 export function normalize(s: string): string {
@@ -13,7 +13,7 @@ export function normalize(s: string): string {
 }
 
 function cjkRuns(s: string): string[] {
-  return s.match(/[\u4e00-\u9fff]{2,}/g) ?? [];
+  return s.match(/[一-鿿]{2,}/g) ?? [];
 }
 function latinTokens(s: string): string[] {
   return s.toLowerCase().match(/[a-z0-9][a-z0-9+#.\-]{1,}/g) ?? [];

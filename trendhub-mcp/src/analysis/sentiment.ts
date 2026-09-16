@@ -26,9 +26,10 @@ const DEGREE: Record<string, number> = {
   "更加": 1.4, "更": 1.3, "相当": 1.3, "明显": 1.3, "显著": 1.5, "大幅": 1.6, "格外": 1.4, "很": 1.3,
   "比较": 0.9, "有点": 0.7, "稍微": 0.6, "略": 0.7, "略微": 0.7,
 };
-// 注意：不放单字“非”，以免误伤极高频的“非常”
+// 注意：不放单字"非"，以免误伤极高频的"非常"
 const NEGATION = ["不是", "不会", "不能", "没有", "并非", "难以", "不", "没", "无", "别", "莫", "未", "勿"];
-const CLAUSE_BREAK = /[，,。！？!?.；;、\n\r\t]/;
+const CLAUSE_BREAK = /[，,。！？!?.；;、
+	]/;
 
 export interface SentimentResult {
   score: number; // -1(极负) ~ 1(极正)
@@ -51,7 +52,7 @@ function collectHits(text: string, dict: string[]): { word: string; index: numbe
       idx = text.indexOf(w, from);
     }
   }
-  // 按位置排序，去除被更长词包含的重复（如“涨”与“暴涨”）
+  // 按位置排序，去除被更长词包含的重复（如"涨"与"暴涨"）
   hits.sort((a, b) => a.index - b.index || b.word.length - a.word.length);
   const chosen: { word: string; index: number }[] = [];
   const occupied: [number, number][] = [];
