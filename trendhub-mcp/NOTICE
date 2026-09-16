@@ -1,0 +1,65 @@
+TrendHub MCP — Third-Party Notices & Attribution
+==================================================
+
+TrendHub MCP is distributed under the MIT License (see LICENSE).
+
+It bundles / depends on the following open-source software (all MIT-licensed
+unless noted). We are grateful to their authors.
+
+RUNTIME DEPENDENCIES
+--------------------
+1. @modelcontextprotocol/sdk
+   License: MIT
+   Purpose: official Model Context Protocol server/client SDK and transports.
+   Upstream: https://github.com/modelcontextprotocol
+
+2. dailyhot-api  (imsyy/DailyHotApi)
+   License: MIT
+   Purpose: in-process aggregator for many Chinese hot-list platforms
+            (Weibo, Bilibili, Douyin, Toutiao, IT之家, 掘金, CSDN, V2EX, 澎湃, 腾讯新闻, etc.).
+   Upstream: https://github.com/imsyy/DailyHotApi
+   Note: invoked in-process via app.fetch(); no separate server/port is started.
+
+3. rss-parser
+   License: MIT
+   Purpose: RSS/Atom parsing for future-trend signal feeds.
+   Upstream: https://github.com/rbren/rss-parser
+
+4. cheerio
+   License: MIT
+   Purpose: HTML parsing for GitHub Trending and Product Hunt.
+   Upstream: https://github.com/cheeriojs/cheerio
+
+5. zod
+   License: MIT
+   Purpose: runtime schema validation for MCP tool inputs.
+   Upstream: https://github.com/colinhacks/zod
+
+DEV DEPENDENCIES
+----------------
+- TypeScript (Apache-2.0), tsx (MIT), @types/node (MIT).
+
+DATA SOURCES
+------------
+- Real-time hot lists are fetched from each platform's own public,
+  unofficial-but-open web interfaces. All content, trademarks and data remain
+  the property of their respective platforms; TrendHub only normalizes and
+  presents them, and every record carries its sourceUrl.
+- Google Trends interest-over-time and related-queries are read from Google's
+  public explore widgets. Values are RELATIVE popularity on a 0-100 scale, not
+  absolute search volumes. Google's legacy Daily/Realtime Trending endpoints
+  (JSON and RSS) were retired by Google and are intentionally not used.
+- Future-signal headlines come from each publication's public RSS feed;
+  headlines/abstracts are © their publishers and are used for trend research.
+
+RESEARCH-ONLY REFERENCES (no code copied/integrated)
+----------------------------------------------------
+- NewsNow (ourongxing/newsnow, MIT): studied during research for platform
+  coverage; not bundled.
+- TrendRadar (GPL-3.0): architecture/ideas only. Because GPL-3.0 is copyleft,
+  NO TrendRadar code is copied or integrated into this MIT project.
+
+NO AFFILIATION
+--------------
+TrendHub is an internal company tool. It is not affiliated with, endorsed or
+sponsored by any of the platforms or publications listed above.
