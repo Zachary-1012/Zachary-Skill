@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "trendhub": {
+      "url": "https://trendhub-remote-production.up.railway.app/mcp"
+    }
+  }
+}
