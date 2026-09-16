@@ -37,6 +37,8 @@ const { classifyFailure } = await import("../dist/src/store/reliability.js");
 
 assert.equal(pkg.version, manifest.version, "package.json and manifest.json versions must match");
 assert.equal(pkg.version, SERVER_VERSION, "package.json and MCP server versions must match");
+assert.equal(pkg.version, lock.version, "package-lock top-level version must match package.json");
+assert.equal(pkg.version, lock.packages?.[""]?.version, "package-lock root package version must match package.json");
 assert.match(pkg.version, /^\d+\.\d+\.\d+$/, "Stable product version must be semver x.y.z");
 assert.equal(lock.lockfileVersion, 3, "public stable lockfile must remain v3");
 assert.deepEqual(lock.packages?.[""]?.dependencies, pkg.dependencies, "lockfile root dependencies must match package.json");
@@ -46,6 +48,7 @@ assert.equal(currentPackageVersion(), pkg.version, "runtime version reader must 
 
 assert.equal(typeof pkg.scripts?.["source:health"], "string", "source health command must be explicit");
 assert.equal(typeof pkg.scripts?.["quality:diagnostic"], "string", "voluntary local quality diagnostic must exist");
+assert.equal(typeof pkg.scripts?.["benchmark:lead"], "string", "batch lead benchmark command must exist");
 assert.equal(typeof pkg.scripts?.test, "string", "deterministic npm test command must exist");
 assert.equal(typeof pkg.scripts?.["release:gate"], "string", "release gate command must exist");
 assert.equal(pkg.files.includes("SKILL.md"), true, "release package must contain SKILL.md");
@@ -154,6 +157,7 @@ for (const relative of [
   "scripts/test.mjs",
   "scripts/test-intelligence.mjs",
   "scripts/quality-diagnostic.mjs",
+  "scripts/benchmark.mjs",
   "web/auth.js",
 ]) {
   const checked = spawnSync(process.execPath, ["--check", join(ROOT, relative)], { encoding: "utf8" });
