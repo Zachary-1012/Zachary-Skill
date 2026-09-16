@@ -76,9 +76,13 @@ export function appendHistory(result: HotResult): void {
 }
 
 export function readHistory(platform: string, hours = 720, now = new Date()): HistoryPoint[] {
-  const cutoff = now.getTime() - Math.max(1, hours) * 60 * 60 * 1000;
+  const nowMs = now.getTime();
+  const cutoff = nowMs - Math.max(1, hours) * 60 * 60 * 1000;
   return readFile(platform).points
-    .filter((x) => Date.parse(x.capturedAt) >= cutoff)
+    .filter((x) => {
+      const capturedMs = Date.parse(x.capturedAt);
+      return Number.isFinite(capturedMs) && capturedMs >= cutoff && capturedMs <= nowMs;
+    })
     .sort((a, b) => Date.parse(a.capturedAt) - Date.parse(b.capturedAt));
 }
 
