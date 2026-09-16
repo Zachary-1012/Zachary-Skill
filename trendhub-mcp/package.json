@@ -1,0 +1,52 @@
+{
+  "name": "trendhub-mcp",
+  "version": "1.0.0",
+  "description": "TrendHub MCP — 公司级全网热点趋势采集与分析插件（当下热点 / 趋势走势 / 未来趋势 / 节点日历）。任何支持 MCP 的 AI（ChatGPT、豆包、DeepSeek、Claude、Cursor 等）均可调用；算力与分析由调用方 AI 自身完成，本插件不内置任何大模型密钥。",
+  "type": "module",
+  "bin": {
+    "trendhub-mcp": "dist/src/index.js"
+  },
+  "files": [
+    "dist",
+    "data",
+    "manifest.json",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/index.js",
+    "start:http": "node dist/src/index.js --http",
+    "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/index.ts --http",
+    "selftest": "tsx scripts/selftest.ts",
+    "snapshot": "tsx scripts/snapshot.ts"
+  },
+  "keywords": [
+    "mcp",
+    "trending",
+    "hot-search",
+    "trends",
+    "model-context-protocol",
+    "weibo",
+    "zhihu",
+    "douyin",
+    "bilibili",
+    "google-trends"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.14"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "cheerio": "1.2.0",
+    "dailyhot-api": "2.0.8",
+    "rss-parser": "3.13.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.3",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3"
+  }
+}
