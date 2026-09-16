@@ -38,7 +38,7 @@ must(gateway.includes('url.pathname.startsWith("/api/")'), "gateway must explici
 must(gateway.includes("MAX_BODY_BYTES"), "request body limit missing");
 must(gateway.includes("MAX_CONCURRENCY"), "concurrency guard missing");
 must(!gateway.includes("XHS_COOKIE:"), "public gateway must not inject a private Xiaohongshu cookie");
-must(privacy.includes("does not require an account"), "privacy notice must state account posture");
+must(privacy.includes("No TrendHub account is required"), "privacy notice must state account posture");
 must(privacy.includes("third-party cloud infrastructure"), "privacy notice must disclose hosting infrastructure processing");
 must(terms.includes("not affiliated with or endorsed"), "terms must disclose third-party platform independence");
 must(terms.includes("not factual guarantees"), "terms must bound analytical indicators");
