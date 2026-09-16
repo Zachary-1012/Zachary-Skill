@@ -1,19 +1,25 @@
 /**
  * Trend Intelligence Engine v1.
  * Deterministic lifecycle/velocity/persistence/diffusion/confidence metrics built from local evidence history.
- * It does not ask an LLM to invent stages or probabilities; insufficient history stays explicit.
+ * It does not ask an LLM to invent stages or probabilities; insufficient/stale evidence stays explicit.
  */
 import { keywordHit } from "./text.js";
 import { readHistory, type HistoryPoint } from "../store/history.js";
-import { getSourceReliability } from "../store/reliability.js";
+import { getSourceReliability, type SourceReliability } from "../store/reliability.js";
 
 export type TrendLifecycle = "insufficient_history" | "emerging" | "accelerating" | "mainstream" | "saturating" | "declining";
+
+const CURRENT_EVIDENCE_MAX_AGE_HOURS = 12;
 
 export interface PlatformTrajectory {
   platform: string;
   historySamples: number;
   matchedSamples: number;
+  observableNow: boolean;
   current: boolean;
+  sourceStatus: SourceReliability["status"];
+  latestEvidenceAt: string | null;
+  latestEvidenceAgeHours: number | null;
   firstSeenAt: string | null;
   lastSeenAt: string | null;
   persistence: number | null;
@@ -34,6 +40,8 @@ export interface TrendIntelligence {
   evidence: {
     platformsRequested: number;
     platformsWithHistory: number;
+    platformsObservableNow: number;
+    platformsUnavailableOrStale: number;
     platformsEverSeen: number;
     platformsCurrent: number;
     totalHistorySamples: number;
@@ -79,19 +87,27 @@ function trajectory(platform: string, keyword: string, now: Date): PlatformTraje
   const first = matched[0] ?? null;
   const last = matched.at(-1) ?? null;
   const latestPoint = history.at(-1) ?? null;
-  const latestHit = latestPoint ? hitInPoint(latestPoint, keyword) : null;
+  const latestEvidenceAgeHours = latestPoint ? round(hoursBetween(latestPoint.capturedAt, now.toISOString()), 2) : null;
+  const rel = getSourceReliability(platform, now);
+  const sourceUsableNow = rel.status === "UP" || rel.status === "DEGRADED";
+  const evidenceFresh = latestEvidenceAgeHours != null && latestEvidenceAgeHours <= CURRENT_EVIDENCE_MAX_AGE_HOURS;
+  const observableNow = sourceUsableNow && evidenceFresh;
+  const latestHit = observableNow && latestPoint ? hitInPoint(latestPoint, keyword) : null;
   const ranks = matched.map((x) => x.item.rank).filter((x): x is number => x != null);
   let rankVelocityPerHour: number | null = null;
   if (first && last && first !== last && first.item.rank != null && last.item.rank != null) {
     const h = hoursBetween(first.point.capturedAt, last.point.capturedAt);
     if (h >= 0.25) rankVelocityPerHour = round((first.item.rank - last.item.rank) / h);
   }
-  const rel = getSourceReliability(platform, now);
   return {
     platform,
     historySamples: history.length,
     matchedSamples: matched.length,
+    observableNow,
     current: latestHit !== null,
+    sourceStatus: rel.status,
+    latestEvidenceAt: latestPoint?.capturedAt ?? null,
+    latestEvidenceAgeHours,
     firstSeenAt: first?.point.capturedAt ?? null,
     lastSeenAt: last?.point.capturedAt ?? null,
     persistence: history.length ? round(matched.length / history.length) : null,
@@ -106,18 +122,19 @@ function trajectory(platform: string, keyword: string, now: Date): PlatformTraje
 function classifyLifecycle(input: {
   totalHistorySamples: number;
   firstSeenAt: string | null;
+  observablePlatforms: number;
   currentPlatforms: number;
-  everPlatforms: number;
+  observableEverPlatforms: number;
   persistence: number;
   avgRankVelocity: number | null;
   spreadVelocity: number | null;
   now: Date;
 }): TrendLifecycle {
-  if (input.totalHistorySamples < 4 || !input.firstSeenAt) return "insufficient_history";
+  if (input.totalHistorySamples < 4 || !input.firstSeenAt || input.observablePlatforms === 0) return "insufficient_history";
   if (input.currentPlatforms === 0) return "declining";
   const ageHours = hoursBetween(input.firstSeenAt, input.now.toISOString());
-  const diffusionRetention = input.everPlatforms ? input.currentPlatforms / input.everPlatforms : 0;
-  if ((input.avgRankVelocity ?? 0) < -0.25 || (input.everPlatforms >= 3 && diffusionRetention < 0.5)) return "declining";
+  const diffusionRetention = input.observableEverPlatforms ? input.currentPlatforms / input.observableEverPlatforms : 1;
+  if ((input.avgRankVelocity ?? 0) < -0.25 || (input.observableEverPlatforms >= 3 && diffusionRetention < 0.5)) return "declining";
   if (ageHours <= 24 && input.currentPlatforms <= 2) return "emerging";
   if (input.currentPlatforms >= 2 && (input.spreadVelocity ?? 0) > 0.04 && (input.avgRankVelocity ?? 0) > 0.08) return "accelerating";
   if (input.currentPlatforms >= 3 && input.persistence >= 0.6 && (input.avgRankVelocity ?? 0) < 0.08) return "saturating";
@@ -128,7 +145,10 @@ function classifyLifecycle(input: {
 export function analyzeTrendIntelligence(keyword: string, platforms: string[], now = new Date()): TrendIntelligence {
   const trajectories = platforms.map((p) => trajectory(p, keyword, now));
   const withHistory = trajectories.filter((x) => x.historySamples > 0);
+  const observable = trajectories.filter((x) => x.observableNow);
+  const unavailableOrStale = trajectories.filter((x) => !x.observableNow);
   const ever = trajectories.filter((x) => x.firstSeenAt !== null);
+  const observableEver = observable.filter((x) => x.firstSeenAt !== null);
   const current = trajectories.filter((x) => x.current);
   const totalHistorySamples = trajectories.reduce((a, x) => a + x.historySamples, 0);
   const seenTimes = ever.map((x) => x.firstSeenAt as string).sort((a, b) => Date.parse(a) - Date.parse(b));
@@ -144,20 +164,22 @@ export function analyzeTrendIntelligence(keyword: string, platforms: string[], n
   const spreadVelocity = firstSeenAt && ever.length > 1 && ageHours != null && ageHours >= 0.25
     ? round((ever.length - 1) / ageHours)
     : null;
-  const reliabilityValues = trajectories.map((x) => x.reliabilityScore).filter((x): x is number => x != null);
+  const reliabilityValues = observable.map((x) => x.reliabilityScore).filter((x): x is number => x != null);
   const sourceReliabilityScore = reliabilityValues.length
     ? Math.round(reliabilityValues.reduce((a, x) => a + x, 0) / reliabilityValues.length)
     : null;
 
   const historySufficiency = clamp(totalHistorySamples / Math.max(8, platforms.length * 4));
-  const diffusion = platforms.length ? current.length / platforms.length : 0;
-  const evidenceCoverage = Math.min(1, current.length / 3);
+  const diffusion = observable.length ? current.length / observable.length : 0;
+  const evidenceCoverage = observable.length ? Math.min(1, current.length / Math.min(3, observable.length)) : 0;
+  const observabilityCoverage = platforms.length ? observable.length / platforms.length : 0;
   const confidence = Math.round(100 * clamp(
-    evidenceCoverage * 0.25 +
+    evidenceCoverage * 0.2 +
     clamp(persistence) * 0.2 +
-    clamp(diffusion * 2) * 0.15 +
+    clamp(diffusion) * 0.15 +
     (sourceReliabilityScore == null ? 0.5 : sourceReliabilityScore / 100) * 0.2 +
-    historySufficiency * 0.2,
+    historySufficiency * 0.15 +
+    observabilityCoverage * 0.1,
   ));
 
   const velocityScore = avgRankVelocity == null && spreadVelocity == null
@@ -166,8 +188,9 @@ export function analyzeTrendIntelligence(keyword: string, platforms: string[], n
   const lifecycle = classifyLifecycle({
     totalHistorySamples,
     firstSeenAt,
+    observablePlatforms: observable.length,
     currentPlatforms: current.length,
-    everPlatforms: ever.length,
+    observableEverPlatforms: observableEver.length,
     persistence,
     avgRankVelocity,
     spreadVelocity,
@@ -177,9 +200,11 @@ export function analyzeTrendIntelligence(keyword: string, platforms: string[], n
   const caveats: string[] = [
     "All scores are deterministic heuristics over locally captured public evidence; they are not probability forecasts.",
     "Cross-platform ranks and hot values are not treated as directly comparable absolute quantities.",
+    `Current diffusion uses only sources with usable evidence no older than ${CURRENT_EVIDENCE_MAX_AGE_HOURS} hours; stale/unavailable sources are excluded rather than treated as topic absence.`,
   ];
-  if (lifecycle === "insufficient_history") caveats.push("More snapshots are required before lifecycle claims are reliable.");
-  if (sourceReliabilityScore == null) caveats.push("Source reliability history is not yet sufficient; confidence is conservatively capped by neutral reliability weight.");
+  if (lifecycle === "insufficient_history") caveats.push("More fresh snapshots are required before lifecycle claims are reliable.");
+  if (sourceReliabilityScore == null) caveats.push("Source reliability history is not yet sufficient; confidence uses a neutral reliability prior.");
+  if (unavailableOrStale.length) caveats.push(`${unavailableOrStale.length} selected source(s) are unavailable or stale and were excluded from current diffusion.`);
 
   return {
     methodologyVersion: "trend-intelligence-v1",
@@ -191,6 +216,8 @@ export function analyzeTrendIntelligence(keyword: string, platforms: string[], n
     evidence: {
       platformsRequested: platforms.length,
       platformsWithHistory: withHistory.length,
+      platformsObservableNow: observable.length,
+      platformsUnavailableOrStale: unavailableOrStale.length,
       platformsEverSeen: ever.length,
       platformsCurrent: current.length,
       totalHistorySamples,
@@ -203,7 +230,7 @@ export function analyzeTrendIntelligence(keyword: string, platforms: string[], n
       averageRankVelocityPerHour: avgRankVelocity == null ? null : round(avgRankVelocity),
       spreadVelocityPlatformsPerHour: spreadVelocity,
       persistenceScore: withHistory.length ? Math.round(clamp(persistence) * 100) : null,
-      diffusionScore: platforms.length ? Math.round(clamp(diffusion) * 100) : null,
+      diffusionScore: observable.length ? Math.round(clamp(diffusion) * 100) : null,
       sourceReliabilityScore,
       historySufficiencyScore: Math.round(historySufficiency * 100),
     },
@@ -240,6 +267,6 @@ export function benchmarkTrendLead(keyword: string, referenceAt: string, platfor
     platformsDetected: detections.length,
     detections,
     verdict: first === null ? "insufficient_evidence" : leadHours! >= 0 ? "detected_before_reference" : "detected_after_reference",
-    note: "The reference timestamp must come from an external, documented ground-truth event (for example an official announcement or agreed mainstream-breakout timestamp). TrendHub never invents the reference.",
+    note: "The reference timestamp must come from an external, documented ground-truth event selected independently of TrendHub output. TrendHub never invents the reference.",
   };
 }
