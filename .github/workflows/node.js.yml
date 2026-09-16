@@ -67,6 +67,7 @@ jobs:
         working-directory: trendhub-mcp
         env:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
+          TRENHUB_INSTALL_CHANNEL: dev
         run: |
           set -euo pipefail
           bash scripts/bootstrap.sh --global | tee "$RUNNER_TEMP/trendhub-bootstrap.txt"
@@ -79,6 +80,7 @@ jobs:
         working-directory: trendhub-mcp
         env:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
+          TRENHUB_INSTALL_CHANNEL: dev
         run: |
           $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1 2>&1
           $status = $LASTEXITCODE
