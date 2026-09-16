@@ -260,4 +260,5 @@ class XhsClient {
     return { status: res.status, json };
   }
 }
+
 export const xhsClient = new XhsClient();
