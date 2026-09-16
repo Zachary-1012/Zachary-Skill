@@ -17,6 +17,7 @@ const lock = JSON.parse(await readFile(join(ROOT, "package-lock.json"), "utf8"))
 const manifest = JSON.parse(await readFile(join(ROOT, "manifest.json"), "utf8"));
 const repoReadme = await readFile(join(ROOT, "..", "README.md"), "utf8");
 const accessDoc = await readFile(join(ROOT, "docs", "access.md"), "utf8");
+const setupClientsDoc = await readFile(join(ROOT, "docs", "setup-clients.md"), "utf8");
 const bootstrapSh = await readFile(join(ROOT, "scripts", "bootstrap.sh"), "utf8");
 const bootstrapPs1 = await readFile(join(ROOT, "scripts", "bootstrap.ps1"), "utf8");
 await access(join(ROOT, "dist", "src", "index.js"));
@@ -40,7 +41,6 @@ assert.equal(pkg.files.includes("docs"), true, "release package must contain set
 assert.equal(manifest.aiInstall?.successMarker, "SMOKE OK tools=16", "AI install success marker must remain machine readable");
 assert.equal(manifest.runtime?.autoUpdate?.channel, "github-stable-release", "auto updater must use stable release channel");
 
-// Public AI bootstrap contract: no account fiction, no preinstalled Node requirement.
 assert.equal(manifest.aiInstall?.public, true, "AI install contract must stay public");
 assert.equal(manifest.aiInstall?.registrationRequired, false, "TrendHub must not introduce a registration requirement");
 assert.equal(manifest.aiInstall?.loginRequired, false, "TrendHub must not introduce a login requirement");
@@ -48,6 +48,9 @@ assert.equal(manifest.aiInstall?.bootstrap?.nodeFree, true, "AI bootstrap must s
 assert.equal(manifest.aiInstall?.bootstrap?.minimumNodeMajor, 22);
 assert.equal(manifest.aiInstall?.bootstrap?.preferredNodeMajor, 24);
 assert.equal(manifest.aiInstall?.bootstrap?.source, "https://nodejs.org/dist/latest-v24.x");
+assert.equal(manifest.aiInstall?.bootstrap?.resultMarker, "AI_BOOTSTRAP_OK ");
+assert.equal(manifest.aiInstall?.bootstrap?.mcpConfigFromResult?.commandField, "node");
+assert.equal(manifest.aiInstall?.bootstrap?.mcpConfigFromResult?.launcherField, "launcher");
 assert.match(manifest.aiInstall?.bootstrap?.integrity || "", /SHASUMS256\.txt/i);
 assert.match(manifest.aiInstall?.bootstrap?.commands?.windows || "", /bootstrap\.ps1/i);
 assert.match(manifest.aiInstall?.bootstrap?.commands?.macosLinux || "", /bootstrap\.sh/i);
@@ -55,12 +58,18 @@ assert.match(manifest.aiInstall?.bootstrap?.commands?.macosLinux || "", /bootstr
 for (const [name, text] of [
   ["README", repoReadme],
   ["access.md", accessDoc],
+  ["setup-clients.md", setupClientsDoc],
   ["manifest.json", JSON.stringify(manifest)],
 ]) {
   assert.equal(text.includes("TrendHub 账号"), false, `${name} must not imply that a TrendHub account system exists`);
 }
 assert.match(repoReadme, /无需审批、注册、登录或中央服务器/);
 assert.match(accessDoc, /无需审批、注册、登录或中央服务器/);
+assert.match(repoReadme, /AI_BOOTSTRAP_OK/);
+assert.match(accessDoc, /AI_BOOTSTRAP_OK/);
+assert.match(setupClientsDoc, /AI_BOOTSTRAP_OK/);
+assert.match(setupClientsDoc, /<NODE_COMMAND>/);
+assert.match(setupClientsDoc, /<LAUNCHER>/);
 
 for (const [name, text] of [
   ["bootstrap.sh", bootstrapSh],
@@ -70,6 +79,9 @@ for (const [name, text] of [
   assert.match(text, /SHASUMS256\.txt/, `${name} must verify against official checksums`);
   assert.match(text, /SHA-256|SHA256|Get-FileHash|sha256sum|shasum/i, `${name} must enforce SHA-256 verification`);
   assert.match(text, /scripts[\\/]setup\.mjs/, `${name} must hand off to the canonical setup.mjs installer`);
+  assert.match(text, /AI_BOOTSTRAP_OK/, `${name} must return persistent MCP runtime paths`);
+  assert.match(text, /process\.execPath/, `${name} must return the actual Node executable path`);
+  assert.match(text, /launcher/, `${name} must return the absolute launcher path`);
 }
 
 if (process.platform !== "win32") {
