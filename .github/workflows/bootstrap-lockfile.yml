@@ -1,0 +1,44 @@
+name: Bootstrap Lockfile
+
+on:
+  push:
+    branches: ["hardening/public-stable-v1"]
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: hardening/public-stable-v1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+
+      - name: Generate npm lockfile from pinned dependencies
+        working-directory: trendhub-mcp
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify lockfile can drive a clean install
+        working-directory: trendhub-mcp
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Commit lockfile to hardening branch
+        shell: bash
+        run: |
+          if git diff --quiet -- trendhub-mcp/package-lock.json && git ls-files --error-unmatch trendhub-mcp/package-lock.json >/dev/null 2>&1; then
+            echo "package-lock.json already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trendhub-mcp/package-lock.json
+          git commit -m "chore: add reproducible npm lockfile"
+          git push origin HEAD:hardening/public-stable-v1
