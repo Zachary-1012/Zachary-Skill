@@ -1,0 +1,22 @@
+{
+  "name": "trendhub",
+  "version": "1.4.1",
+  "description": "Evidence-first professional trend intelligence across 38 public trend sources with 19 MCP tools, Source Reliability, lifecycle/velocity/persistence/diffusion/confidence and 24h/72h lead benchmarks.",
+  "author": {
+    "name": "Zachary"
+  },
+  "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
+  "repository": "https://github.com/Zachary-1012/Zachary-Skill",
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "trend-intelligence",
+    "trending",
+    "research",
+    "source-reliability",
+    "xiaohongshu",
+    "google-trends"
+  ],
+  "skills": "skills/",
+  "mcpServers": "mcp.json"
+}
