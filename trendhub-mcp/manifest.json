@@ -10,23 +10,72 @@
     "public": true,
     "repository": "https://github.com/Zachary-1012/Zachary-Skill.git",
     "projectDir": "trendhub-mcp",
-    "requires": { "node": ">=22", "recommended": "Node 24 LTS" },
+    "registrationRequired": false,
+    "loginRequired": false,
+    "requires": {
+      "git": "recommended for public-stable clone/update; AI should install Git from a trusted OS or official source if missing",
+      "node": ">=22",
+      "recommended": "Node 24 LTS"
+    },
+    "bootstrap": {
+      "nodeFree": true,
+      "minimumNodeMajor": 22,
+      "preferredNodeMajor": 24,
+      "source": "https://nodejs.org/dist/latest-v24.x",
+      "integrity": "verify the official SHASUMS256.txt SHA-256 before extraction",
+      "installScope": "portable runtime in user cache; no administrator rights and no system Node replacement",
+      "commands": {
+        "windows": "powershell -ExecutionPolicy Bypass -File .\\scripts\\bootstrap.ps1",
+        "macosLinux": "bash scripts/bootstrap.sh"
+      },
+      "behavior": "Reuse existing Node >=22. If Node is missing or below 22, prepare verified portable Node 24 LTS, prepend it only for the current install process, then continue setup.mjs -> npm ci -> build -> smoke."
+    },
     "install": "node scripts/setup.mjs",
     "verify": "npm run smoke",
     "successMarker": "SMOKE OK tools=16",
-    "mcpStdio": { "command": "node", "args": ["scripts/launcher.mjs"] },
-    "note": "AI 安装器拿到仓库链接后可直接 clone，进入 projectDir，检查 Node >=22，执行 install，再以 successMarker 验证；无需模型 API Key、TrendHub 账号或中央服务器。"
+    "mcpStdio": {
+      "command": "node",
+      "args": [
+        "scripts/launcher.mjs"
+      ]
+    },
+    "note": "AI 安装器拿到仓库链接后可直接 clone；若 Git 缺失先从可信系统源/官方源安装 Git；进入 projectDir 后优先执行平台 bootstrap。无需用户预装 Node、无需注册/登录、无需模型 API Key或中央服务器。"
   },
   "runtime": {
     "type": "local-mcp-plugin",
-    "requires": { "node": ">=22", "recommended": "24 LTS" },
+    "requires": {
+      "node": ">=22",
+      "recommended": "24 LTS"
+    },
     "transports": [
-      { "id": "stdio", "default": true, "command": "node", "args": ["scripts/launcher.mjs"], "note": "启动包装器：先启动当前已验证版本，再后台检查 GitHub Stable Release；仅正式 release 可自动升级，不追 main HEAD；失败时尽力回滚。TRENTHUB_AUTOUPDATE=0 可关闭。" },
-      { "id": "http", "command": "node", "args": ["scripts/launcher.mjs", "--http"], "endpoint": "/mcp", "bind": "127.0.0.1", "defaultPort": 8333, "auth": "loopback 默认免鉴权；非 loopback 监听必须设置 TRENTHUB_HTTP_TOKEN，并使用 Authorization: Bearer <token>" }
+      {
+        "id": "stdio",
+        "default": true,
+        "command": "node",
+        "args": [
+          "scripts/launcher.mjs"
+        ],
+        "note": "启动包装器：先启动当前已验证版本，再后台检查 GitHub Stable Release；仅正式 release 可自动升级，不追 main HEAD；失败时尽力回滚。TRENTHUB_AUTOUPDATE=0 可关闭。"
+      },
+      {
+        "id": "http",
+        "command": "node",
+        "args": [
+          "scripts/launcher.mjs",
+          "--http"
+        ],
+        "endpoint": "/mcp",
+        "bind": "127.0.0.1",
+        "defaultPort": 8333,
+        "auth": "loopback 默认免鉴权；非 loopback 监听必须设置 TRENTHUB_HTTP_TOKEN，并使用 Authorization: Bearer <token>"
+      }
     ],
     "console": {
       "command": "node",
-      "args": ["scripts/launcher.mjs", "--ui"],
+      "args": [
+        "scripts/launcher.mjs",
+        "--ui"
+      ],
       "npmScript": "npm run ui",
       "url": "http://127.0.0.1:8333/",
       "mcpEndpoint": "/mcp",
@@ -57,7 +106,7 @@
   "aiPolicy": {
     "bringsOwnLLM": true,
     "note": "插件不内置、不要求任何大模型 API Key。分析成文与创作由调用方 AI（ChatGPT/Claude/豆包/DeepSeek/Gemini/Cursor 等）用其自身算力完成；插件只提供实时数据、确定性分析与创作脚手架。",
-    "network": "运行取数时仅向目标公开数据源发起必要请求；安装依赖会访问 npm registry/npmmirror；更新只访问 GitHub Stable Release。HTTP 默认绑定 127.0.0.1，非 loopback 必须配置 Bearer Token。",
+    "network": "运行取数时仅向目标公开数据源发起必要请求；安装依赖会访问 npm registry/npmmirror；Node bootstrap 访问 nodejs.org；更新只访问 GitHub Stable Release。HTTP 默认绑定 127.0.0.1，非 loopback 必须配置 Bearer Token。",
     "telemetry": "none",
     "dataEgress": "target-sources-only",
     "centralDataReturn": "none",
@@ -65,8 +114,15 @@
   },
   "dataPolicy": {
     "noFabrication": true,
-    "missingValueMarkers": ["null", "missing", "degraded"],
-    "everyRecordHas": ["capturedAt", "sourceUrl"],
+    "missingValueMarkers": [
+      "null",
+      "missing",
+      "degraded"
+    ],
+    "everyRecordHas": [
+      "capturedAt",
+      "sourceUrl"
+    ],
     "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
     "zeroTelemetry": true,
     "noCentralDataReturn": true,
@@ -74,22 +130,86 @@
     "localStorageOnly": true
   },
   "tools": [
-    { "name": "list_platforms", "group": "discover", "summary": "列出全部可查询平台" },
-    { "name": "list_categories", "group": "discover", "summary": "列出平台/信源/节点/模板分类" },
-    { "name": "get_trending", "group": "trending", "summary": "获取当下热点榜单（按平台或分类），并自动积累快照" },
-    { "name": "xhs_hot_topics", "group": "trending", "summary": "小红书主打：热门推荐笔记流（封面/标题/作者/点赞/链接，游客零配置可用）与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索" },
-    { "name": "cross_platform_overlap", "group": "trending", "summary": "分析关键词在多少平台同时上榜（跨平台共振）" },
-    { "name": "discover_trending_topics", "group": "trending", "summary": "自动聚类发现多平台共振话题" },
-    { "name": "trend_change_alerts", "group": "trending", "summary": "新晋/飙升/掉榜话题（对比历史快照）" },
-    { "name": "take_snapshot", "group": "trending", "summary": "手动落一次热榜快照" },
-    { "name": "keyword_trend_curve", "group": "trendline", "summary": "Google Trends 关键词相对热度曲线（0-100，可对比）" },
-    { "name": "related_queries", "group": "trendline", "summary": "Google Trends 相关词 top/rising" },
-    { "name": "future_signals", "group": "future", "summary": "聚合高质量科技/AI/商业/营销信源最新文章" },
-    { "name": "upcoming_events", "group": "future", "summary": "未来 N 天趋势节点日历（展会/财报/大促/政策/节假日）" },
-    { "name": "analyze_topic", "group": "analysis", "summary": "话题深度情报包（共振+走势+相关词+信号+节点+情感）" },
-    { "name": "list_templates", "group": "produce", "summary": "列出脚本/文案/方案专家模板" },
-    { "name": "get_template", "group": "produce", "summary": "获取模板完整结构与 checklist" },
-    { "name": "get_content_brief", "group": "produce", "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令" }
+    {
+      "name": "list_platforms",
+      "group": "discover",
+      "summary": "列出全部可查询平台"
+    },
+    {
+      "name": "list_categories",
+      "group": "discover",
+      "summary": "列出平台/信源/节点/模板分类"
+    },
+    {
+      "name": "get_trending",
+      "group": "trending",
+      "summary": "获取当下热点榜单（按平台或分类），并自动积累快照"
+    },
+    {
+      "name": "xhs_hot_topics",
+      "group": "trending",
+      "summary": "小红书主打：热门推荐笔记流（封面/标题/作者/点赞/链接，游客零配置可用）与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索"
+    },
+    {
+      "name": "cross_platform_overlap",
+      "group": "trending",
+      "summary": "分析关键词在多少平台同时上榜（跨平台共振）"
+    },
+    {
+      "name": "discover_trending_topics",
+      "group": "trending",
+      "summary": "自动聚类发现多平台共振话题"
+    },
+    {
+      "name": "trend_change_alerts",
+      "group": "trending",
+      "summary": "新晋/飙升/掉榜话题（对比历史快照）"
+    },
+    {
+      "name": "take_snapshot",
+      "group": "trending",
+      "summary": "手动落一次热榜快照"
+    },
+    {
+      "name": "keyword_trend_curve",
+      "group": "trendline",
+      "summary": "Google Trends 关键词相对热度曲线（0-100，可对比）"
+    },
+    {
+      "name": "related_queries",
+      "group": "trendline",
+      "summary": "Google Trends 相关词 top/rising"
+    },
+    {
+      "name": "future_signals",
+      "group": "future",
+      "summary": "聚合高质量科技/AI/商业/营销信源最新文章"
+    },
+    {
+      "name": "upcoming_events",
+      "group": "future",
+      "summary": "未来 N 天趋势节点日历（展会/财报/大促/政策/节假日）"
+    },
+    {
+      "name": "analyze_topic",
+      "group": "analysis",
+      "summary": "话题深度情报包（共振+走势+相关词+信号+节点+情感）"
+    },
+    {
+      "name": "list_templates",
+      "group": "produce",
+      "summary": "列出脚本/文案/方案专家模板"
+    },
+    {
+      "name": "get_template",
+      "group": "produce",
+      "summary": "获取模板完整结构与 checklist"
+    },
+    {
+      "name": "get_content_brief",
+      "group": "produce",
+      "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令"
+    }
   ],
   "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT)."
 }
