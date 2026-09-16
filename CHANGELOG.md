@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.1 — Multi-registry distribution
+
+- Add isolated public Streamable HTTP MCP gateway for marketplace distribution.
+- Add public privacy/terms/health/discovery endpoints while keeping the core loopback-only behind a private bearer token.
+- Add Official MCP Registry, Cursor, Smithery/Glama-ready distribution metadata and remote smoke validation.
+- No change to the 19-tool TrendHub capability contract.
+
 All notable TrendHub changes are recorded here. Versions follow Semantic Versioning and only Stable Releases are considered distributable product versions.
 
 ## [1.4.0] - 2026-09-17

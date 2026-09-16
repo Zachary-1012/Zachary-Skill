@@ -50,6 +50,27 @@ jobs:
           npm run smoke | tee /tmp/trendhub-smoke.txt
           grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
 
+      - name: Remote gateway handshake and isolation smoke
+        shell: bash
+        env:
+          TRENHUB_REMOTE_HOST: 127.0.0.1
+          PORT: "18444"
+        run: |
+          set -euo pipefail
+          npm run start:remote >/tmp/trendhub-remote.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18444/health >/tmp/trendhub-health.json 2>/dev/null; then
+              break
+            fi
+            sleep 0.25
+          done
+          node -e "const h=require('/tmp/trendhub-health.json'); if(!h.ok || h.tools!==19 || h.version!=='1.4.1') process.exit(1)"
+          npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
+          grep -F "REMOTE SMOKE OK tools=19" /tmp/trendhub-remote-smoke.txt
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/platforms)" = "404"
+
   bootstrap-e2e:
     name: Bootstrap E2E / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -80,7 +101,7 @@ jobs:
         working-directory: trendhub-mcp
         env:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
-          TRENTHUB_INSTALL_CHANNEL: dev
+          TRENHUB_INSTALL_CHANNEL: dev
         run: |
           $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1 2>&1
           $status = $LASTEXITCODE

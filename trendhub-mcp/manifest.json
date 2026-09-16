@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "专业级全网趋势情报 MCP Skill，以小红书为深度主打：覆盖 38 个平台/趋势信源、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h lead benchmark 与内容生产，共 19 个 MCP 工具。BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "MIT",
@@ -110,18 +110,45 @@
       "log": "logs/autoupdate.log",
       "failureMode": "fail-open + rollback：网络/无 release/本地 tracked 修改时不更新；安装或构建失败时尽力恢复更新前版本",
       "network": "GitHub Releases API + git release tag；不跟随 main HEAD"
+    },
+    "remote": {
+      "type": "streamable-http",
+      "url": "https://trendhub-remote-production.up.railway.app/mcp",
+      "health": "https://trendhub-remote-production.up.railway.app/health",
+      "privacy": "https://trendhub-remote-production.up.railway.app/privacy",
+      "terms": "https://trendhub-remote-production.up.railway.app/terms",
+      "accountRequired": false,
+      "modelApiKeyRequired": false,
+      "note": "Public distribution adapter. The hosted gateway exposes MCP only; the local console/API is not exposed and no visitor XHS_COOKIE is used."
     }
   },
   "intelligence": {
     "methodologyVersion": "trend-intelligence-v1",
     "historyRetentionDays": 30,
     "historyMaxSnapshotsPerPlatform": 1500,
-    "lifecycleStates": ["insufficient_history", "emerging", "accelerating", "mainstream", "saturating", "declining"],
-    "metrics": ["velocity", "persistence", "diffusion", "sourceReliability", "historySufficiency", "confidence"],
+    "lifecycleStates": [
+      "insufficient_history",
+      "emerging",
+      "accelerating",
+      "mainstream",
+      "saturating",
+      "declining"
+    ],
+    "metrics": [
+      "velocity",
+      "persistence",
+      "diffusion",
+      "sourceReliability",
+      "historySufficiency",
+      "confidence"
+    ],
     "confidenceIsProbability": false,
     "benchmark": {
       "methodologyVersion": "trend-lead-benchmark-v1",
-      "windowsHours": [24, 72],
+      "windowsHours": [
+        24,
+        72
+      ],
       "requiresExternalGroundTruthTimestamp": true,
       "noSyntheticReference": true
     }
@@ -129,8 +156,19 @@
   "sourceReliability": {
     "localOnly": true,
     "retentionDays": 30,
-    "windowsHours": [24, 168, 720],
-    "statuses": ["UP", "DEGRADED", "DOWN", "AUTH_REQUIRED", "RATE_LIMITED", "UNKNOWN"],
+    "windowsHours": [
+      24,
+      168,
+      720
+    ],
+    "statuses": [
+      "UP",
+      "DEGRADED",
+      "DOWN",
+      "AUTH_REQUIRED",
+      "RATE_LIMITED",
+      "UNKNOWN"
+    ],
     "scoreWeights": {
       "okRate": 0.55,
       "usableRate": 0.25,
@@ -143,7 +181,16 @@
     "autoUpload": false,
     "diagnosticCommand": "npm run quality:diagnostic",
     "sharing": "manual opt-in only",
-    "excludes": ["hostname", "username", "absolutePaths", "cookies", "queryText", "contentBodies", "ipAddress", "accountIdentifiers"]
+    "excludes": [
+      "hostname",
+      "username",
+      "absolutePaths",
+      "cookies",
+      "queryText",
+      "contentBodies",
+      "ipAddress",
+      "accountIdentifiers"
+    ]
   },
   "aiPolicy": {
     "bringsOwnLLM": true,
@@ -156,7 +203,11 @@
   },
   "dataPolicy": {
     "noFabrication": true,
-    "missingValueMarkers": ["null", "missing", "degraded"],
+    "missingValueMarkers": [
+      "null",
+      "missing",
+      "degraded"
+    ],
     "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
     "zeroTelemetry": true,
     "noCentralDataReturn": true,
@@ -164,25 +215,101 @@
     "localStorageOnly": true
   },
   "tools": [
-    { "name": "list_platforms", "group": "discover", "summary": "列出全部可查询平台" },
-    { "name": "list_categories", "group": "discover", "summary": "列出平台/信源/节点/模板分类" },
-    { "name": "get_trending", "group": "trending", "summary": "获取当下热点榜单（按平台或分类），并自动积累快照与历史" },
-    { "name": "xhs_hot_topics", "group": "trending", "summary": "小红书主打：热门推荐笔记流与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索" },
-    { "name": "cross_platform_overlap", "group": "trending", "summary": "分析关键词在多少平台同时上榜（跨平台共振）" },
-    { "name": "discover_trending_topics", "group": "trending", "summary": "自动聚类发现多平台共振话题" },
-    { "name": "trend_change_alerts", "group": "trending", "summary": "新晋/飙升/掉榜话题（对比历史快照）" },
-    { "name": "take_snapshot", "group": "trending", "summary": "手动落一次热榜快照并积累趋势历史" },
-    { "name": "source_reliability", "group": "reliability", "summary": "量化数据源可用率、延迟、连续失败、schema drift 与当前状态" },
-    { "name": "keyword_trend_curve", "group": "trendline", "summary": "Google Trends 关键词相对热度曲线（0-100，可对比）" },
-    { "name": "related_queries", "group": "trendline", "summary": "Google Trends 相关词 top/rising" },
-    { "name": "future_signals", "group": "future", "summary": "聚合高质量科技/AI/商业/营销信源最新文章" },
-    { "name": "upcoming_events", "group": "future", "summary": "未来 N 天趋势节点日历（展会/财报/大促/政策/节假日）" },
-    { "name": "analyze_topic", "group": "analysis", "summary": "话题深度情报包（共振+走势+相关词+信号+节点+情感）" },
-    { "name": "trend_intelligence", "group": "analysis", "summary": "生命周期、速度、持续性、跨平台扩散、可靠度与置信度" },
-    { "name": "benchmark_trend_lead", "group": "evaluation", "summary": "基于外部 ground truth 评估 TrendHub 是否提前24h/72h发现趋势" },
-    { "name": "list_templates", "group": "produce", "summary": "列出脚本/文案/方案专家模板" },
-    { "name": "get_template", "group": "produce", "summary": "获取模板完整结构与 checklist" },
-    { "name": "get_content_brief", "group": "produce", "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令" }
+    {
+      "name": "list_platforms",
+      "group": "discover",
+      "summary": "列出全部可查询平台"
+    },
+    {
+      "name": "list_categories",
+      "group": "discover",
+      "summary": "列出平台/信源/节点/模板分类"
+    },
+    {
+      "name": "get_trending",
+      "group": "trending",
+      "summary": "获取当下热点榜单（按平台或分类），并自动积累快照与历史"
+    },
+    {
+      "name": "xhs_hot_topics",
+      "group": "trending",
+      "summary": "小红书主打：热门推荐笔记流与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索"
+    },
+    {
+      "name": "cross_platform_overlap",
+      "group": "trending",
+      "summary": "分析关键词在多少平台同时上榜（跨平台共振）"
+    },
+    {
+      "name": "discover_trending_topics",
+      "group": "trending",
+      "summary": "自动聚类发现多平台共振话题"
+    },
+    {
+      "name": "trend_change_alerts",
+      "group": "trending",
+      "summary": "新晋/飙升/掉榜话题（对比历史快照）"
+    },
+    {
+      "name": "take_snapshot",
+      "group": "trending",
+      "summary": "手动落一次热榜快照并积累趋势历史"
+    },
+    {
+      "name": "source_reliability",
+      "group": "reliability",
+      "summary": "量化数据源可用率、延迟、连续失败、schema drift 与当前状态"
+    },
+    {
+      "name": "keyword_trend_curve",
+      "group": "trendline",
+      "summary": "Google Trends 关键词相对热度曲线（0-100，可对比）"
+    },
+    {
+      "name": "related_queries",
+      "group": "trendline",
+      "summary": "Google Trends 相关词 top/rising"
+    },
+    {
+      "name": "future_signals",
+      "group": "future",
+      "summary": "聚合高质量科技/AI/商业/营销信源最新文章"
+    },
+    {
+      "name": "upcoming_events",
+      "group": "future",
+      "summary": "未来 N 天趋势节点日历（展会/财报/大促/政策/节假日）"
+    },
+    {
+      "name": "analyze_topic",
+      "group": "analysis",
+      "summary": "话题深度情报包（共振+走势+相关词+信号+节点+情感）"
+    },
+    {
+      "name": "trend_intelligence",
+      "group": "analysis",
+      "summary": "生命周期、速度、持续性、跨平台扩散、可靠度与置信度"
+    },
+    {
+      "name": "benchmark_trend_lead",
+      "group": "evaluation",
+      "summary": "基于外部 ground truth 评估 TrendHub 是否提前24h/72h发现趋势"
+    },
+    {
+      "name": "list_templates",
+      "group": "produce",
+      "summary": "列出脚本/文案/方案专家模板"
+    },
+    {
+      "name": "get_template",
+      "group": "produce",
+      "summary": "获取模板完整结构与 checklist"
+    },
+    {
+      "name": "get_content_brief",
+      "group": "produce",
+      "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令"
+    }
   ],
   "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT)."
 }

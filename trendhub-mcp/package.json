@@ -1,6 +1,6 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "TrendHub MCP — 专业级全网趋势情报 Skill：19 个 MCP 工具覆盖实时热榜、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、24h/72h lead benchmark 与内容生产；BYO-AI、零模型 Key、本地优先。",
   "type": "module",
   "bin": {
@@ -22,10 +22,11 @@
     "upgrade": "node scripts/upgrade.mjs",
     "smoke": "node scripts/smoke.mjs",
     "build": "tsc -p tsconfig.json",
-    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs",
+    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs && node scripts/test-distribution.mjs",
     "release:gate": "npm run build && npm test && npm run smoke",
     "start": "node scripts/launcher.mjs",
     "start:http": "node scripts/launcher.mjs --http",
+    "start:remote": "node scripts/remote-gateway.mjs",
     "ui": "node scripts/launcher.mjs --ui",
     "start:plain": "node dist/src/index.js",
     "dev": "tsx src/index.ts",
@@ -35,7 +36,8 @@
     "selftest": "npm run source:health",
     "snapshot": "tsx scripts/snapshot.ts",
     "quality:diagnostic": "node scripts/quality-diagnostic.mjs",
-    "benchmark:lead": "node scripts/benchmark.mjs"
+    "benchmark:lead": "node scripts/benchmark.mjs",
+    "smoke:remote": "node scripts/remote-smoke.mjs"
   },
   "keywords": [
     "mcp",

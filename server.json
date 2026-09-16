@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Zachary-1012/trendhub",
+  "title": "TrendHub",
+  "description": "Evidence-first professional trend intelligence across 38 public trend sources with 19 MCP tools, Source Reliability, trend lifecycle/velocity/persistence/diffusion/confidence, Google Trends, future signals and 24h/72h lead benchmarks.",
+  "version": "1.4.1",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://trendhub-remote-production.up.railway.app/mcp"
+    }
+  ]
+}

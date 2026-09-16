@@ -21,6 +21,14 @@ import { xhsClient } from "../sources/xhs/guest.js";
 
 const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 
+// MCP annotations are part of the public tool contract. They are intentionally
+// conservative: any tool that may refresh/write TrendHub's local evidence state
+// is not advertised as read-only, even though it never writes to a third-party
+// service. No TrendHub tool performs a destructive external action.
+const LOCAL_READ = { readOnlyHint: true, openWorldHint: false, destructiveHint: false };
+const WEB_READ = { readOnlyHint: true, openWorldHint: true, destructiveHint: false };
+const WEB_STATE = { readOnlyHint: false, openWorldHint: true, destructiveHint: false };
+
 function json(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
@@ -34,10 +42,10 @@ function platformNames(input?: string): string[] {
 
 export function registerTools(server: McpServer): void {
   /* ---------- 发现 ---------- */
-  server.tool("list_platforms", "列出可查询的全部热点平台（调用名、中文名、分类、数据来源）", {}, async () =>
+  server.tool("list_platforms", "列出可查询的全部热点平台（调用名、中文名、分类、数据来源）", {}, LOCAL_READ, async () =>
     json({ platforms: listPlatforms() }));
 
-  server.tool("list_categories", "列出平台分类与内容/模板分类", {}, async () =>
+  server.tool("list_categories", "列出平台分类与内容/模板分类", {}, LOCAL_READ, async () =>
     json({ platformCategories: categories(), futureSignalCategories: futureCategories(), eventCategories: eventCategories(), templateTypes: ["script", "copy", "plan"] }));
 
   /* ---------- 当下热点 ---------- */
@@ -49,6 +57,7 @@ export function registerTools(server: McpServer): void {
       category: z.string().optional().describe("分类：social/video/news/tech/dev/ai/global"),
       limit: z.number().min(5).max(50).optional().describe("每个平台返回条数，默认20"),
     },
+    WEB_STATE,
     async ({ platform, category, limit }) => {
       const n = limit ?? 20;
       let results;
@@ -82,6 +91,7 @@ export function registerTools(server: McpServer): void {
       topic_limit: z.number().min(5).max(50).optional().describe("派生话题词数量，默认20"),
       with_hotlist: z.boolean().optional().describe("登录态下是否同时取官方热搜词榜，默认 true"),
     },
+    WEB_STATE,
     async ({ limit, topic_limit, with_hotlist }) => {
       const n = limit ?? 30;
       const feed = await getHot(XHS_PLATFORM, n);
@@ -116,6 +126,7 @@ export function registerTools(server: McpServer): void {
       keyword: z.string().describe("关键词或话题，如 'AI眼镜'、'英伟达'"),
       platforms: z.string().optional().describe("可选，限定平台调用名，逗号分隔"),
     },
+    WEB_READ,
     async ({ keyword, platforms }) => json(await crossPlatformOverlap(keyword, splitList(platforms)))
   );
 
@@ -126,6 +137,7 @@ export function registerTools(server: McpServer): void {
       min_platforms: z.number().min(2).max(6).optional().describe("至少在几个平台出现，默认2"),
       platforms: z.string().optional().describe("可选，限定平台，逗号分隔"),
     },
+    WEB_READ,
     async ({ min_platforms, platforms }) => json(await discoverClusters(splitList(platforms), min_platforms ?? 2))
   );
 
@@ -133,6 +145,7 @@ export function registerTools(server: McpServer): void {
     "trend_change_alerts",
     "对比历史快照，输出各平台新晋上榜、排名飙升(≥3位)、掉榜的话题。需要先有两次以上快照（get_trending 会自动积累，或用 take_snapshot）。",
     { platforms: z.string().optional().describe("可选，限定平台，逗号分隔；默认核心平台") },
+    LOCAL_READ,
     async ({ platforms }) => {
       const names = platformNames(platforms);
       const diffs = names.map((p) => diffPlatform(p));
@@ -156,6 +169,7 @@ export function registerTools(server: McpServer): void {
     "take_snapshot",
     "立即对各平台落一次历史快照（也可由系统定时调用以持续监测）。",
     { platforms: z.string().optional().describe("可选，限定平台，逗号分隔") },
+    WEB_STATE,
     async ({ platforms }) => json({ capturedAt: new Date().toISOString(), report: await takeSnapshots(splitList(platforms)) })
   );
 
@@ -167,6 +181,7 @@ export function registerTools(server: McpServer): void {
       platforms: z.string().optional().describe("平台调用名，逗号分隔；默认核心平台"),
       refresh: z.boolean().optional().describe("是否先联网刷新一次，默认 false"),
     },
+    WEB_STATE,
     async ({ platforms, refresh }) => {
       const names = platformNames(platforms);
       if (refresh === true) {
@@ -191,6 +206,7 @@ export function registerTools(server: McpServer): void {
       geo: z.string().optional().describe("地区代码，US/CN/TW/HK，留空=全球"),
       timeframe: z.string().optional().describe("如 today 1-m / today 3-m / today 12-m / now 7-d，默认 today 12-m"),
     },
+    WEB_READ,
     async ({ keywords, geo, timeframe }) => json(await interestOverTime(splitList(keywords), geo ?? "", timeframe ?? "today 12-m"))
   );
 
@@ -198,6 +214,7 @@ export function registerTools(server: McpServer): void {
     "related_queries",
     "获取关键词在 Google Trends 的相关搜索词：top（长期热门）与 rising（近期飙升），用于选题与 SEO/搜索流量。",
     { keyword: z.string(), geo: z.string().optional() },
+    WEB_READ,
     async ({ keyword, geo }) => json(await relatedQueries(keyword, geo ?? ""))
   );
 
@@ -210,6 +227,7 @@ export function registerTools(server: McpServer): void {
       keyword: z.string().optional().describe("按关键词过滤标题/摘要"),
       limit: z.number().min(5).max(100).optional(),
     },
+    WEB_READ,
     async ({ category, keyword, limit }) => json(await futureSignals({ category, keyword, limit: limit ?? 40 }))
   );
 
@@ -220,6 +238,7 @@ export function registerTools(server: McpServer): void {
       days_ahead: z.number().min(1).max(365).optional().describe("未来天数窗口，默认90"),
       category: z.string().optional().describe("节点分类，如 tech-event/earnings/ecommerce/holiday-cn/policy"),
     },
+    LOCAL_READ,
     async ({ days_ahead, category }) => json(upcomingEvents({ daysAhead: days_ahead ?? 90, category }))
   );
 
@@ -232,6 +251,7 @@ export function registerTools(server: McpServer): void {
       geo: z.string().optional().describe("Google Trends 地区，留空全球"),
       timeframe: z.string().optional().describe("趋势时间窗，默认 today 3-m"),
     },
+    WEB_READ,
     async ({ keyword, geo, timeframe }) => json(await analyzeTopic(keyword, { geo, timeframe }))
   );
 
@@ -243,6 +263,7 @@ export function registerTools(server: McpServer): void {
       platforms: z.string().optional().describe("可选平台，逗号分隔；默认核心平台"),
       refresh: z.boolean().optional().describe("是否先刷新当前数据，默认 true"),
     },
+    WEB_STATE,
     async ({ keyword, platforms, refresh }) => {
       const names = platformNames(platforms);
       if (refresh !== false) {
@@ -261,6 +282,7 @@ export function registerTools(server: McpServer): void {
       reference_time: z.string().describe("外部 ground-truth ISO-8601 时间，例如 2026-09-20T09:00:00+08:00"),
       platforms: z.string().optional().describe("可选平台；默认核心平台"),
     },
+    LOCAL_READ,
     async ({ keyword, reference_time, platforms }) => json(benchmarkTrendLead(keyword, reference_time, platformNames(platforms))),
   );
 
@@ -272,6 +294,7 @@ export function registerTools(server: McpServer): void {
       type: z.string().optional().describe("script=脚本 copy=文案 plan=方案"),
       platform: z.string().optional().describe("平台，如 douyin/xiaohongshu/weibo/wechat/twitter"),
     },
+    LOCAL_READ,
     async ({ type, platform }) => json({ templates: listTemplates(type, platform).map((t) => ({ id: t.id, name: t.name, type: t.type, platforms: t.platforms, bestFor: t.bestFor })) })
   );
 
@@ -279,6 +302,7 @@ export function registerTools(server: McpServer): void {
     "get_template",
     "获取某个模板的完整结构（章节/目的/写作指引/填空位/checklist）。",
     { id: z.string().describe("模板 id，如 short-video-script / xiaohongshu-note / marketing-plan") },
+    LOCAL_READ,
     async ({ id }) => {
       const t = getTemplate(id);
       return t ? json(t) : json({ error: `未找到模板 ${id}，可用 list_templates 查看` });
@@ -296,6 +320,7 @@ export function registerTools(server: McpServer): void {
       audience: z.string().optional().describe("目标人群画像"),
       geo: z.string().optional().describe("搜索趋势地区"),
     },
+    WEB_READ,
     async ({ topic, template_id, platform, goal, audience, geo }) =>
       json(await getContentBrief(topic, { templateId: template_id, platform, goal, audience, geo }))
   );

@@ -1,6 +1,6 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.0** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.1** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
@@ -51,7 +51,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## TrendHub v1.4.0 能力
+## TrendHub v1.4.1 能力
 
 | 能力层 | 当前能力 |
 | --- | --- |
