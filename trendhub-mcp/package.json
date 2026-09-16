@@ -34,7 +34,8 @@
     "source:health": "tsx scripts/selftest.ts",
     "selftest": "npm run source:health",
     "snapshot": "tsx scripts/snapshot.ts",
-    "quality:diagnostic": "node scripts/quality-diagnostic.mjs"
+    "quality:diagnostic": "node scripts/quality-diagnostic.mjs",
+    "benchmark:lead": "node scripts/benchmark.mjs"
   },
   "keywords": [
     "mcp",
