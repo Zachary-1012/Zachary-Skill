@@ -1,0 +1,48 @@
+name: Public Install E2E
+
+on:
+  push:
+    branches: ["main"]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Use Node.js 24 LTS
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Fresh clone from the public repository URL
+        shell: bash
+        run: |
+          rm -rf /tmp/zachary-skill-public
+          git clone --depth 1 https://github.com/Zachary-1012/Zachary-Skill.git /tmp/zachary-skill-public
+          test -f /tmp/zachary-skill-public/trendhub-mcp/SKILL.md
+          test -f /tmp/zachary-skill-public/trendhub-mcp/manifest.json
+
+      - name: Run the documented AI installation contract
+        working-directory: /tmp/zachary-skill-public/trendhub-mcp
+        run: node scripts/setup.mjs --global
+
+      - name: Verify stable pin and MCP readiness
+        working-directory: /tmp/zachary-skill-public/trendhub-mcp
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="$(git describe --tags --exact-match HEAD)"
+          test "$TAG" = "v$VERSION"
+          npm run smoke | tee /tmp/trendhub-smoke.txt
+          grep -F "SMOKE OK tools=16" /tmp/trendhub-smoke.txt
+          node -e "const m=require('./manifest.json'); if(m.aiInstall?.successMarker!=='SMOKE OK tools=16') process.exit(1)"
+
+      - name: Public install contract result
+        if: success()
+        run: echo "PUBLIC INSTALL E2E OK — repo URL -> stable release -> npm ci/build -> 16-tool MCP smoke"
