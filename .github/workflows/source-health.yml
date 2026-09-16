@@ -33,8 +33,18 @@ jobs:
       - name: Check live third-party sources
         run: npm run source:health
 
+      - name: Upload quantified health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-health-${{ github.run_id }}
+          path: trendhub-mcp/data/health/source-health-latest.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Explain scope
         if: always()
         run: |
-          echo "Source Health observes third-party availability and data quality."
+          echo "Source Health observes third-party availability, latency and data quality."
           echo "It is intentionally separate from PR CI and the Stable Release gate."
+          echo "The JSON artifact is evidence for reliability review; it does not contain user telemetry."
