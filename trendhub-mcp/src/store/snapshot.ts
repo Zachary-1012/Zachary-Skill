@@ -1,5 +1,6 @@
 /**
  * 本地快照存储：每个平台维护 latest / previous 两个槽（环形），用于新晋/飙升/掉榜与增速。
+ * 同时把可用结果追加到有界历史库，供生命周期、扩散与 24h/72h lead benchmark 使用。
  * 纯文件、零依赖、可离线；快照不足时如实返回 insufficient_history，绝不编造变化。
  */
 import fs from "node:fs";
@@ -7,6 +8,7 @@ import path from "node:path";
 import { config } from "../config.js";
 import type { HotResult } from "../util/schema.js";
 import { getMany, PLATFORMS } from "../sources/index.js";
+import { appendHistory } from "./history.js";
 
 interface SnapFile {
   latest: HotResult | null;
@@ -45,15 +47,17 @@ export async function takeSnapshots(platforms?: string[]): Promise<{ platform: s
     snap.previous = snap.latest;
     snap.latest = r;
     writeSnap(r.platform, snap);
+    appendHistory(r);
     report.push({ platform: r.platform, ok: r.dataQuality === "ok", items: r.items.length });
   }
   return report;
 }
 
-/** 用一次查询结果直接推进快照环（查询即积累历史，无需额外定时任务） */
+/** 用一次查询结果直接推进快照环与历史库（查询即积累历史，无需额外定时任务） */
 export function updateFromResults(results: HotResult[]): void {
   for (const r of results) {
     if (r.dataQuality === "missing" || !r.items.length) continue;
+    appendHistory(r);
     const snap = readSnap(r.platform);
     // 避免连续两次写入完全相同的 capturedAt
     if (snap.latest && snap.latest.capturedAt === r.capturedAt) continue;

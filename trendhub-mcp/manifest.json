@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.3.1",
-  "description": "公司级全网热点趋势 MCP 插件，以小红书热点与趋势为主打：小红书热门笔记流与话题词派生、国内外共 38 个平台实时热榜、Google Trends 关键词走势与相关词、高质量未来趋势信源、年度节点日历，提供跨平台共振、新晋/飙升/掉榜、话题深度情报与脚本/文案/方案专家创作简报，内置零模型 Key 的本地可视化控制台。",
+  "version": "1.4.0",
+  "description": "专业级全网趋势情报 MCP Skill，以小红书为深度主打：覆盖 38 个平台/趋势信源、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h lead benchmark 与内容生产，共 19 个 MCP 工具。BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "MIT",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -39,7 +39,7 @@
     },
     "install": "node scripts/setup.mjs",
     "verify": "npm run smoke",
-    "successMarker": "SMOKE OK tools=16",
+    "successMarker": "SMOKE OK tools=19",
     "mcpStdio": {
       "command": "node",
       "args": [
@@ -98,6 +98,7 @@
     "test": "npm test",
     "releaseGate": "npm run release:gate",
     "sourceHealth": "npm run source:health",
+    "qualityDiagnostic": "npm run quality:diagnostic",
     "upgrade": "node scripts/upgrade.mjs",
     "selftest": "npm run selftest",
     "selftestCompatibility": "保留旧命令；等价于 npm run source:health",
@@ -111,9 +112,42 @@
       "network": "GitHub Releases API + git release tag；不跟随 main HEAD"
     }
   },
+  "intelligence": {
+    "methodologyVersion": "trend-intelligence-v1",
+    "historyRetentionDays": 30,
+    "historyMaxSnapshotsPerPlatform": 1500,
+    "lifecycleStates": ["insufficient_history", "emerging", "accelerating", "mainstream", "saturating", "declining"],
+    "metrics": ["velocity", "persistence", "diffusion", "sourceReliability", "historySufficiency", "confidence"],
+    "confidenceIsProbability": false,
+    "benchmark": {
+      "methodologyVersion": "trend-lead-benchmark-v1",
+      "windowsHours": [24, 72],
+      "requiresExternalGroundTruthTimestamp": true,
+      "noSyntheticReference": true
+    }
+  },
+  "sourceReliability": {
+    "localOnly": true,
+    "retentionDays": 30,
+    "windowsHours": [24, 168, 720],
+    "statuses": ["UP", "DEGRADED", "DOWN", "AUTH_REQUIRED", "RATE_LIMITED", "UNKNOWN"],
+    "scoreWeights": {
+      "okRate": 0.55,
+      "usableRate": 0.25,
+      "averageQuality": 0.2
+    },
+    "privacy": "stores only timestamp, quality, latency, item count and coarse failure class; no query text, cookies, user content, hostname, IP, account identifiers or model prompts"
+  },
+  "qualityEvaluation": {
+    "telemetry": false,
+    "autoUpload": false,
+    "diagnosticCommand": "npm run quality:diagnostic",
+    "sharing": "manual opt-in only",
+    "excludes": ["hostname", "username", "absolutePaths", "cookies", "queryText", "contentBodies", "ipAddress", "accountIdentifiers"]
+  },
   "aiPolicy": {
     "bringsOwnLLM": true,
-    "note": "插件不内置、不要求任何大模型 API Key。分析成文与创作由调用方 AI（ChatGPT/Claude/豆包/DeepSeek/Gemini/Cursor 等）用其自身算力完成；插件只提供实时数据、确定性分析与创作脚手架。",
+    "note": "插件不内置、不要求任何大模型 API Key。分析成文与创作由调用方 AI（ChatGPT/Claude/豆包/DeepSeek/Gemini/Cursor 等）用其自身算力完成；插件提供实时数据、确定性分析、趋势情报指标与创作脚手架。",
     "network": "运行取数时仅向目标公开数据源发起必要请求；安装依赖会访问 npm registry/npmmirror；Node bootstrap 访问 nodejs.org；更新只访问 GitHub Stable Release。HTTP 默认绑定 127.0.0.1，非 loopback 必须配置 Bearer Token。",
     "telemetry": "none",
     "dataEgress": "target-sources-only",
@@ -122,15 +156,7 @@
   },
   "dataPolicy": {
     "noFabrication": true,
-    "missingValueMarkers": [
-      "null",
-      "missing",
-      "degraded"
-    ],
-    "everyRecordHas": [
-      "capturedAt",
-      "sourceUrl"
-    ],
+    "missingValueMarkers": ["null", "missing", "degraded"],
     "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
     "zeroTelemetry": true,
     "noCentralDataReturn": true,
@@ -140,17 +166,20 @@
   "tools": [
     { "name": "list_platforms", "group": "discover", "summary": "列出全部可查询平台" },
     { "name": "list_categories", "group": "discover", "summary": "列出平台/信源/节点/模板分类" },
-    { "name": "get_trending", "group": "trending", "summary": "获取当下热点榜单（按平台或分类），并自动积累快照" },
-    { "name": "xhs_hot_topics", "group": "trending", "summary": "小红书主打：热门推荐笔记流（封面/标题/作者/点赞/链接，游客零配置可用）与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索" },
+    { "name": "get_trending", "group": "trending", "summary": "获取当下热点榜单（按平台或分类），并自动积累快照与历史" },
+    { "name": "xhs_hot_topics", "group": "trending", "summary": "小红书主打：热门推荐笔记流与标题话题词派生；配置 XHS_COOKIE 后追加官方热搜词榜与关键词爆款搜索" },
     { "name": "cross_platform_overlap", "group": "trending", "summary": "分析关键词在多少平台同时上榜（跨平台共振）" },
     { "name": "discover_trending_topics", "group": "trending", "summary": "自动聚类发现多平台共振话题" },
     { "name": "trend_change_alerts", "group": "trending", "summary": "新晋/飙升/掉榜话题（对比历史快照）" },
-    { "name": "take_snapshot", "group": "trending", "summary": "手动落一次热榜快照" },
+    { "name": "take_snapshot", "group": "trending", "summary": "手动落一次热榜快照并积累趋势历史" },
+    { "name": "source_reliability", "group": "reliability", "summary": "量化数据源可用率、延迟、连续失败、schema drift 与当前状态" },
     { "name": "keyword_trend_curve", "group": "trendline", "summary": "Google Trends 关键词相对热度曲线（0-100，可对比）" },
     { "name": "related_queries", "group": "trendline", "summary": "Google Trends 相关词 top/rising" },
     { "name": "future_signals", "group": "future", "summary": "聚合高质量科技/AI/商业/营销信源最新文章" },
     { "name": "upcoming_events", "group": "future", "summary": "未来 N 天趋势节点日历（展会/财报/大促/政策/节假日）" },
     { "name": "analyze_topic", "group": "analysis", "summary": "话题深度情报包（共振+走势+相关词+信号+节点+情感）" },
+    { "name": "trend_intelligence", "group": "analysis", "summary": "生命周期、速度、持续性、跨平台扩散、可靠度与置信度" },
+    { "name": "benchmark_trend_lead", "group": "evaluation", "summary": "基于外部 ground truth 评估 TrendHub 是否提前24h/72h发现趋势" },
     { "name": "list_templates", "group": "produce", "summary": "列出脚本/文案/方案专家模板" },
     { "name": "get_template", "group": "produce", "summary": "获取模板完整结构与 checklist" },
     { "name": "get_content_brief", "group": "produce", "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令" }

@@ -6,6 +6,11 @@ npm-debug.log*
 .env
 .env.*
 data/snapshots/
+data/history/
+data/reliability/
+data/health/
+data/diagnostics/
+data/benchmarks/
 .DS_Store
 Thumbs.db
 .idea/

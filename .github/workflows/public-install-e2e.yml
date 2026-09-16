@@ -27,6 +27,7 @@ jobs:
           test -f /tmp/zachary-skill-public/trendhub-mcp/SKILL.md
           test -f /tmp/zachary-skill-public/trendhub-mcp/manifest.json
           test -f /tmp/zachary-skill-public/trendhub-mcp/scripts/bootstrap.sh
+          test -f /tmp/zachary-skill-public/trendhub-mcp/docs/intelligence-methodology.md
 
       - name: Run the documented Node-free AI installation contract
         working-directory: /tmp/zachary-skill-public/trendhub-mcp
@@ -37,7 +38,7 @@ jobs:
           set -euo pipefail
           bash scripts/bootstrap.sh --global | tee /tmp/trendhub-bootstrap.txt
           grep -F "AI_BOOTSTRAP_OK " /tmp/trendhub-bootstrap.txt
-          grep -F "SMOKE OK tools=16" /tmp/trendhub-bootstrap.txt
+          grep -F "SMOKE OK tools=19" /tmp/trendhub-bootstrap.txt
 
       - name: Verify stable pin and MCP readiness
         working-directory: /tmp/zachary-skill-public/trendhub-mcp
@@ -47,9 +48,9 @@ jobs:
           TAG="$(git describe --tags --exact-match HEAD)"
           test "$TAG" = "v$VERSION"
           npm run smoke | tee /tmp/trendhub-smoke.txt
-          grep -F "SMOKE OK tools=16" /tmp/trendhub-smoke.txt
-          node -e "const m=require('./manifest.json'); if(m.aiInstall?.successMarker!=='SMOKE OK tools=16') process.exit(1)"
+          grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
+          node -e "const m=require('./manifest.json'); const v=process.argv[1]; if(m.version!==v || m.aiInstall?.successMarker!=='SMOKE OK tools=19' || m.tools?.length!==19) process.exit(1)" "$VERSION"
 
       - name: Public install contract result
         if: success()
-        run: echo "PUBLIC INSTALL E2E OK — public repo -> verified portable Node 24 bootstrap -> stable release -> npm ci/build -> 16-tool MCP smoke"
+        run: echo "PUBLIC INSTALL E2E OK — public repo -> verified portable Node 24 bootstrap -> stable release -> npm ci/build -> 19-tool professional MCP smoke"

@@ -1,78 +1,104 @@
 /**
- * 自检：真实拉取每个数据源，输出可用性/条数/耗时，用于安装验证与排障。
- * 运行：npm run selftest
+ * Source Health：真实拉取注册平台与关键辅助信源，输出机器可读健康报告。
+ * 这是第三方可用性观测，不属于 release gate；单个平台临时不可用不会伪装成代码失败。
+ * 运行：npm run source:health
  */
-import { getHot, listPlatforms } from "../src/sources/index.js";
+import fs from "node:fs";
+import path from "node:path";
+import { config } from "../src/config.js";
+import { getMany, listPlatforms } from "../src/sources/index.js";
 import { interestOverTime, relatedQueries } from "../src/sources/googleTrends.js";
 import { futureSignals } from "../src/sources/rss.js";
 import { upcomingEvents } from "../src/sources/events.js";
 import { sentiment } from "../src/analysis/sentiment.js";
 import { listTemplates } from "../src/analysis/produce.js";
-
-const PLATFORMS = [
-  "xiaohongshu",
-  "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome",
-  "juejin", "csdn", "v2ex", "thepaper", "qq-news",
-  "hackernews", "github-trending", "producthunt", "reddit-technology",
-];
+import { listSourceReliability } from "../src/store/reliability.js";
+import { historyDepth } from "../src/store/history.js";
+import { updateFromResults } from "../src/store/snapshot.js";
 
 function fmt(ms: number): string {
   return `${ms}ms`;
 }
 
 async function main(): Promise<void> {
+  const generatedAt = new Date().toISOString();
   const rows: { name: string; status: string; detail: string }[] = [];
+  const platforms = listPlatforms();
+  const names = platforms.map((p) => p.platform);
 
-  // 1) 热榜平台
-  for (const p of PLATFORMS) {
-    const t = Date.now();
-    const r = await getHot(p, 20);
+  // 1) 全注册热榜平台：getMany 内部分批并行；每次结果自动进入 Reliability 观测。
+  // 可用结果同时推进 snapshot/history，使定时 Source Health 也能形成真实的长期趋势证据。
+  const hotStarted = Date.now();
+  const hotResults = await getMany(names, 20);
+  updateFromResults(hotResults);
+  for (const r of hotResults) {
     rows.push({
-      name: p.padEnd(18),
+      name: r.platform.padEnd(24),
       status: r.dataQuality === "ok" ? "OK  " : r.dataQuality === "degraded" ? "DEGR" : "MISS",
-      detail: `${fmt(Date.now() - t).padStart(7)} n=${String(r.items.length).padStart(2)} ${r.note ? "| " + r.note.slice(0, 60) : ""}`,
+      detail: `n=${String(r.items.length).padStart(2)} ${r.note ? "| " + r.note.slice(0, 80) : ""}`,
     });
   }
 
   // 2) Google Trends
   const t1 = Date.now();
   const curve = await interestOverTime(["AI"], "US", "today 3-m");
-  rows.push({ name: "gtrends-curve".padEnd(18), status: curve.dataQuality === "ok" ? "OK  " : "MISS", detail: `${fmt(Date.now() - t1)} points=${curve.points.length} ${curve.note ?? ""}`.slice(0, 90) });
+  rows.push({ name: "gtrends-curve".padEnd(24), status: curve.dataQuality === "ok" ? "OK  " : "MISS", detail: `${fmt(Date.now() - t1)} points=${curve.points.length} ${curve.note ?? ""}`.slice(0, 110) });
 
   const t2 = Date.now();
   const rq = await relatedQueries("AI", "US");
-  rows.push({ name: "gtrends-related".padEnd(18), status: rq.dataQuality === "ok" ? "OK  " : "DEGR", detail: `${fmt(Date.now() - t2)} top=${rq.top.length} rising=${rq.rising.length} ${rq.note ?? ""}`.slice(0, 90) });
+  rows.push({ name: "gtrends-related".padEnd(24), status: rq.dataQuality === "ok" ? "OK  " : "DEGR", detail: `${fmt(Date.now() - t2)} top=${rq.top.length} rising=${rq.rising.length} ${rq.note ?? ""}`.slice(0, 110) });
 
   // 3) 未来信号 RSS
   const t4 = Date.now();
-  const fs = await futureSignals({ limit: 30, perSource: 4 });
-  rows.push({ name: "future-rss".padEnd(18), status: fs.dataQuality === "ok" ? "OK  " : fs.dataQuality === "degraded" ? "DEGR" : "MISS", detail: `${fmt(Date.now() - t4)} articles=${fs.total} sourcesOk=${fs.sourceStatus.filter((s) => s.ok).length}/${fs.sourceStatus.length}` });
+  const future = await futureSignals({ limit: 30, perSource: 4 });
+  rows.push({ name: "future-rss".padEnd(24), status: future.dataQuality === "ok" ? "OK  " : future.dataQuality === "degraded" ? "DEGR" : "MISS", detail: `${fmt(Date.now() - t4)} articles=${future.total} sourcesOk=${future.sourceStatus.filter((s) => s.ok).length}/${future.sourceStatus.length}` });
 
-  // 4) 节点日历
+  // 4) 内置确定性能力 sanity
   const ev = upcomingEvents({ daysAhead: 120 });
-  rows.push({ name: "events-calendar".padEnd(18), status: ev.total ? "OK  " : "MISS", detail: `events=${ev.total}` });
-
-  // 5) 情感引擎
+  rows.push({ name: "events-calendar".padEnd(24), status: ev.total ? "OK  " : "MISS", detail: `events=${ev.total}` });
   const s1 = sentiment("这个产品真的非常好用，强烈推荐！");
   const s2 = sentiment("又翻车了，质量太差，非常失望");
-  const sentOk = s1.label === "positive" && s2.label === "negative";
-  rows.push({ name: "sentiment".padEnd(18), status: sentOk ? "OK  " : "DEGR", detail: `pos=${s1.score} neg=${s2.score}` });
-
-  // 6) 模板库
+  rows.push({ name: "sentiment".padEnd(24), status: s1.label === "positive" && s2.label === "negative" ? "OK  " : "DEGR", detail: `pos=${s1.score} neg=${s2.score}` });
   const tpl = listTemplates();
-  rows.push({ name: "templates".padEnd(18), status: tpl.length ? "OK  " : "MISS", detail: `count=${tpl.length}` });
+  rows.push({ name: "templates".padEnd(24), status: tpl.length ? "OK  " : "MISS", detail: `count=${tpl.length}` });
 
-  console.log("\n================ TrendHub 自检报告 ================");
+  const reliability = listSourceReliability(names);
+  const report = {
+    schemaVersion: 1,
+    generatedAt,
+    runDurationMs: Date.now() - Date.parse(generatedAt),
+    hotFetchDurationMs: Date.now() - hotStarted,
+    registeredPlatformCount: platforms.length,
+    hotSummary: {
+      ok: hotResults.filter((r) => r.dataQuality === "ok").length,
+      degraded: hotResults.filter((r) => r.dataQuality === "degraded").length,
+      missing: hotResults.filter((r) => r.dataQuality === "missing").length,
+    },
+    reliability,
+    history: names.map((platform) => ({ platform, ...historyDepth(platform) })),
+    auxiliary: {
+      googleTrendsCurve: { dataQuality: curve.dataQuality, points: curve.points.length },
+      googleTrendsRelated: { dataQuality: rq.dataQuality, top: rq.top.length, rising: rq.rising.length },
+      futureRss: { dataQuality: future.dataQuality, articles: future.total, sourceOk: future.sourceStatus.filter((s) => s.ok).length, sourceTotal: future.sourceStatus.length },
+      eventCount: ev.total,
+      templateCount: tpl.length,
+    },
+    semantics: "UP/DOWN is observed source availability, not code correctness; auth-required sources may be expected without local credentials.",
+  };
+
+  const healthDir = path.join(config.dataDir, "health");
+  fs.mkdirSync(healthDir, { recursive: true });
+  fs.writeFileSync(path.join(healthDir, "source-health-latest.json"), JSON.stringify(report, null, 2), "utf8");
+
+  console.log("\n================ TrendHub Source Health ================");
   for (const r of rows) console.log(`${r.status} ${r.name} ${r.detail}`);
-  const ok = rows.filter((r) => r.status.trim() === "OK").length;
-  console.log(`\n平台总数(注册表): ${listPlatforms().length}`);
-  console.log(`通过 ${ok}/${rows.length}。MISS 多为当前网络无法访问该平台或上游临时变动，不影响其他工具。`);
-  console.log("==================================================\n");
-  // 主动退出：聚合源可能持有连接池/定时器，避免进程挂住
+  console.log(`\n注册平台: ${platforms.length}; hot OK=${report.hotSummary.ok} DEGRADED=${report.hotSummary.degraded} MISSING=${report.hotSummary.missing}`);
+  console.log("机器可读报告: data/health/source-health-latest.json");
+  console.log("说明：第三方源状态与代码发布门禁分离；缺失/登录要求/限流会被如实量化，不会伪造成功。\n");
   process.exit(0);
 }
 
 main().catch((e) => {
-  console.error("selftest failed:", e);
+  console.error("source-health failed:", e);
   process.exit(1);
 });

@@ -46,7 +46,9 @@ jobs:
         run: npm test
 
       - name: MCP smoke handshake
-        run: npm run smoke
+        run: |
+          npm run smoke | tee /tmp/trendhub-smoke.txt
+          grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
 
   bootstrap-e2e:
     name: Bootstrap E2E / ${{ matrix.os }}
@@ -69,7 +71,7 @@ jobs:
           set -euo pipefail
           bash scripts/bootstrap.sh --global | tee "$RUNNER_TEMP/trendhub-bootstrap.txt"
           grep -F "AI_BOOTSTRAP_OK " "$RUNNER_TEMP/trendhub-bootstrap.txt"
-          grep -F "SMOKE OK tools=16" "$RUNNER_TEMP/trendhub-bootstrap.txt"
+          grep -F "SMOKE OK tools=19" "$RUNNER_TEMP/trendhub-bootstrap.txt"
 
       - name: Force verified portable Node 24 bootstrap (Windows)
         if: runner.os == 'Windows'
@@ -83,4 +85,4 @@ jobs:
           $output | Tee-Object -FilePath "$env:RUNNER_TEMP\trendhub-bootstrap.txt"
           if ($status -ne 0) { exit $status }
           if (-not ($output | Select-String -SimpleMatch "AI_BOOTSTRAP_OK ")) { throw "missing AI_BOOTSTRAP_OK marker" }
-          if (-not ($output | Select-String -SimpleMatch "SMOKE OK tools=16")) { throw "missing 16-tool smoke marker" }
+          if (-not ($output | Select-String -SimpleMatch "SMOKE OK tools=19")) { throw "missing 19-tool smoke marker" }

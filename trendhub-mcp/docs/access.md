@@ -1,18 +1,23 @@
 # 访问与安装说明
 
-TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁保持简单：**拿到仓库链接的人，就能 clone 安装使用**，无需审批、注册、登录或中央服务器。
+TrendHub v1.4.0 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
 
+原 upstream 仓库的**写权限**与公开读取是两件事：当前只有 `@Zachary-1012` 和 owner 明确邀请的 Collaborators 能修改原仓库；公开用户可以读取、clone 和使用，但不会自动获得 upstream 写权限。`main` 还受 PR + Node 22/24 required checks + up-to-date + 禁止 force-push/deletion + no-bypass 的 ruleset 保护。
+
+> 法律许可另看 LICENSE：当前是 MIT，因此公开用户仍可对自己的副本 fork/修改/再分发。仓库写保护不能把 MIT 变成“法律上只能使用”。
+
 ## 给 AI 的安装流程
 
-如果使用者把仓库链接交给一个具备终端执行能力的 AI / Coding Agent，推荐按下面流程完成安装：
+把仓库链接交给具备终端执行能力的 AI / Coding Agent：
 
-1. 检查 `git`。如机器没有 Git，AI 应先通过操作系统可信的软件源或 Git 官方安装方式补齐 Git。
+1. 检查 Git；没有则从可信系统软件源或 Git 官方方式补齐。
 2. clone 公开仓库并进入 `trendhub-mcp`。
-3. 执行平台对应的 Node-free bootstrap。已有 Node >=22 时 bootstrap 会直接复用；没有 Node 或版本过低时，会从 `nodejs.org/dist/latest-v24.x` 获取最新 Node 24 LTS 便携运行时，并使用官方 `SHASUMS256.txt` 校验 SHA-256 后再执行。
+3. 执行对应平台 Node-free bootstrap。已有 Node >=22 时复用；没有/过旧时，从 `nodejs.org/dist/latest-v24.x` 下载 Node 24 LTS 便携运行时，并用官方 `SHASUMS256.txt` 做 SHA-256 校验。
 4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
-5. 成功后 bootstrap 最后一行固定输出 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取 JSON 中的 `node` 和 `launcher` 绝对路径，并按 `command=<node>`、`args=[<launcher>]` 配置 MCP；这样系统 PATH 里即使没有 Node，也能稳定启动。
+5. 必须看到 `SMOKE OK tools=19`。
+6. bootstrap 最后一行输出 `AI_BOOTSTRAP_OK {...}`；AI 必须用 JSON 中 `node` 与 `launcher` 的绝对路径配置 MCP。
 
 macOS / Linux：
 
@@ -30,151 +35,113 @@ cd Zachary-Skill\trendhub-mcp
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
 ```
 
-bootstrap 的 Node 24 运行时只放在用户缓存目录：
-
-- Windows：`%LOCALAPPDATA%\TrendHub\node24\...`
-- macOS / Linux：`${XDG_CACHE_HOME:-~/.cache}/trendhub/node24/...`
-
-它不要求管理员权限，不卸载或覆盖系统 Node；如果机器本来已有 Node >=22，就不会下载 Node。
-
-已有 Node >=22 的机器仍可直接走原安装入口：
+便携 Node 默认只放用户缓存目录，不要求管理员权限，也不卸载/覆盖系统 Node。已有 Node >=22 的机器可直接：
 
 ```bash
 node scripts/setup.mjs
 npm run smoke
 ```
 
-成功标志固定为：
+成功标志：
 
 ```text
-SMOKE OK tools=16
-```
-
-bootstrap 完成时还会输出类似：
-
-```text
+SMOKE OK tools=19
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
-Node-free 安装时，MCP stdio 必须使用这两个绝对路径。只有确认系统 Node 全局可用时，才可简写为：
+Node-free 安装时 MCP stdio 必须优先使用这两个绝对路径。只有确认系统 Node 全局可用时才可简写：
 
 ```text
 command: node
 args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 ```
 
-机器可读安装信息也写在 `manifest.json -> aiInstall`。
+机器可读安装合同见 `manifest.json -> aiInstall`。
 
 ## 人工安装
 
-如果已经有 Node >=22：
+已有 Node >=22：
 
 ```bash
-# 1) 克隆公开仓库
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
-
-# 2) 进入插件目录
 cd Zachary-Skill/trendhub-mcp
-
-# 3) 一键安装
 node scripts/setup.mjs
-# 国内网络若官方源慢： node scripts/setup.mjs --cn
-# 海外网络：           node scripts/setup.mjs --global
+# 国内网络慢： node scripts/setup.mjs --cn
+# 海外：       node scripts/setup.mjs --global
 ```
 
-如果没有 Node 或 Node <22，不需要先手工安装 Node，直接运行本页上方对应平台的 bootstrap 即可。
+安装严格使用已提交 `package-lock.json` + `npm ci`，再 build + offline MCP smoke。
 
-安装脚本严格使用已提交的 `package-lock.json` 与 `npm ci`，随后构建并执行不联网的 MCP smoke。看到 `SMOKE OK tools=16` 即代表服务就绪。
-
-外部平台健康检查与安装门禁分离：
+## 安装后验证与质量边界
 
 ```bash
-npm run source:health
+npm run smoke              # MCP 合同：必须 SMOKE OK tools=19
+npm test                   # deterministic offline release tests
+npm run source:health      # 真实第三方数据源状态；不属于 release gate
+npm run quality:diagnostic # 主动、本地、匿名化质量诊断；不自动上传
 ```
 
-旧命令 `npm run selftest` 仍保留兼容，但等价于 source health；它会真实访问第三方平台，因此**不属于安装、PR CI 或 release gate**。
+`Source Health` 与 CI 故意分离：第三方平台的登录要求、限流、风控、网络或 schema drift 会被标记为 `AUTH_REQUIRED / RATE_LIMITED / DOWN / DEGRADED`，但不会把外部平台暂时故障伪装成 TrendHub 代码失败。
+
+## v1.4.0 新的专业能力
+
+TrendHub 在本地积累有界历史与 Source Reliability 观测：
+
+- `source_reliability`：24h/7d/30d ok/usable rate、P50/P95、连续失败、schema drift、UP/DEGRADED/DOWN/AUTH_REQUIRED/RATE_LIMITED；
+- `trend_intelligence`：生命周期、rank velocity、persistence、cross-platform diffusion、source reliability、history sufficiency、deterministic confidence；
+- `benchmark_trend_lead`：使用外部 ground-truth `reference_time` 计算是否提前 24h/72h 发现趋势。
+
+指标是确定性规则，不是预测概率。历史不足返回 `insufficient_history`。完整方法见 `docs/intelligence-methodology.md`。
 
 ## 更新：只跟随 Stable Release
 
-推荐客户端入口为 `scripts/launcher.mjs`。每次 AI 客户端启动时：
+推荐入口 `scripts/launcher.mjs`：
 
 1. 当前已安装版本立即启动；
 2. 后台读取 GitHub 最新正式 Stable Release；
-3. 只有更高的正式 `vX.Y.Z` 才执行更新；
+3. 只有更高正式 `vX.Y.Z` 才更新；
 4. 不跟随 `main` HEAD；
-5. 检测到已跟踪文件的本地修改时跳过；
-6. 安装/构建失败时尽力回滚到更新前版本。
+5. tracked 文件有本地修改时跳过；
+6. 安装/构建失败时尽力回滚。
 
-设置 `TRENTHUB_AUTOUPDATE=0` 可完全关闭自动更新。手动升级：
+关闭自动更新：`TRENTHUB_AUTOUPDATE=0`。手动升级：
 
 ```bash
-cd Zachary-Skill/trendhub-mcp
 node scripts/upgrade.mjs
 ```
 
-ZIP 安装无法自动切换 GitHub release tag，建议长期使用 `git clone` 安装。
-
 ## Release 门禁
 
-正式 Stable Release 不直接从开发分支发布。`main` 必须先通过：
+Stable Release 必须经过：
 
-- Node 22.x / 24.x；
-- `npm ci` 锁定安装；
-- TypeScript build；
-- deterministic `npm test`；
-- MCP smoke handshake。
+- PR 到受保护的 `main`；
+- Node 22.x / 24.x `npm ci + build + deterministic tests + MCP smoke`；
+- Windows/macOS/Linux Node-free bootstrap E2E；
+- 合并后的 main CI；
+- Stable Release 重新执行 release gate；
+- Public Install E2E 从公开 URL fresh clone，验证 Stable tag、Node-free bootstrap 与 `SMOKE OK tools=19`。
 
-CI 全绿后，Release 工作流才生成正式 tag、npm `.tgz` 与 `SHA256SUMS.txt`。第三方平台的实时可达性由独立 `Source Health` 工作流观察，不阻断代码发布。
+## 小红书增强能力（可选）
 
-## 可选：配置小红书登录态
-
-游客模式零配置即可使用小红书热门推荐笔记流与派生词。需要官方热搜词榜 / 关键词搜索时，再设置本机环境变量 `XHS_COOKIE`（需包含 `a1` 与 `web_session`）。Cookie 只应存在于使用者本机，**禁止提交到仓库**。
+游客模式零配置可用热门推荐笔记流与派生词。官方热搜词榜/关键词搜索需要本机环境变量 `XHS_COOKIE`（含 `a1` 与 `web_session`）。Cookie 只应存在使用者本机，**禁止提交仓库或质量诊断**。
 
 ## HTTP 网络边界
 
-### 本机模式（默认）
+默认 `127.0.0.1:8333`，loopback 无需额外 Token。
 
-默认监听：
-
-```text
-127.0.0.1:8333
-```
-
-本机 loopback 模式无需额外 Token，保持安装即用。
-
-### 局域网 / Tailscale / 其他非 loopback 模式
-
-只要 `TRENTHUB_HOST` 不是 loopback，就**必须**同时设置 `TRENTHUB_HTTP_TOKEN`，否则 TrendHub 会拒绝启动。
-
-Windows PowerShell 示例：
-
-```powershell
-$env:TRENTHUB_HOST='0.0.0.0'
-$env:TRENTHUB_HTTP_TOKEN='请使用足够长的随机Token'
-npm run start:http
-```
-
-macOS / Linux 示例：
-
-```bash
-TRENTHUB_HOST=0.0.0.0 \
-TRENTHUB_HTTP_TOKEN='请使用足够长的随机Token' \
-npm run start:http
-```
-
-远程 MCP 客户端需要发送：
+任何非 loopback 监听必须同时设置 `TRENTHUB_HTTP_TOKEN`，否则 TrendHub 拒绝启动。远程 `/mcp` 与 `/api/*` 请求必须：
 
 ```text
 Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
 ```
 
-鉴权保护 `/mcp` 与 `/api/*`。即使启用 Token，也建议只放在受信任局域网或 Tailscale 等私有组网，不直接将 8333 端口暴露到公开互联网。
+即使启用 Token，也建议只用于受信任局域网/Tailscale 等私有组网，不直接暴露 8333 到公开互联网。
 
-## 安全与数据边界（准确口径）
+## 数据与隐私边界
 
-- **无需注册 / 登录**：TrendHub 没有独立账号体系，公开仓库本身就是分发入口。
-- **无模型 Key**：TrendHub 本身不需要、也不存储任何大模型 API Key；调用方 AI 使用自己的模型能力。
-- **无第三方遥测**：TrendHub 不做使用统计、埋点或行为上报。
-- **无 TrendHub 中央数据回传**：没有中央 TrendHub 服务接收使用者数据。
-- **不是“完全无出站网络”**：实时取数需要请求目标公开数据源；安装访问 npm registry/npmmirror；Node bootstrap 访问 `nodejs.org`；更新访问 GitHub Stable Release。
-- 仓库公开后，任何人都可以查看 / fork；MIT 许可允许商用与修改。不要把 `XHS_COOKIE`、账号凭据、公司内部资料或其他敏感信息提交到仓库。
+- 无独立账号体系；无需注册/登录。
+- TrendHub 本身无模型 API Key。
+- 正常运行无第三方 telemetry、无 TrendHub 中央数据回传。
+- `quality:diagnostic` 仅用户主动执行，本地生成 JSON，不自动上传；排除 hostname、username、绝对路径、Cookie、查询词、内容正文、IP、账号标识。
+- 实时取数仍需要访问目标公开数据源；安装会访问 npm/Node 官方源；更新访问 GitHub Stable Release。
+- 本地 reliability/history/health/diagnostic 目录均在 `.gitignore` 中，默认不会提交到公共仓库。

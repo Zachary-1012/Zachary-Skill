@@ -3,10 +3,14 @@ name: Source Health
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 2 * * *"
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: read
+
+concurrency:
+  group: trendhub-source-health
+  cancel-in-progress: false
 
 jobs:
   source-health:
@@ -24,17 +28,49 @@ jobs:
           cache: npm
           cache-dependency-path: trendhub-mcp/package-lock.json
 
+      - name: Restore rolling reliability and trend state
+        id: restore-source-state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            trendhub-mcp/data/reliability
+            trendhub-mcp/data/history
+            trendhub-mcp/data/snapshots
+          key: trendhub-source-state-${{ github.run_id }}
+          restore-keys: |
+            trendhub-source-state-
+
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
       - name: Build
         run: npm run build
 
-      - name: Check live third-party sources
+      - name: Check live third-party sources and advance evidence history
         run: npm run source:health
+
+      - name: Save rolling reliability and trend state
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            trendhub-mcp/data/reliability
+            trendhub-mcp/data/history
+            trendhub-mcp/data/snapshots
+          key: trendhub-source-state-${{ github.run_id }}
+
+      - name: Upload quantified health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-health-${{ github.run_id }}
+          path: trendhub-mcp/data/health/source-health-latest.json
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Explain scope
         if: always()
         run: |
-          echo "Source Health observes third-party availability and data quality."
-          echo "It is intentionally separate from PR CI and the Stable Release gate."
+          echo "Source Health runs every 6h, restores prior non-sensitive operational state, and advances reliability/history evidence."
+          echo "It observes third-party availability, latency and data quality; it is intentionally separate from PR CI and the Stable Release gate."
+          echo "Cached state contains public trend evidence and operational metadata only; no cookies, model prompts or user telemetry are persisted."
