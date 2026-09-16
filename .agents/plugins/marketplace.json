@@ -1,0 +1,16 @@
+{
+  "name": "zachary-skills",
+  "interface": {
+    "displayName": "Zachary Skills"
+  },
+  "plugins": [
+    {
+      "name": "trendhub",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Zachary-1012/Zachary-Skill.git",
+        "ref": "main"
+      }
+    }
+  ]
+}
