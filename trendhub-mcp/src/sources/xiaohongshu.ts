@@ -1,304 +1,229 @@
 /**
- * Xiaohongshu (小红书) hot-trending source.
+ * 小红书（Xiaohongshu / RED）自研采集源。
  *
- * Capability matrix (verified live):
- *   - Guest (zero config): homefeed hot recommendation notes (homefeed_recommend).
- *   - With XHS_COOKIE (a1 + web_session): official search hotlist + keyword search.
- *
- * Data red line: when a capability needs a cookie and none is present, the
- * platform is returned with dataQuality "missing" and setup guidance — never
- * fabricated. liked_count is kept as the platform's own hotText ("4.1万");
- * the numeric `hot` is only a within-platform sort hint.
+ * 数据口径（务必随结果传达，禁止伪造）：
+ *  - platform=xiaohongshu        ：官方首页「热门推荐流」笔记，游客零登录可取，含标题/作者/封面/点赞展示值；
+ *                                  这是平台推荐序的热门内容，不是官方「热搜词榜」。
+ *  - platform=xiaohongshu-hotlist：官方「热搜词榜」，仅登录态开放，需环境变量 XHS_COOKIE；
+ *                                  未配置时显式 missing 并给出配置说明，绝不返回编造词榜。
+ *  - 关键词爆款笔记搜索（search/notes，按热度排序）同样仅登录态开放，供 analyze_topic 增强。
+ *  - liked_count 为平台展示近似文案（"4.1万"/"10万+"），hotText 原样保留；hot 为派生数值，仅同平台内可比。
  */
+import type { HotItem, HotResult } from "../util/schema.js";
+import { missingResult, nowIso } from "../util/schema.js";
+import { TtlCache } from "../util/http.js";
+import { config } from "../config.js";
+import { xhsClient, generateSearchId, XHS_HOME } from "./xhs/guest.js";
 
-import type { HotItem, PlatformResult, SourceContext } from "../util/schema.js";
-import { xhsClient, generateSearchId, XHS_EDITH, USER_AGENT } from "./xhs/guest.js";
-import { extractXhsTopics } from "../analysis/xhsTopics.js";
+const cache = new TtlCache<HotResult>(config.cacheTtlSec);
 
 export const XHS_PLATFORM = "xiaohongshu";
 export const XHS_HOTLIST_PLATFORM = "xiaohongshu-hotlist";
+export const XHS_LABEL = "小红书热门笔记";
+export const XHS_HOTLIST_LABEL = "小红书热搜词榜";
+export const XHS_CATEGORY = "social";
 
-interface XhsNoteCard {
-  display_title?: string;
-  type?: string;
-  note_id?: string;
-  xsec_token?: string;
-  cover?: { url?: string; url_default?: string; urlDefault?: string };
-  user?: { nick_name?: string; nickname?: string; user_id?: string };
-  interact_info?: { liked_count?: string; likedCount?: string };
-}
+const GUEST_NOTE =
+  "游客模式：小红书官方首页「热门推荐流」（非官方热搜词榜）；liked_count 为平台展示近似值（如 4.1万 / 10万+，非精确整数）。配置环境变量 XHS_COOKIE（含 a1 与 web_session 的网页 Cookie）可额外启用官方热搜词榜与关键词爆款搜索。";
+const LOGIN_NOTE = "登录态（XHS_COOKIE）：小红书首页热门推荐流。";
+const HOTLIST_MISSING_NOTE =
+  "官方热搜词榜仅对登录态开放：请配置环境变量 XHS_COOKIE（小红书网页端完整 Cookie，需同时含 a1 与 web_session）。零登录可改用 platform=xiaohongshu 的「热门笔记」。";
 
-function noteUrl(id?: string, token?: string): string | undefined {
-  if (!id) return undefined;
-  const tok = token ? `?xsec_token=${encodeURIComponent(token)}&xsec_source=pc_feed` : "";
-  return `https://www.xiaohongshu.com/explore/${id}${tok}`;
-}
-
-function coverUrl(cover?: XhsNoteCard["cover"]): string | undefined {
-  if (!cover) return undefined;
-  return cover.url || cover.url_default || cover.urlDefault || undefined;
-}
-
-/** Parse "4.1万" / "10万+" / "1234" into a comparable number (sort hint only). */
-export function parseCount(text?: string): number | null {
-  if (!text) return null;
-  const m = String(text).trim().match(/([0-9]+(?:\.[0-9]+)?)/);
+/** 解析平台展示热度文案："757"→757，"4.1万"→41000，"10万+"→100000，"1.2亿"→120000000。无法解析为 null。 */
+export function parseCount(text: string | null | undefined): number | null {
+  if (text == null) return null;
+  const m = String(text).replace(/,/g, "").match(/([\d.]+)\s*(万|亿|w|W)?/);
   if (!m) return null;
-  let n = parseFloat(m[1]);
-  if (/万/.test(text)) n *= 10000;
-  if (/亿/.test(text)) n *= 100000000;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n)) return null;
+  const unit = m[2];
+  if (unit === "万" || unit === "w" || unit === "W") return Math.round(n * 1e4);
+  if (unit === "亿") return Math.round(n * 1e8);
   return Math.round(n);
 }
 
-function mapNote(card: XhsNoteCard, rank: number): HotItem {
-  const id = card.note_id;
-  const token = card.xsec_token;
-  const likedText = card.interact_info?.liked_count ?? card.interact_info?.likedCount;
-  const hot = parseCount(likedText);
+function pickCover(cover: any): string | null {
+  if (!cover || typeof cover !== "object") return null;
+  const u = cover.urlDefault || cover.url || cover.info_list?.[0]?.url || null;
+  return typeof u === "string" && u.startsWith("http") ? u : null;
+}
+
+function noteUrl(id: string, token: string | null): string | null {
+  if (!id) return null;
+  const q = token ? `?xsec_token=${encodeURIComponent(token)}&xsec_source=pc_feed` : "";
+  return `${XHS_HOME}/explore/${id}${q}`;
+}
+
+function mapNote(raw: any, rank: number): HotItem | null {
+  const nc = raw?.note_card ?? raw ?? {};
+  const id = String(raw?.id ?? nc.note_id ?? nc.id ?? "").trim();
+  const title = String(nc.display_title ?? nc.title ?? "").trim();
+  if (!title) return null;
+  const interact = nc.interact_info ?? {};
+  const likedText = interact.liked_count != null ? String(interact.liked_count) : null;
+  const token = raw?.xsec_token ?? nc.xsec_token ?? null;
   return {
-    id: id ? `xhs-note-${id}` : `xhs-note-${rank}`,
-    title: card.display_title || "(无标题笔记)",
     rank,
-    hot: hot ?? undefined,
-    hotText: likedText ? `${likedText} 赞` : undefined,
+    title,
     url: noteUrl(id, token),
-    imageUrl: coverUrl(card.cover),
-    kind: card.type === "video" ? "video" : "note",
-    author: card.user?.nick_name || card.user?.nickname || undefined,
-    source: XHS_PLATFORM,
-    capturedAt: new Date().toISOString(),
+    hot: parseCount(likedText),
+    hotText: likedText,
+    desc: null,
+    author: nc.user?.nick_name ?? nc.user?.nickname ?? null,
+    externalId: id || null,
+    imageUrl: pickCover(nc.cover),
+    kind: nc.type ?? null,
   };
 }
 
-/**
- * Guest-accessible homefeed hot recommendation notes.
- * Category is fixed to homefeed_recommend (the only guest-readable feed).
- */
-export async function fetchXiaohongshu(ctx: SourceContext): Promise<PlatformResult> {
-  const now = new Date().toISOString();
-  const client = xhsClient();
-  const loggedIn = client.hasLoginCookie();
-  const num = Math.min(Math.max(ctx.limit || 30, 1), 40);
+/** 小红书首页热门推荐流（游客零登录可用）。 */
+export async function fetchXiaohongshu(limit: number): Promise<HotResult> {
+  const key = `xhs:feed:${limit}:${xhsClient.hasLoginCookie() ? "login" : "guest"}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
 
-  const body: Record<string, unknown> = {
+  const num = Math.min(Math.max(limit, 1), 40);
+  const body = {
     cursor_score: "",
-    extract_flags: "",
-    homefeed_feed_type: "normal",
-    category: "homefeed_recommend",
     num,
     refresh_type: 1,
     note_index: 0,
+    unread_begin_note_id: "",
+    unread_end_note_id: "",
+    unread_note_count: 0,
+    category: "homefeed_recommend",
+    search_key: "",
     need_num: num,
-    search_id: generateSearchId(),
-    query_type: 0,
-    image_formats: ["jpg", "webp", "avif"],
     image_scenes: ["FD_PRV_WEBP", "FD_WM_WEBP"],
-    supported_card_types: ["video", "normal", "live"],
-    need_filter_image: false,
-    need_num_before_note_index: 0,
-    extra: { need_body_cookie_grey: 0, is_video_feed: 0 },
   };
 
   try {
-    const json: any = await client.request({
-      method: "POST",
-      url: `${XHS_EDITH}/api/sns/web/v1/homefeed`,
-      body,
-    });
-    if (json.code !== 0 || !json.data) {
-      return {
-        platform: XHS_PLATFORM,
-        category: "social",
-        items: [],
-        updatedAt: now,
-        capturedAt: now,
-        dataQuality: "degraded",
-        sourceUrl: "https://www.xiaohongshu.com/explore",
-        error: `homefeed code=${json.code} msg=${json.msg || json.sub_msg || ""}`,
-      };
+    const { status, json } = await xhsClient.request("POST", "/api/sns/web/v1/homefeed", { body });
+    if (!json || json.success !== true) {
+      const res = missingResult(
+        XHS_PLATFORM,
+        XHS_LABEL,
+        XHS_CATEGORY,
+        `小红书热门流获取失败（HTTP ${status}, code=${json?.code ?? "?"}, msg=${json?.msg ?? "无响应"}）。`
+      );
+      return res;
     }
-    const rawItems: any[] = json.data.items || [];
-    const items: HotItem[] = [];
-    let rank = 0;
-    for (const it of rawItems) {
-      const card: XhsNoteCard = it.note_card || it;
-      if (!card || !card.display_title) continue;
-      if (card.note_id) card.note_id = card.note_id;
-      card.xsec_token = it.xsec_token || card.xsec_token;
-      items.push(mapNote(card, ++rank));
-    }
-    const topics = extractXhsTopics(items.map((i) => i.title), 20);
-    return {
+    const rows: any[] = json?.data?.items ?? [];
+    const items: HotItem[] = rows
+      .map((r, i) => mapNote(r, i + 1))
+      .filter((x): x is HotItem => x !== null)
+      .slice(0, limit);
+
+    const login = xhsClient.hasLoginCookie();
+    const res: HotResult = {
       platform: XHS_PLATFORM,
-      category: "social",
-      items: items.slice(0, ctx.limit || items.length),
-      updatedAt: now,
-      capturedAt: now,
-      dataQuality: loggedIn ? "ok" : "degraded",
-      sourceUrl: "https://www.xiaohongshu.com/explore",
-      note: loggedIn
-        ? `已登录态热门推荐流 ${items.length} 条；附派生话题词（非官方词榜）。`
-        : `游客模式：首页热门推荐流 ${items.length} 条（零配置可得）。官方热搜词榜/关键词搜索需配置 XHS_COOKIE。`,
-      derived: { topics: topics.topics, topicNote: topics.note, sampleSize: topics.sampleSize },
-    } as PlatformResult;
-  } catch (err: any) {
-    return {
-      platform: XHS_PLATFORM,
-      category: "social",
-      items: [],
-      updatedAt: now,
-      capturedAt: now,
-      dataQuality: "degraded",
-      sourceUrl: "https://www.xiaohongshu.com/explore",
-      error: `小红书热门流获取失败: ${err?.message || err}`,
-    };
-  }
-}
-
-/**
- * Official search hotlist. Requires XHS_COOKIE; guests receive -104.
- * Parsed leniently across known response shapes; unknown shapes → degraded.
- */
-export async function fetchXiaohongshuHotlist(ctx: SourceContext): Promise<PlatformResult> {
-  const now = new Date().toISOString();
-  const client = xhsClient();
-  const sourceUrl = "https://www.xiaohongshu.com/search_result?keyword=%E7%83%AD%E6%90%9C";
-  const setupNote =
-    "小红书官方热搜词榜需登录态：请在环境变量配置 XHS_COOKIE（需含 a1 与 web_session，从浏览器登录后的 Cookie 复制）。";
-
-  if (!client.hasLoginCookie()) {
-    return {
-      platform: XHS_HOTLIST_PLATFORM,
-      category: "social",
-      items: [],
-      updatedAt: now,
-      capturedAt: now,
-      dataQuality: "missing",
-      sourceUrl,
-      note: setupNote,
-    };
-  }
-
-  const num = Math.min(Math.max(ctx.limit || 50, 1), 100);
-  try {
-    const json: any = await client.request({
-      method: "GET",
-      url: `${XHS_EDITH}/api/sns/web/v1/search/hotlist`,
-      params: { num },
-    });
-    if (json.code !== 0 || !json.data) {
-      return {
-        platform: XHS_HOTLIST_PLATFORM,
-        category: "social",
-        items: [],
-        updatedAt: now,
-        capturedAt: now,
-        dataQuality: "degraded",
-        sourceUrl,
-        error: `hotlist code=${json.code} msg=${json.msg || json.sub_msg || ""} dataKeys=${json.data ? Object.keys(json.data).join(",") : "none"}`,
-        note: setupNote,
-      };
-    }
-    const list: any[] =
-      json.data.items || json.data.hot_list || json.data.hotlist ||
-      json.data.list || json.data.word_list || [];
-    const items: HotItem[] = list.slice(0, ctx.limit || list.length).map((w: any, i: number) => {
-      const word = w.word || w.title || w.name || w.query || w.note?.word || "";
-      const score = w.score ?? w.num ?? w.view_count ?? w.hot_value ?? w.favorite_count;
-      return {
-        id: `xhs-hot-${i + 1}`,
-        title: String(word),
-        rank: i + 1,
-        hot: typeof score === "number" ? score : undefined,
-        hotText: typeof score === "string" ? score : undefined,
-        url: `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(String(word))}`,
-        source: XHS_HOTLIST_PLATFORM,
-        capturedAt: now,
-      };
-    });
-    return {
-      platform: XHS_HOTLIST_PLATFORM,
-      category: "social",
-      items,
-      updatedAt: now,
-      capturedAt: now,
+      label: XHS_LABEL,
+      category: XHS_CATEGORY,
+      capturedAt: nowIso(),
+      sourceUpdatedAt: null,
       dataQuality: items.length ? "ok" : "degraded",
-      sourceUrl,
-      note: items.length
-        ? `小红书官方热搜词榜 ${items.length} 条（登录态）。`
-        : `热搜词榜返回结构未识别，dataKeys=${Object.keys(json.data).join(",")}`,
+      items,
+      note: items.length ? (login ? LOGIN_NOTE : GUEST_NOTE) : "小红书热门流未返回笔记（可能触发游客风控，稍后重试或配置 XHS_COOKIE）。",
     };
-  } catch (err: any) {
-    return {
+    cache.set(key, res);
+    return res;
+  } catch (e) {
+    return missingResult(XHS_PLATFORM, XHS_LABEL, XHS_CATEGORY, `小红书热门流请求失败：${(e as Error).message}`);
+  }
+}
+
+/** 小红书官方热搜词榜（仅登录态；游客显式 missing）。 */
+export async function fetchXiaohongshuHotlist(limit: number): Promise<HotResult> {
+  if (!xhsClient.hasLoginCookie()) {
+    return missingResult(XHS_HOTLIST_PLATFORM, XHS_HOTLIST_LABEL, XHS_CATEGORY, HOTLIST_MISSING_NOTE);
+  }
+  const key = `xhs:hotlist:${limit}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  try {
+    const { status, json } = await xhsClient.request("GET", "/api/sns/web/v1/search/hotlist", {
+      params: { num: limit },
+    });
+    if (!json || json.success !== true) {
+      return missingResult(
+        XHS_HOTLIST_PLATFORM,
+        XHS_HOTLIST_LABEL,
+        XHS_CATEGORY,
+        `热搜词榜获取失败（HTTP ${status}, code=${json?.code ?? "?"}, msg=${json?.msg ?? "无响应"}）；Cookie 可能已过期或该账号无权限。`
+      );
+    }
+    const d = json.data;
+    const rows: any[] = d?.items ?? d?.hot_list ?? d?.list ?? d?.word_list ?? (Array.isArray(d) ? d : []);
+    const items: HotItem[] = rows
+      .map((r, i) => {
+        const word = String(r.word ?? r.title ?? r.name ?? r.query ?? r.note ?? "").trim();
+        if (!word) return null;
+        const score = Number(r.score ?? r.num ?? r.view_count ?? r.hot_value ?? r.value ?? NaN);
+        return {
+          rank: typeof r.rank === "number" ? r.rank : i + 1,
+          title: word,
+          url: `${XHS_HOME}/search_result?keyword=${encodeURIComponent(word)}&source=web_explore_feed`,
+          hot: Number.isFinite(score) ? score : null,
+          hotText: r.display_word ?? r.score_text ?? (Number.isFinite(score) ? String(score) : null),
+          desc: r.desc ?? r.reason ?? null,
+          author: null,
+          externalId: r.id != null ? String(r.id) : null,
+          imageUrl: null,
+          kind: null,
+        } as HotItem;
+      })
+      .filter((x): x is HotItem => x !== null)
+      .slice(0, limit);
+
+    const res: HotResult = {
       platform: XHS_HOTLIST_PLATFORM,
-      category: "social",
-      items: [],
-      updatedAt: now,
-      capturedAt: now,
-      dataQuality: "degraded",
-      sourceUrl,
-      error: `小红书热搜词榜获取失败: ${err?.message || err}`,
-      note: setupNote,
+      label: XHS_HOTLIST_LABEL,
+      category: XHS_CATEGORY,
+      capturedAt: nowIso(),
+      sourceUpdatedAt: null,
+      dataQuality: items.length ? "ok" : "degraded",
+      items,
+      note: items.length
+        ? "登录态（XHS_COOKIE）：小红书官方热搜词榜。"
+        : `热搜词榜响应结构未识别（data keys: ${d && typeof d === "object" ? Object.keys(d).join(",") : typeof d}），请反馈以适配。`,
     };
+    cache.set(key, res);
+    return res;
+  } catch (e) {
+    return missingResult(XHS_HOTLIST_PLATFORM, XHS_HOTLIST_LABEL, XHS_CATEGORY, `热搜词榜请求失败：${(e as Error).message}`);
   }
 }
 
 /**
- * Keyword note search. Requires XHS_COOKIE (guests get -104).
- * Used by analyze_topic / content briefs for logged-in users.
+ * 关键词爆款笔记搜索（按热度排序），仅登录态可用。
+ * 供 analyze_topic / 选题增强；游客或失败时返回 null（调用方静默跳过，不造假）。
  */
-export async function searchXhsNotes(keyword: string, opts: {
-  page?: number;
-  pageSize?: number;
-  sort?: "general" | "time_descending" | "popularity_descending";
-} = {}): Promise<{ items: HotItem[]; dataQuality: string; note?: string; error?: string }> {
-  const now = new Date().toISOString();
-  const client = xhsClient();
-  if (!client.hasLoginCookie()) {
-    return {
-      items: [],
-      dataQuality: "missing",
-      note: "关键词搜索需登录态：请配置 XHS_COOKIE（含 a1 与 web_session）。",
-    };
-  }
-  const pageSize = Math.min(opts.pageSize || 20, 20);
-  const body: Record<string, unknown> = {
-    keyword,
-    page: opts.page || 1,
-    page_size: pageSize,
-    search_id: generateSearchId(),
-    sort: opts.sort || "general",
-    note_type: 0,
-    ext_flags: 0,
-    image_formats: ["jpg", "webp", "avif"],
-    image_scenes: ["FD_PRV_WEBP", "FD_WM_WEBP"],
-  };
+export async function searchXhsNotes(
+  keyword: string,
+  limit = 20,
+  sort: "general" | "popularity_descending" | "time_descending" = "popularity_descending"
+): Promise<HotItem[] | null> {
+  if (!keyword.trim() || !xhsClient.hasLoginCookie()) return null;
   try {
-    const json: any = await client.request({
-      method: "POST",
-      url: `${XHS_EDITH}/api/sns/web/v1/search/notes`,
-      body,
+    const pageSize = Math.min(Math.max(limit, 1), 20);
+    const { json } = await xhsClient.request("POST", "/api/sns/web/v1/search/notes", {
+      body: {
+        keyword,
+        page: 1,
+        page_size: pageSize,
+        search_id: generateSearchId(),
+        sort,
+        note_type: 0,
+      },
     });
-    if (json.code !== 0 || !json.data) {
-      return {
-        items: [],
-        dataQuality: "degraded",
-        error: `search code=${json.code} msg=${json.msg || json.sub_msg || ""}`,
-      };
-    }
-    const rawItems: any[] = json.data.items || [];
-    const items: HotItem[] = [];
-    let rank = 0;
-    for (const it of rawItems) {
-      const card: XhsNoteCard = it.note_card || it;
-      if (!card || !card.display_title) continue;
-      card.xsec_token = it.xsec_token || card.xsec_token;
-      items.push(mapNote(card, ++rank));
-    }
-    return { items, dataQuality: "ok", note: `关键词「${keyword}」搜索到 ${items.length} 条笔记（登录态）。` };
-  } catch (err: any) {
-    return { items: [], dataQuality: "degraded", error: `搜索失败: ${err?.message || err}` };
+    if (!json || json.success !== true) return null;
+    const rows: any[] = json?.data?.items ?? json?.data?.notes ?? [];
+    return rows
+      .map((r, i) => mapNote(r, i + 1))
+      .filter((x): x is HotItem => x !== null)
+      .slice(0, limit);
+  } catch {
+    return null;
   }
 }
-
-export const xhsUserAgent = USER_AGENT;
