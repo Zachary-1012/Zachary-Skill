@@ -51,8 +51,7 @@ VIEWS.overlap = function (content, params) {
       <input class="input" id="f-kw" placeholder="关键词，如 AI眼镜 / 英伟达" value="${esc(params.keyword || "")}">
       <input class="input" id="f-plats" placeholder="可选，限定平台，逗号分隔" style="flex:0 1 280px" value="${esc(params.platforms || "")}">
       <button class="btn primary" id="btn-go">分析共振</button>
-    </div>
-    <div id="out">${empty("输入关键词后开始分析")}</div>`;
+    </div><div id="out">${empty("输入关键词后开始分析")}</div>`;
   const run = async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -87,11 +86,9 @@ VIEWS.clusters = function (content) {
     <p class="lead">无需关键词，基于标题相似度自动聚类当前在多个平台共振的话题。规则聚类可能合并/遗漏近义话题，主题归纳请交给 AI 复核。</p>
     <div class="controls">
       <label class="field">至少在 N 个平台出现<select id="f-min">
-        ${[2, 3, 4, 5].map((n) => `<option value="${n}">${n}</option>`).join("")}
-      </select></label>
+        ${[2, 3, 4, 5].map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label>
       <button class="btn primary" id="btn-go">发现共振话题</button>
-    </div>
-    <div id="out">${empty("点击按钮开始（需拉取多个平台，可能耗时数十秒）")}</div>`;
+    </div><div id="out">${empty("点击按钮开始（需拉取多个平台，可能耗时数十秒）")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     $("#out").innerHTML = loading();
     try {
