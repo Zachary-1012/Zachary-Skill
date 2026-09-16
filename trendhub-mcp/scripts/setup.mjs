@@ -1,18 +1,27 @@
 /**
  * TrendHub 一键安装 / 快速接入脚本（跨平台，纯 Node，零外部依赖）。
  *
- *   node scripts/setup.mjs               # 自动选最快 npm 源：npm ci -> 构建 -> 数秒握手验证
+ *   node scripts/setup.mjs               # 默认 public-stable：main clone 会钉到最新 Stable Release
  *   node scripts/setup.mjs --cn          # 强制国内 npmmirror 镜像
  *   node scripts/setup.mjs --global      # 强制官方源 registry.npmjs.org
  *   node scripts/setup.mjs --registry=URL
  *   node scripts/setup.mjs --no-smoke    # 跳过最后的握手验证
  *
- * 安装严格使用 package-lock.json + npm ci，确保公开分发时依赖可重复。
- * 全量 source health 会真实请求第三方平台，不属于安装/发布门禁。
+ * 开发者若明确需要安装当前未发布 main，可设置 TRENTHUB_INSTALL_CHANNEL=dev。
+ * 正式安装严格使用 package-lock.json + npm ci，确保公开分发依赖可重复。
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT, exec, selectRegistry, npmInstall, npmBuild } from "./lib-trendhub.mjs";
+import {
+  ROOT,
+  exec,
+  selectRegistry,
+  npmInstall,
+  npmBuild,
+  isGitRepo,
+  currentBranch,
+  latestStableRelease,
+} from "./lib-trendhub.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -37,8 +46,62 @@ const t0 = Date.now();
 const elapsed = () => `${((Date.now() - t0) / 1000).toFixed(1)}s`;
 const section = (title) => console.log(`\n==> ${title}`);
 
-console.log("TrendHub 一键安装（锁定依赖、自动选择国内外最快 npm 源）");
+console.log("TrendHub 一键安装（Public Stable + 锁定依赖）");
 console.log(`目录：${ROOT}`);
+
+async function pinMainCloneToStableRelease() {
+  if ((process.env.TRENTHUB_INSTALL_CHANNEL || "").toLowerCase() === "dev") {
+    console.log("安装通道：dev（显式允许当前未发布 ref）");
+    return;
+  }
+  if (!(await isGitRepo())) {
+    console.log("安装通道：当前目录不是 git clone，无法自动钉 Stable Release；继续使用本地文件。");
+    return;
+  }
+  const branch = await currentBranch();
+  if (branch !== "main") {
+    console.log(`安装通道：当前 ref=${branch || "detached"}，不自动改写开发/显式 checkout。`);
+    return;
+  }
+
+  const release = await latestStableRelease(8_000);
+  if (!release) {
+    console.log("安装通道：尚无可读取的 Stable Release（首次发布或网络受限），继续当前 main。 ");
+    return;
+  }
+
+  section(`0/3 钉到 Stable Release ${release.tag}`);
+  const fetchTag = await exec(
+    "git",
+    ["fetch", "--force", "--depth", "1", "origin", `refs/tags/${release.tag}:refs/tags/${release.tag}`],
+    { mode: "inherit", timeoutMs: 90_000 },
+  );
+  if (!fetchTag.ok) {
+    console.error(`[setup] 已发现 Stable Release ${release.tag}，但无法获取该 tag。为避免误装未发布 main，本次安装停止。`);
+    process.exit(1);
+  }
+
+  const head = await exec("git", ["rev-parse", "HEAD"], { mode: "capture", timeoutMs: 8_000 });
+  const stable = await exec("git", ["rev-list", "-n", "1", `refs/tags/${release.tag}`], { mode: "capture", timeoutMs: 8_000 });
+  if (!head.ok || !stable.ok) {
+    console.error("[setup] 无法确认 Stable Release commit，本次安装停止。");
+    process.exit(1);
+  }
+
+  if (head.stdout.trim() !== stable.stdout.trim()) {
+    const checkout = await exec("git", ["checkout", "--quiet", "--detach", `refs/tags/${release.tag}`], {
+      mode: "inherit",
+      timeoutMs: 30_000,
+    });
+    if (!checkout.ok) {
+      console.error(`[setup] 无法切换到 ${release.tag}，本次安装停止，未继续安装 main。`);
+      process.exit(1);
+    }
+  }
+  console.log(`安装通道：Stable Release ${release.tag}`);
+}
+
+await pinMainCloneToStableRelease();
 
 section("1/3 选择 npm 源");
 const regStart = Date.now();
@@ -77,7 +140,7 @@ if (runSmoke) {
     timeoutMs: 40_000,
   });
   if (!smoke.ok) {
-    console.error("\n[setup] MCP 握手验证未通过。可先运行 npm test，再用 npm run source:health 检查外部信源。 ");
+    console.error("\n[setup] MCP 握手验证未通过。可先运行 npm test，再用 npm run source:health 检查外部信源。");
     process.exit(1);
   }
 }
