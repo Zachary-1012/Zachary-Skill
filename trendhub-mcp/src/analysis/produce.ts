@@ -1,5 +1,5 @@
 /**
- * 内容生产层：把“真实热点证据”与“专家模板”组装成创作简报（brief）。
+ * 内容生产层：把"真实热点证据"与"专家模板"组装成创作简报（brief）。
  * 插件不写成稿（算力归调用方大模型），而是提供证据、同平台真实爆款样本、模板骨架与逐格填充指引。
  */
 import { readSeedJson } from "../util/paths.js";
@@ -8,6 +8,9 @@ import { aggregateSentiment } from "./sentiment.js";
 import { relatedQueries } from "../sources/googleTrends.js";
 import { upcomingEvents } from "../sources/events.js";
 import { getHot } from "../sources/index.js";
+import { XHS_PLATFORM, searchXhsNotes } from "../sources/xiaohongshu.js";
+import { extractXhsTopics } from "./xhsTopics.js";
+import { xhsClient } from "../sources/xhs/guest.js";
 
 export interface Template {
   id: string;
@@ -62,7 +65,7 @@ export async function getContentBrief(topic: string, opts: {
   audience?: string;
   geo?: string;
 } = {}) {
-  const platform = opts.platform ?? "all";
+  const platform = opts.platform ?? XHS_PLATFORM;
   const templateId = opts.templateId ?? PLATFORM_DEFAULT_TEMPLATE[platform] ?? "short-video-script";
   const template = getTemplate(templateId) ?? listTemplates()[0];
 
@@ -92,6 +95,25 @@ export async function getContentBrief(topic: string, opts: {
     }));
   }
 
+  // 2.5) 小红书主打证据：热门标题派生词 + 登录态关键词爆款笔记
+  let xiaohongshu: Record<string, unknown> | null = null;
+  if (platform === XHS_PLATFORM) {
+    const feed = await getHot(XHS_PLATFORM, 30).catch(() => null);
+    if (feed && feed.items.length) {
+      const derived = extractXhsTopics(feed.items.map((i) => i.title), 15);
+      const kw = await searchXhsNotes(topic, 10, "popularity_descending").catch(() => null);
+      xiaohongshu = {
+        mode: xhsClient.hasLoginCookie() ? "cookie" : "guest",
+        derivedTopics: derived.topics,
+        derivedNote: derived.note,
+        keywordHotNotes: kw
+          ? kw.slice(0, 10).map((i) => ({ title: i.title, url: i.url, hotText: i.hotText, author: i.author }))
+          : null,
+        note: "derivedTopics 为热门标题词频派生（非官方词榜）；keywordHotNotes 仅登录态返回，游客为 null。",
+      };
+    }
+  }
+
   // 3) 相关节点
   const relatedNodes = "error" in events ? [] : events.events
     .filter((e) => topic.split(/[\s,，、/|]+/).some((k) => k.length >= 2 && (e.name.includes(k) || (e.expectedImpact ?? "").includes(k))))
@@ -112,17 +134,24 @@ export async function getContentBrief(topic: string, opts: {
       rising: related.rising.slice(0, 10), top: related.top.slice(0, 10),
     },
     sentiment,
+    xiaohongshu,
     relatedNodes,
   };
 
   // 4) 逐格填充指引
   const slots = (template.structure ?? []).flatMap((s) => (s.slots ?? []).map((slot) => ({ section: s.section, slot, hint: `结合证据卡中的真实热点与相关词填充「${slot}」；不得编造数据，缺失则保留为[待补充]` })));
 
+  const xhsPrompt =
+    platform === XHS_PLATFORM
+      ? `7)这是小红书内容：标题前12字给出强钩子，正文口语化分点并配真实细节/避坑提示，结尾留互动提问；自然嵌入证据卡 xiaohongshu.derivedTopics 中高 df 话题词；若提供 keywordHotNotes，参考其爆款角度但严禁抄袭。`
+      : "";
+
   const productionPrompt = [
     `你是资深内容创作者。请基于以下【证据卡】的真实热点数据，使用模板《${template.name}》为主题「${topic}」产出可直接发布的${template.type === "script" ? "脚本" : template.type === "plan" ? "方案" : "文案"}。`,
     opts.audience ? `目标人群：${opts.audience}。` : "",
     opts.goal ? `营销/内容目标：${opts.goal}。` : "",
-    `要求：1)严格遵循模板结构与checklist；2)所有数据、案例须来自证据卡或标注[待补充]，禁止虚构热度/销量；3)参考“同平台爆款样本”的语感与角度但不得抄袭；4)情绪与立场参考情感信号；5)相关搜索词自然融入标题与正文以获取搜索流量；6)输出后自查checklist。`,
+    `要求：1)严格遵循模板结构与checklist；2)所有数据、案例须来自证据卡或标注[待补充]，禁止虚构热度/销量；3)参考"同平台爆款样本"的语感与角度但不得抄袭；4)情绪与立场参考情感信号；5)相关搜索词自然融入标题与正文以获取搜索流量；6)输出后自查checklist。`,
+    xhsPrompt,
   ].join("");
 
   return {

@@ -1,5 +1,5 @@
 /**
- * 话题深度情报包：把分散的数据/分析能力聚合成一份“创作与决策简报”原料，
+ * 话题深度情报包：把分散的数据/分析能力聚合成一份"创作与决策简报"原料，
  * 供调用方大模型做深度解读、预测与内容生产。各模块独立容错，缺失如实标注。
  */
 import { crossPlatformOverlap } from "./overlap.js";
@@ -7,6 +7,8 @@ import { aggregateSentiment } from "./sentiment.js";
 import { interestOverTime, relatedQueries } from "../sources/googleTrends.js";
 import { futureSignals } from "../sources/rss.js";
 import { upcomingEvents } from "../sources/events.js";
+import { fetchXiaohongshu, searchXhsNotes } from "../sources/xiaohongshu.js";
+import { xhsClient } from "../sources/xhs/guest.js";
 
 export async function analyzeTopic(keyword: string, opts: { geo?: string; timeframe?: string; daysAhead?: number } = {}) {
   const geo = opts.geo ?? "";
@@ -48,6 +50,28 @@ export async function analyzeTopic(keyword: string, opts: { geo?: string; timefr
     };
   }
 
+  // 小红书主打证据（游客：首页热门推荐流标题命中；登录态：关键词热度排序爆款）
+  const xhsLoggedIn = xhsClient.hasLoginCookie();
+  const xhsFeed = await fetchXiaohongshu(30).catch(() => null);
+  const kws = keyword.toLowerCase().split(/\s+/).filter((k) => k.length >= 2);
+  const xhsFeedMentions = xhsFeed
+    ? xhsFeed.items
+        .filter((i) => kws.some((k) => i.title.toLowerCase().includes(k)))
+        .slice(0, 15)
+        .map((i) => ({ rank: i.rank, title: i.title, url: i.url, hotText: i.hotText, author: i.author }))
+    : null;
+  const xhsKeyword = xhsLoggedIn ? await searchXhsNotes(keyword, 15, "popularity_descending").catch(() => null) : null;
+  const xiaohongshu = {
+    mode: xhsLoggedIn ? "cookie" : "guest",
+    feedMentions: xhsFeedMentions,
+    keywordHotNotes: xhsKeyword
+      ? xhsKeyword.slice(0, 15).map((i) => ({ rank: i.rank, title: i.title, url: i.url, hotText: i.hotText, author: i.author }))
+      : null,
+    note: xhsLoggedIn
+      ? "feedMentions=当前首页热门推荐流中标题命中该关键词的笔记；keywordHotNotes=按关键词搜索、热度排序的爆款（登录态）。"
+      : "游客模式：仅提供首页热门推荐流标题命中（feedMentions，平台推荐序非词榜）；关键词搜索对游客关闭，keywordHotNotes=null，配置 XHS_COOKIE 后解锁。",
+  };
+
   return {
     keyword,
     generatedAt: new Date().toISOString(),
@@ -58,6 +82,7 @@ export async function analyzeTopic(keyword: string, opts: { geo?: string; timefr
     futureSignals: "error" in signals ? { dataQuality: "missing", note: signals.error } : signals,
     upcomingNodes: "error" in events ? { dataQuality: "missing", note: events.error } : events,
     sentiment,
-    briefingHint: "以上为结构化证据。请基于证据输出：1)话题定性与所处阶段(萌芽/上升/爆发/衰退) 2)驱动因素 3)受众情绪与争议点 4)机会与风险 5)可切入的内容角度。数字与结论须可回溯到上述来源，缺失部分明确说明。",
+    xiaohongshu,
+    briefingHint: "以上为结构化证据。请基于证据输出：1)话题定性与所处阶段(萌芽/上升/爆发/衰退) 2)驱动因素 3)受众情绪与争议点 4)机会与风险 5)可切入的内容角度（小红书为主时结合 xiaohongshu 证据给选题/标题方向）。数字与结论须可回溯到上述来源，缺失部分明确说明。",
   };
 }

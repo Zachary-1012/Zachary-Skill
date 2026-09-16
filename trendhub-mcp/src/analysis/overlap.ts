@@ -17,7 +17,7 @@ export interface OverlapHit {
 }
 
 export async function crossPlatformOverlap(keyword: string, platforms?: string[], limit = 40) {
-  const defaultPlatforms = ["weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "thepaper", "qq-news", "36kr", "ithome", "hackernews", "reddit-worldnews"];
+  const defaultPlatforms = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "thepaper", "qq-news", "36kr", "ithome", "hackernews", "reddit-worldnews"];
   const results: HotResult[] = await getMany(platforms?.length ? platforms : defaultPlatforms, limit);
   const hits: OverlapHit[] = [];
   const checkedPlatforms: { platform: string; label: string; dataQuality: string; items: number }[] = [];
@@ -65,7 +65,7 @@ export interface Cluster {
 
 /** 自动发现跨平台共振话题（标题相似度聚类） */
 export async function discoverClusters(platforms?: string[], minPlatforms = 2, limit = 20): Promise<{ clusters: Cluster[]; note: string }> {
-  const anchorPlatforms = ["weibo", "zhihu", "baidu", "toutiao", "thepaper", "qq-news", "bilibili", "douyin", "36kr", "ithome"];
+  const anchorPlatforms = ["xiaohongshu", "weibo", "zhihu", "baidu", "toutiao", "thepaper", "qq-news", "bilibili", "douyin", "36kr", "ithome"];
   const results: HotResult[] = await getMany(platforms?.length ? platforms : anchorPlatforms, limit);
   const ok = results.filter((r) => r.dataQuality === "ok");
 
