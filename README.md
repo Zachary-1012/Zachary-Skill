@@ -1,29 +1,31 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。每个技能都与具体大模型解耦：无论使用 ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI，均可挂载使用；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.0** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
 
-> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。安装说明见 [`trendhub-mcp/docs/access.md`](./trendhub-mcp/docs/access.md)。
+每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
+
+> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。
 
 ## 给 AI 的安装合同
 
-如果你把本仓库链接直接交给一个可以执行终端命令的 AI / Coding Agent，它应按以下固定流程安装，不需要用户自己准备 Node.js：
+把本仓库链接交给可以执行终端命令的 AI / Coding Agent，它应按固定流程安装，不需要用户自己准备 Node.js：
 
-1. 检查 `git`。如机器尚未安装 Git，AI 应先通过操作系统可信的软件源或 Git 官方安装方式补齐 Git，再执行公开仓库 clone；正式安装推荐使用 `git clone`，以保持 Stable Release 更新能力。
+1. 检查 `git`。如机器未安装 Git，AI 先通过操作系统可信软件源或 Git 官方方式补齐。
 2. clone 并进入 `trendhub-mcp`。
-3. 执行对应平台的 **Node-free bootstrap**：已有 Node >=22 时直接复用；没有 Node 或版本过低时，bootstrap 会从 `nodejs.org` 获取最新 Node 24 LTS 的便携版，使用官方 `SHASUMS256.txt` 校验 SHA-256 后放入用户缓存目录，不需要管理员权限，也不会替换系统 Node。
-4. bootstrap 自动继续现有 `setup.mjs -> npm ci -> build -> smoke` 安装链。
-5. bootstrap 成功后最后输出一行 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取其中的 `node` 与 `launcher` **绝对路径**，并用 `command=<node>`、`args=[<launcher>]` 写入 MCP 配置；这样即使用户系统 PATH 中没有 Node，也能直接启动 TrendHub。
+3. 执行对应平台的 **Node-free bootstrap**：已有 Node >=22 时复用；没有 Node 或版本过低时，从 `nodejs.org` 获取 Node 24 LTS 便携版，使用官方 `SHASUMS256.txt` 校验 SHA-256 后放入用户缓存目录，不要求管理员权限，也不替换系统 Node。
+4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
+5. 成功后输出 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取其中的 `node` 与 `launcher` **绝对路径**写入 MCP 配置。
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 cd Zachary-Skill/trendhub-mcp
 
-# macOS / Linux：没有 Node 也可以直接运行
+# macOS / Linux
 bash scripts/bootstrap.sh
 
-# 已经有 Node >=22 时，也可以直接走原安装入口
+# 已有 Node >=22 也可直接运行
 node scripts/setup.mjs
-npm run smoke                  # 成功标志：SMOKE OK tools=16
+npm run smoke                  # 成功标志：SMOKE OK tools=19
 ```
 
 Windows PowerShell：
@@ -34,13 +36,13 @@ cd Zachary-Skill\trendhub-mcp
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
 ```
 
-bootstrap 成功时的机器可读结果示例：
+机器可读安装结果：
 
 ```text
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
-AI 应按这两个真实绝对路径配置 MCP。只有在确认系统 Node 已经全局可用时，才可以简写为：
+只有在确认系统 Node 已全局可用时，才可以简写：
 
 ```text
 command: node
@@ -49,70 +51,83 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## 技能清单
+## TrendHub v1.4.0 能力
 
-| 技能 | 说明 | 文档 |
-| --- | --- | --- |
-| **TrendHub · 全网热点趋势专家（小红书主打）** | 38 个平台实时热榜（小红书置顶、默认首位）、小红书热门笔记流与话题词派生、Google Trends 走势、未来趋势信号、节点日历、跨平台共振/新晋掉榜分析、话题深度情报、脚本/文案/方案创作简报（16 个 MCP 工具），附本地可视化控制台 | [trendhub-mcp/README.md](./trendhub-mcp/README.md) |
+| 能力层 | 当前能力 |
+| --- | --- |
+| 实时发现 | 38 个平台/趋势信源；小红书热门推荐流为深度主打 |
+| 小红书增强 | 游客热门推荐；本地 `XHS_COOKIE` 可解锁官方热搜词榜与关键词爆款搜索 |
+| 跨平台 | 共振、自动聚类、新晋/飙升/掉榜、历史快照 |
+| **Source Reliability** | UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED；24h/7d/30d ok/usable rate；P50/P95 延迟；连续失败；schema drift |
+| **Trend Intelligence Engine** | `emerging → accelerating → mainstream → saturating → declining`；速度、持续性、扩散、可靠度、历史充分度、置信度 |
+| 搜索趋势 | Google Trends 相对热度曲线、相关词 top/rising |
+| 未来信号 | 科技/AI/商业/营销 RSS 信源 + 趋势节点日历 |
+| **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势 |
+| 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
+| 内容生产 | 脚本/文案/方案模板 + Evidence-first 创作 Brief |
+| 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |
 
-## 一键安装（以 TrendHub 为例）
+完整的 19-tool 契约见 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json)。指标公式和生命周期规则见 [`trendhub-mcp/docs/intelligence-methodology.md`](./trendhub-mcp/docs/intelligence-methodology.md)。
 
-推荐让具备终端执行能力的 AI 直接运行上面的 bootstrap。**Node.js 不再要求用户预先安装**：bootstrap 会复用现有 Node >=22；否则自动准备经 SHA-256 校验的 Node 24 LTS 便携运行时。Windows / macOS / Linux 均可本地安装；手机 / 平板通常通过一台常开主机以受保护 HTTP URL 接入，详见 [setup-clients](./trendhub-mcp/docs/setup-clients.md)。
+## Source Reliability 与真实世界状态
 
-已有 Node >=22 的用户仍可直接执行：
+TrendHub 明确区分：
+
+- **CI / Release Gate**：证明代码、安装、MCP 工具合同可复现；
+- **Source Health**：证明第三方信源在某次真实联网观测中的当前可用状态。
+
+因此：**CI PASS ≠ 38 个第三方平台此刻全部在线。** 平台登录要求、限流、风控、网络异常或页面结构变化会被如实标记，而不是伪造成成功。
 
 ```bash
-git clone https://github.com/Zachary-1012/Zachary-Skill.git
-cd Zachary-Skill/trendhub-mcp
-node scripts/setup.mjs
-# 国内网络慢： node scripts/setup.mjs --cn
-# 海外：       node scripts/setup.mjs --global
+npm run source:health
 ```
 
-`setup.mjs` 严格使用已提交的 `package-lock.json` 与 `npm ci`，不会在用户安装时重新求解依赖。看到 `SMOKE OK tools=16` 即安装就绪。
+每日 GitHub Source Health 会产生机器可读 JSON artifact，用于观察第三方源可用率、延迟和数据质量，但不会阻塞 Stable Release。
 
-- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置；Node-free bootstrap 用户必须优先使用 `AI_BOOTSTRAP_OK` 返回的绝对 Node / launcher 路径。
-- 只想用本地界面看榜：在 `trendhub-mcp` 目录运行 `npm run ui`。
-- 外部信源体检：`npm run source:health`。旧命令 `npm run selftest` 保留兼容，但它**不属于安装或 release gate**。
+## Trend Intelligence 与 Benchmark
+
+`trend_intelligence` 基于本地真实历史证据计算：
+
+- 生命周期；
+- rank velocity；
+- persistence；
+- cross-platform diffusion；
+- source reliability；
+- history sufficiency；
+- deterministic confidence。
+
+这些是**可解释的规则指标，不是预测概率**。历史不足时返回 `insufficient_history`。
+
+`benchmark_trend_lead` 必须由使用者提供一个外部可验证的 `reference_time`，例如官方公告时间、主流爆发时间或团队事先约定的基准时间。TrendHub 只计算自己的最早证据比该时间早/晚多少小时，不会自己编造 ground truth。
+
+## 零遥测质量评估
+
+正常使用不发送 TrendHub telemetry。需要排障或内部评估时，可主动执行：
+
+```bash
+npm run quality:diagnostic
+```
+
+报告只保留版本、Node 主版本、OS family、Source Reliability 汇总、历史深度等操作性信息；不包含 hostname、username、绝对路径、Cookie、查询词、内容正文、IP 或账号标识；**不会自动上传，只有使用者主动选择时才分享。**
 
 ## 更新与发布
 
-TrendHub 不再跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 **GitHub Stable Release**：
+TrendHub 不跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 **GitHub Stable Release**：
 
-1. 当前已验证版本先立即启动；
-2. 后台发现更高的正式 `vX.Y.Z` Release 才进行更新；
-3. 本地 tracked 文件有修改时主动跳过；
-4. 安装/构建失败时尽力回滚更新前版本；
+1. 当前已验证版本先启动；
+2. 后台发现更高正式 `vX.Y.Z` Release 才更新；
+3. 本地 tracked 文件有修改时跳过；
+4. 安装/构建失败时尽力回滚；
 5. `TRENTHUB_AUTOUPDATE=0` 可关闭自动检查。
 
-手动升级：
+正式 Release 必须通过 Node 22/24 的 locked install + build + deterministic tests + MCP smoke；随后再跑 Public Install E2E。Release 同时产出 npm `.tgz` 与 `SHA256SUMS.txt`。
 
-```bash
-cd Zachary-Skill/trendhub-mcp
-node scripts/upgrade.mjs
-```
+## 安全与治理
 
-正式 Release 只有在 Node 22/24 CI 的 **locked install + build + deterministic tests + MCP smoke** 全部通过后才会生成；Release 同时产出 npm `.tgz` 与 `SHA256SUMS.txt`。
+- HTTP 默认绑定 `127.0.0.1`；任何非 loopback 监听都必须配置 `TRENTHUB_HTTP_TOKEN`，并用 Bearer Token 访问 `/mcp` 与 `/api/*`。
+- 仓库不应包含任何模型 Key、Cookie、Token 或内部资料；`XHS_COOKIE` 只保存在使用者本机环境变量。
+- `main` 受保护：必须 PR、Node 22/24 required checks、up-to-date、禁止 force push、禁止删除、无 bypass。
+- upstream 原仓库只允许 owner 与 owner 邀请的 Collaborators 修改；公开用户只有读取/clone/使用 upstream 的权限。
+- 软件当前仍按 **MIT License** 分发；MIT 在法律层面允许使用者对自己的副本进行 fork/修改/再分发，这与“不能修改原 upstream 仓库”是两个不同概念。若未来要改成“法律上仅允许使用、禁止修改/再分发”，需要单独做许可证变更。
 
-## 设计原则
-
-1. **本地 Skill / MCP，而非中央服务**：核心运行在使用者自己的机器上；HTTP 默认只绑定 `127.0.0.1`。
-2. **Bring Your Own AI**：Skill 提供实时数据、确定性分析与生产脚手架；理解、判断和成文由调用方 AI 完成。
-3. **无模型 Key、无第三方遥测、无中央数据回传**：TrendHub 不收集使用统计，不把用户数据发送到 TrendHub 中央服务；但为了完成取数，会向目标公开数据源发起必要网络请求，安装/更新会访问 npm/GitHub。
-4. **Evidence-first，不造假**：取不到的数据显式标记 `missing/degraded`；每条证据保留来源与采集时间。
-5. **可复现发布**：lockfile + `npm ci` + CI release gate + Stable Release channel。
-6. **开放兼容**：标准 MCP、机器可读 `manifest.json`，尽量不绑定具体 AI 厂商。
-
-## HTTP 与安全边界
-
-- 默认 `127.0.0.1`：无需额外 Token，保持本地开箱即用。
-- 一旦 `TRENTHUB_HOST` 配置为 `0.0.0.0`、局域网 IP、Tailscale IP 或其他非 loopback 地址，**必须同时配置 `TRENTHUB_HTTP_TOKEN`**，否则服务拒绝启动。
-- 非 loopback 模式下 `/mcp` 与 `/api/*` 要求 `Authorization: Bearer <token>`。
-- 即使启用 Token，也不建议把 8333 直接暴露到公开互联网；优先使用受信任局域网或私有组网。
-
-## 权限与数据边界
-
-- 仓库公开，**把链接发给谁，谁就能查看并安装**；MIT 许可允许 fork / 商用。
-- 无需注册或登录；仓库不应包含任何密钥、Cookie 或内部资料。小红书增强能力所需 `XHS_COOKIE` 只配置在使用者本机环境变量中。
-- “无中央数据回传”不等于“无任何出站网络”：平台取数会访问对应平台，依赖安装访问 npm registry/npmmirror，Node bootstrap 访问 `nodejs.org`，Stable Release 更新访问 GitHub。
-- 各技能的具体数据口径、已知限制与第三方归因见对应 README 与 `NOTICE`。
+详细规则：[`GOVERNANCE.md`](./GOVERNANCE.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`CHANGELOG.md`](./CHANGELOG.md)
