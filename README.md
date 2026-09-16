@@ -62,7 +62,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 | **Trend Intelligence Engine** | `emerging → accelerating → mainstream → saturating → declining`；速度、持续性、扩散、可靠度、历史充分度、置信度 |
 | 搜索趋势 | Google Trends 相对热度曲线、相关词 top/rising |
 | 未来信号 | 科技/AI/商业/营销 RSS 信源 + 趋势节点日历 |
-| **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势 |
+| **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势；支持批量 benchmark cases |
 | 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
 | 内容生产 | 脚本/文案/方案模板 + Evidence-first 创作 Brief |
 | 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |
@@ -82,7 +82,7 @@ TrendHub 明确区分：
 npm run source:health
 ```
 
-每日 GitHub Source Health 会产生机器可读 JSON artifact，用于观察第三方源可用率、延迟和数据质量，但不会阻塞 Stable Release。
+GitHub Source Health **每 6 小时**运行一次，并恢复上一轮非敏感 `reliability/history/snapshots` 状态，使 24h/7d/30d 稳定性和 24h/72h 趋势历史能够连续积累。每轮会产生机器可读 JSON artifact，保留 30 天；它仍然与 Stable Release gate 分离。
 
 ## Trend Intelligence 与 Benchmark
 
@@ -99,6 +99,14 @@ npm run source:health
 这些是**可解释的规则指标，不是预测概率**。历史不足时返回 `insufficient_history`。
 
 `benchmark_trend_lead` 必须由使用者提供一个外部可验证的 `reference_time`，例如官方公告时间、主流爆发时间或团队事先约定的基准时间。TrendHub 只计算自己的最早证据比该时间早/晚多少小时，不会自己编造 ground truth。
+
+公司内部可批量运行真实案例：
+
+```bash
+npm run benchmark:lead -- --file /path/to/benchmark-cases.json
+```
+
+批量结果包含 evidence coverage、before-reference rate、24h-ahead rate、72h-ahead rate、平均 lead hours 与逐案例证据；报告仅保存在本地 `data/benchmarks/`，不自动上传。
 
 ## 零遥测质量评估
 
