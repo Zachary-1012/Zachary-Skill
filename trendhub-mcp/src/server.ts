@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerTools } from "./tools/definitions.js";
 
 export const SERVER_NAME = "trendhub-mcp";
-export const SERVER_VERSION = "1.4.0";
+export const SERVER_VERSION = "1.4.1";
 
 /** 创建一个 MCP server 实例并注册全部工具（stateless HTTP 模式下每请求新建） */
 export function createMcpServer(): McpServer {

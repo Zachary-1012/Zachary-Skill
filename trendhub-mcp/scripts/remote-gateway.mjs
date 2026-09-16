@@ -23,7 +23,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.4.0";
+const VERSION = "1.4.1";
 let activeRequests = 0;
 let shuttingDown = false;
 
