@@ -92,3 +92,8 @@ jobs:
             --title "TrendHub $TAG" \
             --generate-notes \
             --verify-tag
+
+  public-install-e2e:
+    needs: release
+    if: ${{ needs.release.result == 'success' }}
+    uses: ./.github/workflows/public-install-e2e.yml
