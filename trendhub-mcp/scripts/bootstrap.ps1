@@ -11,6 +11,7 @@ $CacheBase = if ($env:LOCALAPPDATA) {
 } else {
   Join-Path $HOME ".trendhub\node24"
 }
+$ForcePortable = $env:TRENHUB_BOOTSTRAP_FORCE_PORTABLE -eq "1"
 
 function Write-Bootstrap([string]$Message) {
   Write-Host "[bootstrap] $Message"
@@ -22,7 +23,7 @@ function Fail-Bootstrap([string]$Message) {
 
 function Get-NodeMajor([string]$NodePath) {
   try {
-    return [int](& $NodePath -p 'Number(process.versions.node.split(".")[0])')
+    return [int](& $NodePath -p 'parseInt(process.versions.node,10)')
   } catch {
     return 0
   }
@@ -41,11 +42,20 @@ function Invoke-Setup([string]$NodePath) {
   }
 
   $launcher = Join-Path $Root "scripts\launcher.mjs"
-  & $NodePath -e 'const launcher=process.argv[1]; console.log("AI_BOOTSTRAP_OK "+JSON.stringify({node:process.execPath,launcher}));' $launcher
-  exit $LASTEXITCODE
+  $actualNode = & $NodePath -p 'process.execPath'
+  if ($LASTEXITCODE -ne 0) {
+    Fail-Bootstrap "Could not resolve the active Node executable path."
+  }
+  $resolvedLauncher = (Resolve-Path $launcher).Path
+  $result = [ordered]@{
+    node = $actualNode
+    launcher = $resolvedLauncher
+  } | ConvertTo-Json -Compress
+  Write-Output "AI_BOOTSTRAP_OK $result"
+  exit 0
 }
 
-$existingNode = Get-Command node -ErrorAction SilentlyContinue
+$existingNode = if ($ForcePortable) { $null } else { Get-Command node -ErrorAction SilentlyContinue }
 if ($existingNode) {
   $existingPath = $existingNode.Source
   $major = Get-NodeMajor $existingPath
@@ -54,6 +64,8 @@ if ($existingNode) {
   }
   $oldVersion = try { & $existingPath --version } catch { "unknown" }
   Write-Bootstrap "Existing Node $oldVersion is below 22; using a verified portable Node 24 LTS for TrendHub."
+} elseif ($ForcePortable) {
+  Write-Bootstrap "Portable Node 24 path forced for bootstrap verification."
 } else {
   Write-Bootstrap "Node.js not found; installing a verified portable Node 24 LTS for TrendHub."
 }

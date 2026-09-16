@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BASE_URL="https://nodejs.org/dist/latest-v24.x"
 CACHE_ROOT="${XDG_CACHE_HOME:-${HOME}/.cache}/trendhub/node24"
+FORCE_PORTABLE="${TRENHUB_BOOTSTRAP_FORCE_PORTABLE:-0}"
 
 log() { printf '[bootstrap] %s\n' "$*"; }
 fail() { printf '[bootstrap] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -30,13 +31,15 @@ run_setup() {
   exit 0
 }
 
-if command -v node >/dev/null 2>&1; then
+if [ "$FORCE_PORTABLE" != "1" ] && command -v node >/dev/null 2>&1; then
   NODE_BIN="$(command -v node)"
   MAJOR="$(node_major "$NODE_BIN")"
   if [ "$MAJOR" -ge 22 ] 2>/dev/null; then
     run_setup "$NODE_BIN" "$@"
   fi
   log "Existing Node $($NODE_BIN --version 2>/dev/null || printf 'unknown') is below 22; using a verified portable Node 24 LTS for TrendHub."
+elif [ "$FORCE_PORTABLE" = "1" ]; then
+  log "Portable Node 24 path forced for bootstrap verification."
 else
   log "Node.js not found; installing a verified portable Node 24 LTS for TrendHub."
 fi

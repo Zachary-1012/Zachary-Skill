@@ -26,10 +26,18 @@ jobs:
           git clone --depth 1 https://github.com/Zachary-1012/Zachary-Skill.git /tmp/zachary-skill-public
           test -f /tmp/zachary-skill-public/trendhub-mcp/SKILL.md
           test -f /tmp/zachary-skill-public/trendhub-mcp/manifest.json
+          test -f /tmp/zachary-skill-public/trendhub-mcp/scripts/bootstrap.sh
 
-      - name: Run the documented AI installation contract
+      - name: Run the documented Node-free AI installation contract
         working-directory: /tmp/zachary-skill-public/trendhub-mcp
-        run: node scripts/setup.mjs --global
+        shell: bash
+        env:
+          TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
+        run: |
+          set -euo pipefail
+          bash scripts/bootstrap.sh --global | tee /tmp/trendhub-bootstrap.txt
+          grep -F "AI_BOOTSTRAP_OK " /tmp/trendhub-bootstrap.txt
+          grep -F "SMOKE OK tools=16" /tmp/trendhub-bootstrap.txt
 
       - name: Verify stable pin and MCP readiness
         working-directory: /tmp/zachary-skill-public/trendhub-mcp
@@ -44,4 +52,4 @@ jobs:
 
       - name: Public install contract result
         if: success()
-        run: echo "PUBLIC INSTALL E2E OK — repo URL -> stable release -> npm ci/build -> 16-tool MCP smoke"
+        run: echo "PUBLIC INSTALL E2E OK — public repo -> verified portable Node 24 bootstrap -> stable release -> npm ci/build -> 16-tool MCP smoke"
