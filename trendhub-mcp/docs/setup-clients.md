@@ -1,25 +1,61 @@
 # 把 TrendHub 接入你的 AI 客户端
 
-先完成一键安装：
+## 0. 先完成安装
+
+推荐把仓库链接直接交给具备终端执行能力的 AI / Coding Agent，让它使用 Node-free bootstrap。用户不需要预先安装 Node.js。
+
+macOS / Linux：
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 cd Zachary-Skill/trendhub-mcp
-node --version                 # 必须 >=22；推荐 Node 24 LTS
-node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
+bash scripts/bootstrap.sh
 ```
 
-看到 `SMOKE OK tools=16` 即安装完成。外部第三方信源体检使用 `npm run source:health`；旧命令 `npm run selftest` 仍兼容，但它不属于安装、CI 或 release gate。
+Windows PowerShell：
 
-下文把 `/ABS/PATH/` 记为本机 `trendhub-mcp` 的绝对路径：
+```powershell
+git clone https://github.com/Zachary-1012/Zachary-Skill.git
+cd Zachary-Skill\trendhub-mcp
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
+```
+
+已有 Node >=22 的机器也可以直接：
+
+```bash
+node scripts/setup.mjs
+```
+
+看到 `SMOKE OK tools=16` 即安装完成。bootstrap 成功后还会额外输出一行机器可读结果：
+
+```text
+AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
+```
+
+**这是 Node-free 安装的最终 MCP 配置真值。** AI 应读取该 JSON：
+
+- `command` = 返回的 `node` 绝对路径；
+- `args[0]` = 返回的 `launcher` 绝对路径。
+
+如果用户系统中本来就有全局 Node >=22，`command` 可以简写为 `node`；否则不要假设 `node` 已经在系统 PATH。
+
+外部第三方信源体检使用 `npm run source:health`；旧命令 `npm run selftest` 仍兼容，但它不属于安装、CI 或 release gate。
+
+下文把：
+
+- `<NODE_COMMAND>` 记为 `AI_BOOTSTRAP_OK.node`，或确认全局可用时的 `node`；
+- `/ABS/PATH/` 记为本机 `trendhub-mcp` 的绝对路径；
+- `<LAUNCHER>` 记为 `AI_BOOTSTRAP_OK.launcher`，通常等于 `/ABS/PATH/scripts/launcher.mjs`。
+
+路径示例：
 
 - Windows：`C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp`
 - macOS：`/Users/你/Zachary-Skill/trendhub-mcp`
 - Linux：`/home/你/Zachary-Skill/trendhub-mcp`
 
-推荐 stdio 启动入口：`node /ABS/PATH/scripts/launcher.mjs`。launcher 会立即启动当前版本，并仅在后台检查 **GitHub Stable Release**；不会跟随 `main` HEAD。
+推荐 stdio 启动入口：`<NODE_COMMAND> <LAUNCHER>`。launcher 会立即启动当前版本，并仅在后台检查 **GitHub Stable Release**；不会跟随 `main` HEAD。
 
-本地 HTTP：`npm run start:http`，默认地址 `http://127.0.0.1:8333/mcp`。
+本地 HTTP：如果全局 Node/npm 可用，可运行 `npm run start:http`；Node-free bootstrap 用户也可以用返回的 Node 绝对路径执行 `<NODE_COMMAND> <LAUNCHER> --http`。默认地址 `http://127.0.0.1:8333/mcp`。
 
 ---
 
@@ -31,14 +67,14 @@ node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
 {
   "mcpServers": {
     "trendhub": {
-      "command": "node",
-      "args": ["/ABS/PATH/scripts/launcher.mjs"]
+      "command": "<NODE_COMMAND>",
+      "args": ["<LAUNCHER>"]
     }
   }
 }
 ```
 
-保存后完全退出并重启客户端。看到 16 个 trendhub 工具即成功。若 `node` 不在 PATH，把 `command` 换成 `where node` / `which node` 查到的绝对路径。
+把占位符替换为 `AI_BOOTSTRAP_OK` 返回的真实绝对路径；如果全局 Node 已确认可用，`<NODE_COMMAND>` 才可以写成 `node`。保存后完全退出并重启客户端。看到 16 个 trendhub 工具即成功。
 
 ## 2. Cursor
 
@@ -48,8 +84,8 @@ node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
 {
   "mcpServers": {
     "trendhub": {
-      "command": "node",
-      "args": ["/ABS/PATH/scripts/launcher.mjs"]
+      "command": "<NODE_COMMAND>",
+      "args": ["<LAUNCHER>"]
     }
   }
 }
@@ -68,8 +104,8 @@ node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
   "servers": {
     "trendhub": {
       "type": "stdio",
-      "command": "node",
-      "args": ["/ABS/PATH/scripts/launcher.mjs"]
+      "command": "<NODE_COMMAND>",
+      "args": ["<LAUNCHER>"]
     }
   }
 }
@@ -77,21 +113,21 @@ node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
 
 ### Cline / Roo Code 等扩展
 
-选择 stdio，command=`node`，args=`/ABS/PATH/scripts/launcher.mjs`。
+选择 stdio，command=`<NODE_COMMAND>`，args=`<LAUNCHER>`。
 
 ## 4. ChatGPT
 
 如果当前客户端版本支持本地 MCP / stdio，优先使用：
 
 ```text
-command = node
-args    = /ABS/PATH/scripts/launcher.mjs
+command = <NODE_COMMAND>
+args    = <LAUNCHER>
 ```
 
-如果只支持 MCP URL，则先运行：
+如果只支持 MCP URL，则在本机启动 HTTP：
 
-```bash
-npm run start:http
+```text
+<NODE_COMMAND> <LAUNCHER> --http
 ```
 
 再配置：`http://127.0.0.1:8333/mcp`。
@@ -103,8 +139,8 @@ npm run start:http
 TrendHub 可作为 Skill 描述 + MCP 工具使用：
 
 - Skill：读取本目录 `SKILL.md`；
-- MCP：stdio command=`node`，args=`/ABS/PATH/scripts/launcher.mjs`；
-- 若客户端只支持 URL，本机运行 `npm run start:http` 后使用 `http://127.0.0.1:8333/mcp`。
+- MCP：stdio command=`<NODE_COMMAND>`，args=`<LAUNCHER>`；
+- 若客户端只支持 URL，本机运行 `<NODE_COMMAND> <LAUNCHER> --http` 后使用 `http://127.0.0.1:8333/mcp`。
 
 无论入口形式，背后均是同一套 16 个工具。
 
@@ -119,14 +155,14 @@ TrendHub 与模型供应商解耦。只要使用的 AI 客户端支持 MCP，就
 ### stdio（推荐）
 
 ```text
-command=node
-args=["/ABS/PATH/scripts/launcher.mjs"]
+command=<NODE_COMMAND>
+args=["<LAUNCHER>"]
 ```
 
 ### HTTP（本机）
 
-```bash
-npm run start:http
+```text
+<NODE_COMMAND> <LAUNCHER> --http
 ```
 
 URL：`http://127.0.0.1:8333/mcp`
@@ -152,8 +188,16 @@ Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
 
 ## 8. 本地可视化控制台
 
+如果全局 npm 可用：
+
 ```bash
 npm run ui
+```
+
+Node-free bootstrap 用户也可直接：
+
+```text
+<NODE_COMMAND> <LAUNCHER> --ui
 ```
 
 浏览器打开 `http://127.0.0.1:8333/`。控制台包含小红书专区、当下热榜、跨平台共振、关键词曲线、未来信号、节点日历、话题情报与创作简报。
@@ -170,8 +214,8 @@ npm run ui
 {
   "mcpServers": {
     "trendhub": {
-      "command": "node",
-      "args": ["/ABS/PATH/scripts/launcher.mjs"],
+      "command": "<NODE_COMMAND>",
+      "args": ["<LAUNCHER>"],
       "env": {
         "XHS_COOKIE": "a1=xxxx; web_session=xxxx"
       }
@@ -202,7 +246,7 @@ TrendHub 是 Node 进程。Windows / macOS / Linux 可以直接本地运行；iP
 
 先在主机安装 TrendHub，然后配置非 loopback HTTP。
 
-Windows PowerShell：
+Windows PowerShell（全局 npm 可用时）：
 
 ```powershell
 $env:TRENTHUB_HOST='0.0.0.0'
@@ -210,13 +254,15 @@ $env:TRENTHUB_HTTP_TOKEN='使用足够长的随机Token'
 npm run start:http
 ```
 
-macOS / Linux：
+macOS / Linux（全局 npm 可用时）：
 
 ```bash
 TRENTHUB_HOST=0.0.0.0 \
 TRENTHUB_HTTP_TOKEN='使用足够长的随机Token' \
 npm run start:http
 ```
+
+Node-free bootstrap 用户应在同样环境变量下运行 `<NODE_COMMAND> <LAUNCHER> --http`。
 
 同一 Wi‑Fi 可使用主机局域网地址；跨网络建议使用 Tailscale 等私有组网。MCP URL 示例：
 
@@ -250,7 +296,7 @@ Authorization: Bearer <Token>
 
 ## 11. 验证是否接好
 
-命令行：
+全局 npm 可用时：
 
 ```bash
 npm run smoke
@@ -261,6 +307,8 @@ npm run smoke
 ```text
 SMOKE OK tools=16
 ```
+
+Node-free bootstrap 已经在安装过程中执行同一 smoke；同时必须看到最后的 `AI_BOOTSTRAP_OK {...}`，才表示“安装 + 可持久启动配置”完整闭环。
 
 然后可以让 AI 执行例如：
 
@@ -291,20 +339,23 @@ npm run source:health
 - 安装/构建失败时尽力回滚；
 - `TRENTHUB_AUTOUPDATE=0` 可关闭。
 
-手动更新：
+手动更新（全局 Node 可用时）：
 
 ```bash
 node scripts/upgrade.mjs
 ```
 
+Node-free bootstrap 用户可以用 `AI_BOOTSTRAP_OK.node` 的绝对路径执行同一个 `scripts/upgrade.mjs`。
+
 ### 常见问题
 
-- **`node` 找不到 / 版本低**：安装 Node >=22，推荐 Node 24 LTS；用 `where node` / `which node` 确认路径。
-- **工具列表为空**：重跑 `node scripts/setup.mjs`，确认最终出现 `SMOKE OK tools=16`，再完全重启 AI 客户端。
+- **`node` 找不到 / 版本低**：无需用户手工装 Node，直接运行 `bootstrap.sh` / `bootstrap.ps1`；它会准备经官方 SHA-256 校验的 Node 24 LTS 便携运行时。
+- **bootstrap 安装后客户端仍提示找不到 `node`**：不要把 command 写成 `node`；使用 `AI_BOOTSTRAP_OK` 返回的 `node` 绝对路径，并把 `launcher` 绝对路径作为第一个参数。
+- **工具列表为空**：重跑 bootstrap 或 `node scripts/setup.mjs`，确认出现 `SMOKE OK tools=16`，再完全重启 AI 客户端。
 - **个别平台 `missing/degraded`**：运行 `npm run source:health` 看具体信源；第三方平台临时不可达不会被伪装成 0，也不会影响 deterministic CI 的定义。
-- **安装慢**：国内可用 `node scripts/setup.mjs --cn`，海外可用 `--global`。
+- **安装慢**：已有 Node 时国内可用 `node scripts/setup.mjs --cn`，海外可用 `--global`；bootstrap 同样会把附加参数传给 `setup.mjs`。
 - **`npm ci` 报 lockfile 错误**：不要自行删 lockfile；确认仓库 clone 完整并使用官方发布版本。
 - **非 loopback 启动被拒绝**：这是安全门，不是故障；同时配置 `TRENTHUB_HTTP_TOKEN`。
 - **远程 MCP 返回 401**：客户端没有带 `Authorization: Bearer <token>`，或 Token 不匹配。
 - **手机控制台提示 Token**：输入主机端的 `TRENTHUB_HTTP_TOKEN`；它只保存在当前浏览器会话。
-- **Linux 无桌面环境**：不用 `--ui`，直接运行默认 stdio 或 `npm run start:http`；控制台可从其他受信任设备浏览器访问。
+- **Linux 无桌面环境**：不用 `--ui`，直接运行默认 stdio 或 `--http`；控制台可从其他受信任设备浏览器访问。
