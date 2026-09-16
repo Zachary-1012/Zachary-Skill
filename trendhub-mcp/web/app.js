@@ -394,7 +394,8 @@ VIEWS.overlap = function (content, params) {
       <input class="input" id="f-kw" placeholder="关键词，如 AI眼镜 / 英伟达" value="${esc(params.keyword || "")}">
       <input class="input" id="f-plats" placeholder="可选，限定平台，逗号分隔" style="flex:0 1 280px" value="${esc(params.platforms || "")}">
       <button class="btn primary" id="btn-go">分析共振</button>
-    </div><div id="out">${empty("输入关键词后开始分析")}</div>`;
+    </div>
+    <div id="out">${empty("输入关键词后开始分析")}</div>`;
   const run = async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -411,8 +412,7 @@ VIEWS.overlap = function (content, params) {
         `<div class="card"><div class="score-ring">
           <div class="ring" style="--pct:${pct}%"><span>${esc(d.resonanceScore)}</span></div>
           <div><div style="font-size:15px;font-weight:650">「${esc(kw)}」命中 ${d.platformsHit} 个平台 · ${d.totalMentions} 条</div>
-          <div class="sub">${esc(d.scoreNote || "")}</div></div>
-        </div></div>` +
+          <div class="sub">${esc(d.scoreNote || "")}</div></div></div></div>` +
         (d.platforms || []).map(
           (p) => `<div class="platform-hit" style="margin-top:10px"><div class="head"><span>${esc(p.label)} ${qbadge("ok")}</span>
             <span class="sub">命中 ${p.count} · 最佳排名 #${p.bestRank >= 999 ? "—" : p.bestRank}</span></div>
@@ -432,7 +432,8 @@ VIEWS.clusters = function (content) {
       <label class="field">至少在 N 个平台出现<select id="f-min">
         ${[2, 3, 4, 5].map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label>
       <button class="btn primary" id="btn-go">发现共振话题</button>
-    </div><div id="out">${empty("点击按钮开始（需拉取多个平台，可能耗时数十秒）")}</div>`;
+    </div>
+    <div id="out">${empty("点击按钮开始（需拉取多个平台，可能耗时数十秒）")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     $("#out").innerHTML = loading();
     try {
@@ -513,7 +514,8 @@ VIEWS.curve = function (content, params) {
         ${["now 7-d", "today 1-m", "today 3-m", "today 12-m"].map((t) => `<option ${params.timeframe === t ? "selected" : ""}>${t}</option>`).join("")}
       </select>
       <button class="btn primary" id="btn-go">查询趋势</button>
-    </div><div id="out">${empty("输入关键词后查询")}</div>`;
+    </div>
+    <div id="out">${empty("输入关键词后查询")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -542,7 +544,8 @@ VIEWS.related = function (content, params) {
       <input class="input" id="f-kw" placeholder="关键词" value="${esc(params.keyword || "")}">
       <input class="input" id="f-geo" placeholder="地区代码，留空全球" style="flex:0 1 150px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">查询相关词</button>
-    </div><div id="out">${empty("输入关键词后查询")}</div>`;
+    </div>
+    <div id="out">${empty("输入关键词后查询")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -569,7 +572,8 @@ VIEWS.signals = function (content, params) {
       <input class="input" id="f-kw" placeholder="按关键词过滤标题/摘要（可选）" value="${esc(params.keyword || "")}">
       <select id="f-limit" class="input" style="flex:0 1 110px">${[20, 40, 60, 100].map((n) => `<option ${String(params.limit) === String(n) ? "selected" : ""}>${n}</option>`).join("")}</select>
       <button class="btn primary" id="btn-go">拉取信号</button>
-    </div><div id="out">${loading()}</div>`;
+    </div>
+    <div id="out">${loading()}</div>`;
   const run = async () => {
     $("#out").innerHTML = loading();
     try {
@@ -603,7 +607,8 @@ VIEWS.events = function (content, params) {
       <select id="f-days" class="input" style="flex:0 1 140px">${[30, 90, 180, 365].map((n) => `<option ${String(params.days_ahead || 90) === String(n) ? "selected" : ""}>未来 ${n} 天</option>`).join("")}</select>
       <select id="f-cat" class="input" style="flex:0 1 200px">${catOpts}</select>
       <button class="btn primary" id="btn-go">查询节点</button>
-    </div><div id="out">${loading()}</div>`;
+    </div>
+    <div id="out">${loading()}</div>`;
   const run = async () => {
     const qs = new URLSearchParams({ days_ahead: $("#f-days").value, category: $("#f-cat").value });
     const d = await api(`/api/events?${qs}`);
@@ -616,8 +621,7 @@ VIEWS.events = function (content, params) {
               <div style="font-weight:650">${linkOrText(e.name, e.sourceUrl)} <span class="badge neutral">${esc(e.category)}</span> ${e.preheat ? `<span class="badge accent">${esc(e.preheat)}</span>` : ""}</div>
               <div class="ev-meta">${esc(e.startDate)}${e.endDate && e.endDate !== e.startDate ? ` ~ ${esc(e.endDate)}` : ""}${e.region ? ` · ${esc(e.region)}` : ""}</div>
               ${e.expectedImpact ? `<div class="ev-meta">${esc(e.expectedImpact)}</div>` : ""}
-            </div>
-          </div></div>`).join("")}</div>`
+            </div></div></div>`).join("")}</div>`
         : empty(d.note || "窗口内暂无节点"));
   };
   $("#btn-go").addEventListener("click", () => run().catch((e) => ($("#out").innerHTML = note("err", esc(e.message)))));
@@ -632,7 +636,8 @@ VIEWS.topic = function (content, params) {
       <input class="input" id="f-kw" placeholder="要分析的话题" value="${esc(params.keyword || "")}">
       <input class="input" id="f-geo" placeholder="地区代码，留空全球" style="flex:0 1 150px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">生成情报包</button>
-    </div><div id="out">${empty("输入话题后生成")}</div>`;
+    </div>
+    <div id="out">${empty("输入话题后生成")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入话题");
@@ -665,7 +670,8 @@ VIEWS.brief = async function (content, params) {
       <input class="input" id="f-aud" placeholder="目标人群画像（可选）" value="${esc(params.audience || "")}">
       <input class="input" id="f-geo" placeholder="趋势地区（可选）" style="flex:0 1 140px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">生成创作简报</button>
-    </div><div id="out">${empty("填写主题后生成证据简报")}</div>`;
+    </div>
+    <div id="out">${empty("填写主题后生成证据简报")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const topic = $("#f-topic").value.trim();
     if (!topic) return toast("请填写创作主题");
