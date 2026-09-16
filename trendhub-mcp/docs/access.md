@@ -12,6 +12,7 @@ TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁保持简
 2. clone 公开仓库并进入 `trendhub-mcp`。
 3. 执行平台对应的 Node-free bootstrap。已有 Node >=22 时 bootstrap 会直接复用；没有 Node 或版本过低时，会从 `nodejs.org/dist/latest-v24.x` 获取最新 Node 24 LTS 便携运行时，并使用官方 `SHASUMS256.txt` 校验 SHA-256 后再执行。
 4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
+5. 成功后 bootstrap 最后一行固定输出 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取 JSON 中的 `node` 和 `launcher` 绝对路径，并按 `command=<node>`、`args=[<launcher>]` 配置 MCP；这样系统 PATH 里即使没有 Node，也能稳定启动。
 
 macOS / Linux：
 
@@ -49,7 +50,13 @@ npm run smoke
 SMOKE OK tools=16
 ```
 
-之后把 MCP stdio 入口配置为：
+bootstrap 完成时还会输出类似：
+
+```text
+AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
+```
+
+Node-free 安装时，MCP stdio 必须使用这两个绝对路径。只有确认系统 Node 全局可用时，才可简写为：
 
 ```text
 command: node
