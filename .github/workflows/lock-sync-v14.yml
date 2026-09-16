@@ -1,0 +1,47 @@
+name: One-time v1.4.0 Lock Sync
+
+on:
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-lock:
+    if: github.head_ref == 'feat/professional-trend-intelligence-v14'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch head
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Regenerate lock metadata without changing dependency intent
+        working-directory: trendhub-mcp
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit only package-lock when npm changed it
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- trendhub-mcp/package-lock.json; then
+            echo "package-lock already synchronized"
+            exit 0
+          fi
+          git diff -- trendhub-mcp/package-lock.json
+          if ! git diff --quiet -- . ':(exclude)trendhub-mcp/package-lock.json'; then
+            echo "Refusing to commit files other than package-lock.json" >&2
+            git status --short
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trendhub-mcp/package-lock.json
+          git commit -m "chore: sync v1.4.0 package-lock metadata"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
