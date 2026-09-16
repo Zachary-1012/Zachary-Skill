@@ -16,7 +16,7 @@ import { analyzeTopic } from "../analysis/topic.js";
 import { listTemplates, getTemplate, getContentBrief } from "../analysis/produce.js";
 import { fetchXiaohongshu, fetchXiaohongshuHotlist } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
-import { xhsClient } from "./xhs/guest.js";
+import { xhsClient } from "../sources/xhs/guest.js";
 
 const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 
