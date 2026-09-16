@@ -16,6 +16,11 @@ export const config = {
   transport: (process.env.TRENTHUB_TRANSPORT === "http" ? "http" : "stdio") as "stdio" | "http",
   httpHost: process.env.TRENTHUB_HOST ?? "127.0.0.1",
   httpPort: num(process.env.TRENTHUB_PORT, 8333),
+  /**
+   * HTTP Bearer Token。默认 loopback 模式无需配置；一旦监听非 loopback 地址则强制要求。
+   * 客户端请求 /mcp 与 /api/* 时使用 Authorization: Bearer <token>。
+   */
+  httpToken: process.env.TRENTHUB_HTTP_TOKEN?.trim() ?? "",
   /** 热榜 HTTP 缓存秒数 */
   cacheTtlSec: num(process.env.TRENTHUB_CACHE_TTL, 300),
   /** 单次外呼请求超时（毫秒） */
