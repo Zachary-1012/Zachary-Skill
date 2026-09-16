@@ -1,0 +1,40 @@
+name: Source Health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  source-health:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trendhub-mcp
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+      - name: Check live third-party sources
+        run: npm run source:health
+
+      - name: Explain scope
+        if: always()
+        run: |
+          echo "Source Health observes third-party availability and data quality."
+          echo "It is intentionally separate from PR CI and the Stable Release gate."
