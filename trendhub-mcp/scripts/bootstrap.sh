@@ -17,7 +17,17 @@ run_setup() {
   shift
   export PATH="$(dirname "$node_bin"):${PATH}"
   log "Using Node $($node_bin --version)"
-  exec "$node_bin" "$ROOT/scripts/setup.mjs" "$@"
+
+  if "$node_bin" "$ROOT/scripts/setup.mjs" "$@"; then
+    :
+  else
+    local status=$?
+    exit "$status"
+  fi
+
+  local launcher="$ROOT/scripts/launcher.mjs"
+  "$node_bin" -e 'const launcher=process.argv[1]; console.log("AI_BOOTSTRAP_OK "+JSON.stringify({node:process.execPath,launcher}));' "$launcher"
+  exit 0
 }
 
 if command -v node >/dev/null 2>&1; then
