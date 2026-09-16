@@ -40,11 +40,21 @@ The score is operational quality, not a guarantee of future source availability.
 - `RATE_LIMITED`: latest non-ok observation indicates rate limiting or platform risk control;
 - `UNKNOWN`: no local observations yet.
 
+### Rolling reference observations
+
+The repository's scheduled Source Health runs every six hours. Because GitHub hosted runners are ephemeral, the workflow explicitly restores and re-saves only the non-sensitive `reliability/history/snapshots` state. This makes 24h/7d/30d source measurements and lead-time history cumulative instead of restarting from zero every run.
+
+The scheduled reference state contains public trend evidence and operational metadata only. No `XHS_COOKIE`, model prompt, user query, account identifier, hostname or private user data is placed into that cache.
+
+Scheduled observations are a **reference environment**, not a claim that every user's network will see identical platform availability. Local installations build their own reliability history as they are used.
+
 ## 2. Evidence history
 
 Usable hotlist results are retained locally in a bounded 30-day history (maximum 1,500 snapshots per platform). Each history item contains only public trend evidence needed for analysis: timestamp, quality, title, rank, URL, and platform-local hot value.
 
 The existing latest/previous snapshot ring remains unchanged for simple new/rising/dropped alerts.
+
+Evidence enters history through normal `get_trending`/snapshot activity and through scheduled Source Health reference observations. Missing/empty source results do not create fake trend hits; their failure is represented in Source Reliability instead.
 
 ## 3. Trend Intelligence Engine
 
@@ -102,11 +112,41 @@ TrendHub searches only the history captured **before/around that event** and ide
 
 TrendHub never invents the reference timestamp and should never cherry-pick a reference after seeing the result.
 
+### Batch real-world benchmark
+
+Company/internal evaluation can collect independently curated cases and run them in one pass:
+
+```bash
+npm run benchmark:lead -- --file /path/to/benchmark-cases.json
+```
+
+Input may be an array or `{ "cases": [...] }`. Each case is:
+
+```json
+{
+  "id": "optional-case-id",
+  "keyword": "AI眼镜",
+  "referenceTime": "2026-09-20T09:00:00+08:00",
+  "referenceSource": "external evidence description or URL kept by evaluator",
+  "platforms": ["xiaohongshu", "weibo", "bilibili", "douyin"]
+}
+```
+
+The local report contains total cases, evidence-covered cases, before-reference rate, 24h-ahead rate, 72h-ahead rate, average lead hours and per-case evidence. Reports are written under `data/benchmarks/`, ignored by Git and never uploaded automatically.
+
+A benchmark is valid only if ground-truth selection is independent of TrendHub output. Cases with no local evidence remain `insufficient_evidence` and must not be silently excluded when reporting overall coverage.
+
 ## 5. Quality evaluation without telemetry
 
 Normal TrendHub use emits no third-party telemetry.
 
 `npm run quality:diagnostic` is an explicit, voluntary local action. It produces a sanitized JSON report containing product version, Node major, OS family, source-status counts, aggregate reliability/history depth, and source-level operational summaries. It excludes identity and user content. Nothing is uploaded automatically; sharing is manual opt-in only.
+
+Quality evaluation and lead-time benchmarking are deliberately distinct:
+
+- quality diagnostics answer “is this installation and its source state healthy?”;
+- lead benchmarks answer “how early did captured evidence appear relative to an external event?”;
+- neither mechanism collects passive user behavior analytics.
 
 ## 6. Evidence hierarchy
 
