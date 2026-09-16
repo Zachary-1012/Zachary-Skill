@@ -1,0 +1,20 @@
+{
+  "_comment": "未来趋势信号信源（公开 RSS/Atom，均已实测可解析）。可通过环境变量 TRENTHUB_RSS_SOURCES 指向自定义 JSON 覆盖。抓取失败的信源会被自动跳过并标记，不影响其余。",
+  "sources": [
+    { "name": "TechCrunch AI", "category": "ai", "url": "https://techcrunch.com/category/artificial-intelligence/feed/" },
+    { "name": "The Verge AI", "category": "ai", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" },
+    { "name": "MIT Technology Review", "category": "frontier", "url": "https://www.technologyreview.com/feed/" },
+    { "name": "TechCrunch", "category": "tech", "url": "https://techcrunch.com/feed/" },
+    { "name": "The Verge", "category": "tech", "url": "https://www.theverge.com/rss/index.xml" },
+    { "name": "Wired", "category": "tech", "url": "https://www.wired.com/feed/rss" },
+    { "name": "Ars Technica", "category": "tech", "url": "https://feeds.arstechnica.com/arstechnica/index" },
+    { "name": "Stratechery", "category": "strategy", "url": "https://stratechery.com/feed/" },
+    { "name": "Search Engine Land", "category": "marketing", "url": "https://searchengineland.com/feed" },
+    { "name": "Social Media Today", "category": "marketing", "url": "https://www.socialmediatoday.com/feeds/news/" },
+    { "name": "cnBeta", "category": "tech-cn", "url": "https://www.cnbeta.com.tw/backend.php" },
+    { "name": "极客公园", "category": "tech-cn", "url": "https://www.geekpark.net/rss" },
+    { "name": "少数派", "category": "tech-cn", "url": "https://sspai.com/feed" },
+    { "name": "爱范儿", "category": "tech-cn", "url": "https://www.ifanr.com/feed" },
+    { "name": "Solidot", "category": "tech-cn", "url": "https://www.solidot.org/index.rss" }
+  ]
+}
