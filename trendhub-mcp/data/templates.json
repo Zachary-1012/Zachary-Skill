@@ -1,0 +1,167 @@
+{
+  "_comment": "TrendHub 专家内容生产模板库（自整理的通用营销方法论，可商用）。structure 为确定性骨架，slots 为需调用方 AI 结合真实数据填充的空位。成文创作由调用方大模型完成。",
+  "templates": [
+    {
+      "id": "hook-headlines",
+      "name": "爆款标题/钩子库",
+      "type": "copy",
+      "platforms": ["all"],
+      "bestFor": "任何内容的前 3 秒/第一眼，批量产出标题与开头钩子",
+      "formulas": [
+        "数字清单：《{N}个{方法/真相}，第{X}个90%的人不知道》",
+        "反差冲突：《你以为{A}，其实{反常识B}》",
+        "利益前置：《{时间}内{达成结果}，只要{简单动作}》",
+        "痛点共鸣：《总是{痛点}？问题出在{根因}》",
+        "悬念留白：《{现象}，原因最后一条最关键》",
+        "身份代入：《{人群}必看：{具体收益}》",
+        "热点绑定：《{热点事件}背后，藏着{行业启示}》",
+        "权威背书：《{权威/数据}证实：{结论}》"
+      ],
+      "checklist": ["含具体数字或具体结果", "制造信息差或情绪张力", "标题与正文承诺一致，不标题党", "前 12 字出现核心卖点/冲突", "一次只打一个钩子"]
+    },
+    {
+      "id": "short-video-script",
+      "name": "短视频口播分镜脚本",
+      "type": "script",
+      "platforms": ["douyin", "kuaishou", "shipinhao", "youtube-shorts"],
+      "bestFor": "30-90秒口播/科普/种草/观点类短视频",
+      "structure": [
+        { "section": "0-3s 黄金钩子", "purpose": "阻止划走，抛出冲突/悬念/利益", "guidance": "用画面+第一句话同时制造反差或点名人群；不要自我介绍开场", "slots": ["hook画面", "hook口播"] },
+        { "section": "3-10s 痛点/背景", "purpose": "让目标用户对号入座", "guidance": "具象描述1个高频痛点场景，说人话、给细节", "slots": ["痛点场景", "情绪词"] },
+        { "section": "10-25s 反转/新知", "purpose": "给出反常识结论或核心方法", "guidance": "推翻常见错误做法，抛出你的核心观点", "slots": ["错误做法", "正确认知"] },
+        { "section": "25-60s 干货分点", "purpose": "交付价值，建立专业信任", "guidance": "3个要点，每点一句话+一个例子；配字幕与画面提示", "slots": ["要点1", "要点2", "要点3"] },
+        { "section": "60-80s 行动召唤", "purpose": "引导完播、点赞、收藏、关注、评论", "guidance": "给一个明确动作+一个关注理由；可留互动问题", "slots": ["CTA", "互动问题"] }
+      ],
+      "storyboardFields": ["镜头序号", "时长(秒)", "画面/景别", "口播文案", "字幕/花字", "BGM/音效"],
+      "tips": ["每 5-8 秒一个信息点或画面变化", "口播用短句，一句不超过 15 字", "关键结论配大字幕", "结尾引导评论区互动以提升完播与互动率"],
+      "checklist": ["3秒内出现钩子", "有明确目标人群", "至少3个可执行要点", "结尾有且仅有一个主CTA", "总时长与分镜时长之和一致"]
+    },
+    {
+      "id": "xiaohongshu-note",
+      "name": "小红书种草图文",
+      "type": "copy",
+      "platforms": ["xiaohongshu"],
+      "bestFor": "种草、测评、攻略、清单、个人经验",
+      "structure": [
+        { "section": "封面标题", "purpose": "搜索+推荐双流量入口", "guidance": "20字内，含人群+结果+数字/情绪词；可做对比封面", "slots": ["封面主标题", "封面副标题"] },
+        { "section": "开头3行", "purpose": "折叠线前抓住读者", "guidance": "第一人称、交代身份与结果、制造'我也是'共鸣", "slots": ["身份背景", "前后对比/结果"] },
+        { "section": "正文干货", "purpose": "交付可收藏价值", "guidance": "分点+emoji分段，每点一个小标题；真实细节、避坑提醒", "slots": ["经验点1", "经验点2", "经验点3", "避坑"] },
+        { "section": "结尾互动", "purpose": "引导收藏关注评论", "guidance": "总结+提问，降低互动门槛", "slots": ["总结金句", "提问"] },
+        { "section": "标签", "purpose": "搜索流量", "guidance": "1个大词+3个精准词+2个长尾词", "slots": ["话题标签"] }
+      ],
+      "tips": ["标题多用'保姆级/抄作业/真的绝/后悔没早知道'等已验证词，但不夸大", "正文像闺蜜分享，避免硬广腔", "配图建议在文案中标注每张图内容"],
+      "checklist": ["封面标题含关键词", "折叠线前有钩子", "至少3个干货点", "有真实细节或数据", "5-8个标签"]
+    },
+    {
+      "id": "weibo-post",
+      "name": "微博热点文案",
+      "type": "copy",
+      "platforms": ["weibo"],
+      "bestFor": "热点跟进、观点表达、品牌发声",
+      "structure": [
+        { "section": "话题锚点", "purpose": "绑定热搜话题获得曝光", "guidance": "开头带 #话题词#，一句话亮明事件/观点", "slots": ["话题词", "核心判断"] },
+        { "section": "观点/信息", "purpose": "给出增量信息或独到角度", "guidance": "140字内说清'是什么+怎么看'，避免和稀泥", "slots": ["事实", "观点角度"] },
+        { "section": "情绪/金句", "purpose": "激发转发", "guidance": "一句可被引用的话，立场鲜明但不越界", "slots": ["金句"] },
+        { "section": "互动", "purpose": "引导评论", "guidance": "以开放式问题收尾", "slots": ["提问"] }
+      ],
+      "checklist": ["绑定正确话题词", "事实与观点分开", "敏感事件核实信息不造谣", "有明确立场", "长度适配信息流"]
+    },
+    {
+      "id": "wechat-article",
+      "name": "公众号深度文章",
+      "type": "copy",
+      "platforms": ["wechat", "newsletter"],
+      "bestFor": "行业分析、深度解读、品牌长文",
+      "structure": [
+        { "section": "标题", "purpose": "打开率", "guidance": "准备3个标题：悬念型/利益型/观点型，择优", "slots": ["标题A", "标题B", "标题C"] },
+        { "section": "导语", "purpose": "建立阅读动机", "guidance": "用一个场景/数据/矛盾切入，承诺读完能得到什么", "slots": ["开场场景", "阅读收益"] },
+        { "section": "背景与事实", "purpose": "交代来龙去脉", "guidance": "只写读者需要知道的事实，标注信息来源", "slots": ["事件背景", "关键数据"] },
+        { "section": "分层论证(3-4节)", "purpose": "推进核心观点", "guidance": "每节一个小标题+论点+论据(数据/案例)+小结", "slots": ["分论点1", "分论点2", "分论点3"] },
+        { "section": "洞察/预测", "purpose": "提供稀缺价值", "guidance": "回答'所以呢'，给出趋势判断或行动建议", "slots": ["趋势判断", "行动建议"] },
+        { "section": "结尾", "purpose": "沉淀与转发", "guidance": "金句收束+互动+引导在看/转发", "slots": ["金句", "CTA"] }
+      ],
+      "checklist": ["标题有打开欲", "关键数据带来源", "论证层层递进", "有独立洞察而非信息搬运", "小标题可独立成章"]
+    },
+    {
+      "id": "twitter-thread",
+      "name": "X/Twitter 长推线程",
+      "type": "copy",
+      "platforms": ["twitter", "x", "thread"],
+      "bestFor": "观点输出、行业拆解、个人品牌",
+      "structure": [
+        { "section": "Hook 推", "purpose": "决定整串是否被点开", "guidance": "一条推文讲清价值主张或反常识结论", "slots": ["hook"] },
+        { "section": "背景推", "purpose": "建立语境", "guidance": "为什么现在谈这件事", "slots": ["背景"] },
+        { "section": "主体(5-10推)", "purpose": "每推一个独立点", "guidance": "每推只讲一点，编号；数据/案例/对比交替", "slots": ["要点1..N"] },
+        { "section": "转折推", "purpose": "制造记忆点", "guidance": "the turn：认知转变的那一刻", "slots": ["转折"] },
+        { "section": "收获推", "purpose": "给可执行结论", "guidance": "1个行动清单", "slots": ["takeaway"] },
+        { "section": "CTA推", "purpose": "转关", "guidance": "follow for more + 一个问题", "slots": ["CTA"] }
+      ],
+      "checklist": ["首推可独立成立", "每推≤280字符且只讲一点", "编号清晰", "有the turn", "结尾单一CTA"]
+    },
+    {
+      "id": "livestream-script",
+      "name": "直播带货脚本",
+      "type": "script",
+      "platforms": ["douyin-live", "kuaishou-live", "taobao-live"],
+      "bestFor": "单品类/多品类直播话术与节奏编排",
+      "structure": [
+        { "section": "开场暖场(0-5min)", "purpose": "聚人、留人、预告福利", "guidance": "每3分钟重复一次主题与最大福利点", "slots": ["欢迎话术", "福利预告"] },
+        { "section": "痛点引入", "purpose": "唤醒需求", "guidance": "描述使用场景与痛点，让用户自我代入", "slots": ["场景痛点"] },
+        { "section": "产品展示", "purpose": "建立信任与欲望", "guidance": "FABE：特征→优势→利益→证据；现场演示/对比", "slots": ["特征", "优势", "利益", "证据"] },
+        { "section": "信任背书", "purpose": "消除顾虑", "guidance": "销量/评价/资质/退换政策/限量", "slots": ["背书", "零风险承诺"] },
+        { "section": "逼单成交", "purpose": "转化", "guidance": "锚点价格→直播价→赠品→限时限量→倒计时，明确上链接指令", "slots": ["原价锚点", "直播价", "赠品", "稀缺指令"] },
+        { "section": "循环与收尾", "purpose": "承接新流量", "guidance": "每10-15分钟循环一次卖点与福利", "slots": ["循环话术", "下一品预告"] }
+      ],
+      "checklist": ["福利点重复≥3次", "FABE完整", "有明确价格锚点", "稀缺性真实不虚构", "每个品有独立循环节奏", "合规不夸大功效"]
+    },
+    {
+      "id": "marketing-plan",
+      "name": "热点营销/推广方案",
+      "type": "plan",
+      "platforms": ["all"],
+      "bestFor": "借势热点、节点 campaign、新品/活动推广的完整方案",
+      "structure": [
+        { "section": "一、背景与机会", "purpose": "为什么现在做", "guidance": "用趋势数据说明热点阶段、量级、平台分布；附数据来源", "slots": ["热点事实", "数据佐证", "机会判断"] },
+        { "section": "二、目标与KPI", "purpose": "定义成功", "guidance": "SMART目标：曝光/互动/线索/转化，给基线与目标值", "slots": ["营销目标", "核心KPI", "目标值"] },
+        { "section": "三、目标人群与洞察", "purpose": "对谁说", "guidance": "人群画像、核心痛点、情绪、活跃平台与时段", "slots": ["人群画像", "核心洞察", "情绪点"] },
+        { "section": "四、核心策略与卖点", "purpose": "说什么", "guidance": "一个大创意/主张，绑定热点的角度，3个支撑卖点", "slots": ["核心主张", "切入角度", "卖点1-3"] },
+        { "section": "五、内容矩阵与渠道", "purpose": "在哪说、用什么形式", "guidance": "按平台匹配内容形态(短视频/图文/直播/话题)，给出数量与分工", "slots": ["平台-内容-数量表", "KOL/KOC安排"] },
+        { "section": "六、节奏排期", "purpose": "什么时候说", "guidance": "预热-爆发-长尾三阶段时间轴，对齐热点生命周期与节点", "slots": ["预热期动作", "爆发期动作", "长尾期动作", "时间轴"] },
+        { "section": "七、预算与资源", "purpose": "花多少钱、要什么资源", "guidance": "分项预算占位(投流/制作/达人/奖品)，未定时标'待定'不虚构", "slots": ["预算分项", "人力/资源"] },
+        { "section": "八、风险与预案", "purpose": "控风险", "guidance": "舆情、合规、热点反转、库存/履约风险及应对", "slots": ["风险点", "应对预案"] },
+        { "section": "九、复盘指标", "purpose": "如何衡量", "guidance": "数据回收口径、复盘时间、对照基线", "slots": ["复盘指标", "复盘时间"] }
+      ],
+      "checklist": ["每个判断有数据/来源", "KPI可量化且有基线", "平台与内容形态匹配", "排期对齐热点阶段", "预算不虚构、缺失标待定", "含舆情与合规风险"]
+    },
+    {
+      "id": "content-calendar",
+      "name": "节点内容日历/追更方案",
+      "type": "plan",
+      "platforms": ["all"],
+      "bestFor": "围绕未来节点提前布局内容，规划选题与发布节奏",
+      "structure": [
+        { "section": "节点清单", "purpose": "锁定未来可借势的节点", "guidance": "用 upcoming_events 工具拉取未来N天节点，按相关度筛选", "slots": ["节点名称", "日期", "相关度"] },
+        { "section": "选题脑暴", "purpose": "每个节点产出选题", "guidance": "每节点3个选题：预热科普/当天爆发/长尾复盘，标注平台", "slots": ["选题1-3/节点"] },
+        { "section": "内容形式分配", "purpose": "匹配形态", "guidance": "短视频/图文/直播/长文按平台与阶段分配", "slots": ["形式-平台表"] },
+        { "section": "倒排期", "purpose": "保证按时产出", "guidance": "以节点日为0点倒推：脚本-拍摄-剪辑-审核-发布-投流", "slots": ["倒排时间轴"] },
+        { "section": "热点应急位", "purpose": "保留突发热点产能", "guidance": "每周预留20%产能给突发热点，明确响应SOP与责任人", "slots": ["应急机制", "责任人"] }
+      ],
+      "checklist": ["节点日期已核实", "每节点≥3选题", "有倒排期与负责人", "预留突发热点产能", "预热内容提前就位"]
+    },
+    {
+      "id": "product-launch",
+      "name": "新品发布文案",
+      "type": "copy",
+      "platforms": ["all"],
+      "bestFor": "新产品/新功能上市的多平台主文案",
+      "structure": [
+        { "section": "一句话定位", "purpose": "说清是什么、为谁、解决什么", "guidance": "For{人群} who{痛点}, {产品} is{品类} that{核心利益}", "slots": ["定位句"] },
+        { "section": "核心卖点(3个)", "purpose": "差异化", "guidance": "每个卖点=功能+用户利益+证据", "slots": ["卖点1", "卖点2", "卖点3"] },
+        { "section": "场景化描述", "purpose": "让用户想象拥有后的样子", "guidance": "before/after对比，具体使用场景", "slots": ["before", "after"] },
+        { "section": "信任与紧迫", "purpose": "推动首单", "guidance": "背书+首发权益+限时", "slots": ["背书", "首发权益", "时限"] },
+        { "section": "平台适配", "purpose": "一稿多发", "guidance": "输出短视频版/图文版/短动态版/长文版要点", "slots": ["各平台版本"] }
+      ],
+      "checklist": ["定位句清晰", "卖点讲利益而非参数堆砌", "有真实证据", "权益与时限真实", "覆盖主要发布平台"]
+    }
+  ]
+}
