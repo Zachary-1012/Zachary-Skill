@@ -12,8 +12,11 @@ import { interestOverTime, relatedQueries } from "../sources/googleTrends.js";
 import { futureSignals, futureCategories } from "../sources/rss.js";
 import { upcomingEvents, eventCategories } from "../sources/events.js";
 import { diffPlatform, takeSnapshots, updateFromResults } from "../store/snapshot.js";
+import { fetchXiaohongshu, fetchXiaohongshuHotlist, XHS_PLATFORM } from "../sources/xiaohongshu.js";
+import { extractXhsTopics } from "../analysis/xhsTopics.js";
+import { xhsClient } from "../sources/xhs/guest.js";
 
-const DEFAULT_PLATFORMS = ["weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
+const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 
 function json(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -60,6 +63,41 @@ export function registerTools(server: McpServer): void {
         okCount,
         degradedOrMissing: results.filter((r) => r.dataQuality !== "ok").map((r) => ({ platform: r.platform, dataQuality: r.dataQuality, note: r.note })),
         results,
+      });
+    }
+  );
+
+  server.tool(
+    "xhs_hot_topics",
+    "小红书热点聚合（主打平台）：一次性返回官方首页『热门推荐流』笔记（含封面/作者/点赞展示值/原文链接）、由热门标题词频派生的高频话题词（非官方热搜词榜）、当前会话模式（游客/登录）。配置环境变量 XHS_COOKIE 后额外返回官方『热搜词榜』。游客零配置即可用热门推荐流。",
+    {
+      limit: z.number().min(5).max(40).optional().describe("热门笔记条数，默认30，最多40"),
+      topic_limit: z.number().min(5).max(50).optional().describe("派生话题词数量，默认20"),
+      with_hotlist: z.boolean().optional().describe("登录态下是否同时取官方热搜词榜，默认 true"),
+    },
+    async ({ limit, topic_limit, with_hotlist }) => {
+      const n = limit ?? 30;
+      const feed = await fetchXiaohongshu(n);
+      const derivedTopics = extractXhsTopics(feed.items.map((i) => i.title), topic_limit ?? 20);
+      const loggedIn = xhsClient.hasLoginCookie();
+      let officialHotlist = null;
+      if (with_hotlist !== false && loggedIn) officialHotlist = await fetchXiaohongshuHotlist(20);
+      updateFromResults([feed, ...(officialHotlist ? [officialHotlist] : [])]);
+      return json({
+        generatedAt: new Date().toISOString(),
+        platform: XHS_PLATFORM,
+        mode: loggedIn ? "cookie（登录态）" : "guest（游客）",
+        loggedIn,
+        feed,
+        derivedTopics,
+        officialHotlist,
+        hints: loggedIn
+          ? ["已使用 XHS_COOKIE 登录态：热门推荐流 + 官方热搜词榜均可用；关键词爆款见 analyze_topic / get_content_brief。"]
+          : [
+              "游客模式：热门推荐流真实可取（平台推荐序，非官方热搜词榜）。",
+              "官方热搜词榜与关键词搜索对游客关闭（平台 -104）；配置 XHS_COOKIE（含 a1 与 web_session）后解锁。",
+              "liked_count 为平台展示近似值（如 4.1万/10万+），非精确整数。",
+            ],
       });
     }
   );
