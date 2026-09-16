@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "公司级全网热点趋势 MCP 插件，以小红书热点与趋势为主打：小红书热门笔记流与话题词派生、国内外共 38 个平台实时热榜、Google Trends 关键词走势与相关词、高质量未来趋势信源、年度节点日历，提供跨平台共振、新晋/飙升/掉榜、话题深度情报与脚本/文案/方案专家创作简报，内置零模型 Key 的本地可视化控制台。",
   "publisher": "Zachary",
   "license": "MIT",
