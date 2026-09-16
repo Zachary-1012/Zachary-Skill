@@ -1,0 +1,85 @@
+name: Sync distribution version metadata
+
+on:
+  push:
+    branches: ["feat/multi-registry-distribution"]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/multi-registry-distribution
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+
+      - name: Synchronize v1.4.1 metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd trendhub-mcp
+          npm version 1.4.1 --no-git-tag-version --allow-same-version
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          p.scripts['smoke:remote'] = 'node scripts/remote-smoke.mjs';
+          fs.writeFileSync('package.json', JSON.stringify(p, null, 2) + '\n');
+          const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+          m.version = '1.4.1';
+          m.runtime.remote = {
+            type: 'streamable-http',
+            url: 'https://trendhub-remote-production.up.railway.app/mcp',
+            health: 'https://trendhub-remote-production.up.railway.app/health',
+            privacy: 'https://trendhub-remote-production.up.railway.app/privacy',
+            terms: 'https://trendhub-remote-production.up.railway.app/terms',
+            accountRequired: false,
+            modelApiKeyRequired: false,
+            note: 'Public distribution adapter. The hosted gateway exposes MCP only; the local console/API is not exposed and no visitor XHS_COOKIE is used.'
+          };
+          fs.writeFileSync('manifest.json', JSON.stringify(m, null, 2) + '\n');
+          NODE
+          cd ..
+          python3 - <<'PY'
+          from pathlib import Path
+          files = [
+              Path('trendhub-mcp/src/server.ts'),
+              Path('trendhub-mcp/scripts/remote-gateway.mjs'),
+              Path('README.md'),
+              Path('trendhub-mcp/README.md'),
+              Path('trendhub-mcp/SKILL.md'),
+          ]
+          for path in files:
+              if path.exists():
+                  text = path.read_text()
+                  text = text.replace('v1.4.0', 'v1.4.1').replace('"1.4.0"', '"1.4.1"')
+                  path.write_text(text)
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text()
+          header = '''## v1.4.1 — Multi-registry distribution\n\n- Add isolated public Streamable HTTP MCP gateway for marketplace distribution.\n- Add public privacy/terms/health/discovery endpoints while keeping the core loopback-only behind a private bearer token.\n- Add Official MCP Registry, Cursor, Smithery/Glama-ready distribution metadata and remote smoke validation.\n- No change to the 19-tool TrendHub capability contract.\n\n'''
+          if '## v1.4.1 — Multi-registry distribution' not in text:
+              marker = '# Changelog\n\n'
+              text = text.replace(marker, marker + header, 1) if marker in text else header + text
+              changelog.write_text(text)
+          PY
+
+      - name: Commit synchronized metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "Version metadata already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add trendhub-mcp/package.json trendhub-mcp/package-lock.json trendhub-mcp/manifest.json trendhub-mcp/src/server.ts trendhub-mcp/scripts/remote-gateway.mjs README.md trendhub-mcp/README.md trendhub-mcp/SKILL.md CHANGELOG.md
+          git commit -m "chore: synchronize TrendHub v1.4.1 distribution metadata"
+          git push origin HEAD:feat/multi-registry-distribution
