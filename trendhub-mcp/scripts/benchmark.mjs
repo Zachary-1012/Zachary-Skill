@@ -2,7 +2,7 @@
 /**
  * Batch real-world lead-time benchmark.
  * Reads externally curated ground-truth cases and compares them with local TrendHub history.
- * No network calls, telemetry, or synthetic reference timestamps.
+ * No network calls, telemetry, synthetic reference timestamps, or post-event intelligence scoring.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -19,7 +19,7 @@ function argValue(flag) {
 const inputArg = argValue("--file") ?? argValue("-f");
 if (!inputArg) {
   console.error("Usage: npm run benchmark:lead -- --file <benchmark-cases.json>");
-  console.error("Each case: { id?, keyword, referenceTime, platforms?[] , referenceSource? }");
+  console.error("Each case: { id?, keyword, referenceTime, referenceSource, platforms?[] }");
   process.exit(2);
 }
 
@@ -30,7 +30,7 @@ if (!Array.isArray(cases) || cases.length === 0) {
   throw new Error("benchmark file must contain a non-empty array or { cases: [...] }");
 }
 
-const { analyzeTrendIntelligence, benchmarkTrendLead } = await import("../dist/src/analysis/intelligence.js");
+const { benchmarkTrendLead } = await import("../dist/src/analysis/intelligence.js");
 const { listPlatforms } = await import("../dist/src/sources/index.js");
 const defaultPlatforms = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 const known = new Set(listPlatforms().map((x) => x.platform));
@@ -40,28 +40,25 @@ for (let i = 0; i < cases.length; i++) {
   const c = cases[i] ?? {};
   const keyword = String(c.keyword ?? "").trim();
   const referenceTime = String(c.referenceTime ?? c.reference_time ?? "").trim();
+  const referenceSource = String(c.referenceSource ?? c.reference_source ?? "").trim();
   if (!keyword || !referenceTime || !Number.isFinite(Date.parse(referenceTime))) {
     throw new Error(`case ${i + 1} must include keyword and a valid referenceTime`);
+  }
+  if (!referenceSource) {
+    throw new Error(`case ${i + 1} must include referenceSource so the ground truth is auditable`);
   }
   const requested = Array.isArray(c.platforms) && c.platforms.length ? c.platforms.map(String) : defaultPlatforms;
   const platforms = requested.filter((p) => known.has(p));
   if (!platforms.length) throw new Error(`case ${i + 1} has no valid registered platforms`);
 
   const lead = benchmarkTrendLead(keyword, referenceTime, platforms);
-  const intelligence = analyzeTrendIntelligence(keyword, platforms);
   results.push({
     id: c.id ?? `case-${i + 1}`,
     keyword,
     referenceTime: new Date(Date.parse(referenceTime)).toISOString(),
-    referenceSource: c.referenceSource ?? c.reference_source ?? null,
+    referenceSource,
     platforms,
     lead,
-    intelligenceAtEvaluation: {
-      lifecycle: intelligence.lifecycle,
-      confidence: intelligence.confidence,
-      evidence: intelligence.evidence,
-      metrics: intelligence.metrics,
-    },
   });
 }
 
@@ -71,22 +68,25 @@ const ahead24 = withEvidence.filter((x) => x.lead.detected24hAhead);
 const ahead72 = withEvidence.filter((x) => x.lead.detected72hAhead);
 const leadValues = withEvidence.map((x) => x.lead.leadHours).filter((x) => typeof x === "number");
 const averageLeadHours = leadValues.length ? Math.round((leadValues.reduce((a, x) => a + x, 0) / leadValues.length) * 100) / 100 : null;
+const rate = (n, d) => d ? Math.round((n / d) * 1000) / 1000 : null;
 
 const report = {
   schemaVersion: 1,
   methodologyVersion: "trend-lead-benchmark-v1",
   generatedAt: new Date().toISOString(),
   inputFile: path.basename(inputPath),
-  groundTruthPolicy: "referenceTime must be externally documented and selected independently of TrendHub output",
+  groundTruthPolicy: "referenceTime and referenceSource must be externally documented and selected independently of TrendHub output",
+  antiLookaheadPolicy: "Only lead-time evidence is evaluated. Current/post-event lifecycle or confidence is intentionally excluded from benchmark scoring.",
   summary: {
     totalCases: results.length,
     casesWithEvidence: withEvidence.length,
+    evidenceCoverageRate: rate(withEvidence.length, results.length),
     detectedBeforeReference: before.length,
     detected24hAhead: ahead24.length,
     detected72hAhead: ahead72.length,
-    beforeReferenceRate: withEvidence.length ? Math.round((before.length / withEvidence.length) * 1000) / 1000 : null,
-    ahead24Rate: withEvidence.length ? Math.round((ahead24.length / withEvidence.length) * 1000) / 1000 : null,
-    ahead72Rate: withEvidence.length ? Math.round((ahead72.length / withEvidence.length) * 1000) / 1000 : null,
+    beforeReferenceRate: rate(before.length, withEvidence.length),
+    ahead24Rate: rate(ahead24.length, withEvidence.length),
+    ahead72Rate: rate(ahead72.length, withEvidence.length),
     averageLeadHours,
   },
   results,
