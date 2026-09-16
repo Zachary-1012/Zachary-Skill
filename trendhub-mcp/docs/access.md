@@ -1,51 +1,135 @@
 # 访问与安装说明
 
-TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁刻意保持最简单：**拿到仓库链接的人，就能 clone 安装使用**，无需审批、无需被加为协作者、无需中央服务器。
+TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁保持简单：**拿到仓库链接的人，就能 clone 安装使用**，无需审批、协作者权限、TrendHub 账号或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
 
-## 同事安装（一键，约 1–3 分钟，主要取决于网速）
+## 给 AI 的安装流程
+
+如果使用者把仓库链接交给一个具备终端执行能力的 AI / Coding Agent，按下面流程即可完成安装：
 
 ```bash
-# 1) 克隆（公开仓库，无需登录；国内若 clone 很慢，可在仓库网页 Code -> Download ZIP 解压）
+git clone https://github.com/Zachary-1012/Zachary-Skill.git
+cd Zachary-Skill/trendhub-mcp
+node --version                 # 必须 >= 22；推荐 Node 24 LTS
+node scripts/setup.mjs         # package-lock.json + npm ci -> build -> smoke
+npm run smoke                  # 成功标志：SMOKE OK tools=16
+```
+
+之后把 MCP stdio 入口配置为：
+
+```text
+command: node
+args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
+```
+
+机器可读安装信息也写在 `manifest.json -> aiInstall`。
+
+## 人工安装
+
+```bash
+# 1) 克隆公开仓库
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 
 # 2) 进入插件目录
 cd Zachary-Skill/trendhub-mcp
 
-# 3) 一键安装：自动选国内外最快 npm 源 -> 装依赖 -> 构建 -> 数秒握手验证
+# 3) 一键安装
 node scripts/setup.mjs
-#    国内网络若官方源慢： node scripts/setup.mjs --cn
-#    海外网络：           node scripts/setup.mjs --global
+# 国内网络若官方源慢： node scripts/setup.mjs --cn
+# 海外网络：           node scripts/setup.mjs --global
 ```
 
-安装脚本结尾会自动跑一次 `smoke` 握手（数秒、不联网、不抓平台），看到 `SMOKE OK tools=16` 即代表服务就绪。**安装时不要跑 `npm run selftest`**——它会真实抓取全部平台、约 2 分钟，仅用于排障。之后按 [setup-clients.md](./setup-clients.md) 把插件挂到自己用的 AI 客户端，或直接 `npm run ui` 打开本地控制台。
+安装脚本严格使用已提交的 `package-lock.json` 与 `npm ci`，随后构建并执行不联网的 MCP smoke。看到 `SMOKE OK tools=16` 即代表服务就绪。
 
-> 分发方式：管理员把**仓库链接**发给需要的同事即可。链接在谁手里，谁就能装；不做额外 license / 签名 / 账号校验（按需求刻意保持简单）。
+外部平台健康检查与安装门禁分离：
 
-## 以后更新（重启客户端即更新）
+```bash
+npm run source:health
+```
 
-客户端接入推荐使用启动包装器 `scripts/launcher.mjs`：每次 AI 客户端启动插件时，先秒开当前已装版本，再在后台非阻塞检查 GitHub 更新；发现新版才拉取并重建，**重启一次客户端即生效**。连不上 GitHub（国内网络常见）、超时、非 git 目录或本地有改动时一律静默跳过、继续用当前版本，绝不影响使用；设置环境变量 `TRENTHUB_AUTOUPDATE=0` 可完全关闭。更新日志在 `logs/autoupdate.log`。
+旧命令 `npm run selftest` 仍保留兼容，但等价于 source health；它会真实访问第三方平台，因此**不属于安装、PR CI 或 release gate**。
 
-也可手动一键升级：
+## 更新：只跟随 Stable Release
+
+推荐客户端入口为 `scripts/launcher.mjs`。每次 AI 客户端启动时：
+
+1. 当前已安装版本立即启动；
+2. 后台读取 GitHub 最新正式 Stable Release；
+3. 只有更高的正式 `vX.Y.Z` 才执行更新；
+4. 不跟随 `main` HEAD；
+5. 检测到已跟踪文件的本地修改时跳过；
+6. 安装/构建失败时尽力回滚到更新前版本。
+
+设置 `TRENTHUB_AUTOUPDATE=0` 可完全关闭自动更新。手动升级：
 
 ```bash
 cd Zachary-Skill/trendhub-mcp
 node scripts/upgrade.mjs
 ```
 
-老的手动三步仍然等价：`git pull` -> `npm install`（依赖变化时）-> `npm run build`，然后重启客户端。
+ZIP 安装无法自动切换 GitHub release tag，建议长期使用 `git clone` 安装。
 
-## 可选：配置小红书登录态（非必须）
+## Release 门禁
 
-游客模式零配置即可用小红书热门笔记流与派生词。需要官方热搜词榜 / 关键词搜索时，再按 README 第 6 节设置本机环境变量 `XHS_COOKIE`，该 Cookie 只存在本机、只发给小红书官方。
+正式 Stable Release 不直接从开发分支发布。`main` 必须先通过：
 
-## 安全与合规边界（如实说明）
+- Node 22.x / 24.x；
+- `npm ci` 锁定安装；
+- TypeScript build；
+- deterministic `npm test`；
+- MCP smoke handshake。
 
-- 插件**不含任何密钥**：不需要、也不存储大模型 API Key；同事用哪个 AI，就由哪个 AI 出算力。
-- **零遥测、零数据回传**：没有任何统计/埋点/上报，抓取与缓存只在本机发生。
-- **自动更新与安装源**：自动更新仅在启动后非阻塞访问 github.com（git，可关闭、失败安全），不访问任何其它服务器；安装依赖时会在官方 npm 源与国内 npmmirror 镜像间自动选择可达且最快者（镜像包内容一致、经 npm 完整性校验），也可用 `--cn` / `--global` 手动指定。这些都不改变零遥测、零数据回传。
-- HTTP 与控制台**默认**只绑定 `127.0.0.1`（本机）。如需让手机/平板或其他电脑接入，可自行用环境变量 `TRENTHUB_HOST=0.0.0.0` 把监听限定在受信任的局域网或 Tailscale 私有组网内；该 HTTP 端点**没有登录鉴权**，严禁把 8333 端口直接映射/转发到公网互联网。
-- 仓库公开后，任何拿到链接的人都能查看 / fork，且 MIT 许可允许商用、fork 不可收回——**请勿把 `XHS_COOKIE`、账号凭据、公司内部资料提交进仓库**。
-- 纯本地插件 + 海外 GitHub 分发 + 调用第三方模型 API + 不对外提供互联网信息服务，不涉及国内 ICP 备案。
-- 若日后需要收回访问：在 GitHub 将仓库改回私有即可（已 clone 到本机的副本不受影响，但将无法再 `git pull`）。
+CI 全绿后，Release 工作流才生成正式 tag、npm `.tgz` 与 `SHA256SUMS.txt`。第三方平台的实时可达性由独立 `Source Health` 工作流观察，不阻断代码发布。
+
+## 可选：配置小红书登录态
+
+游客模式零配置即可使用小红书热门推荐笔记流与派生词。需要官方热搜词榜 / 关键词搜索时，再设置本机环境变量 `XHS_COOKIE`（需包含 `a1` 与 `web_session`）。Cookie 只应存在于使用者本机，**禁止提交到仓库**。
+
+## HTTP 网络边界
+
+### 本机模式（默认）
+
+默认监听：
+
+```text
+127.0.0.1:8333
+```
+
+本机 loopback 模式无需额外 Token，保持安装即用。
+
+### 局域网 / Tailscale / 其他非 loopback 模式
+
+只要 `TRENTHUB_HOST` 不是 loopback，就**必须**同时设置 `TRENTHUB_HTTP_TOKEN`，否则 TrendHub 会拒绝启动。
+
+Windows PowerShell 示例：
+
+```powershell
+$env:TRENTHUB_HOST='0.0.0.0'
+$env:TRENTHUB_HTTP_TOKEN='请使用足够长的随机Token'
+npm run start:http
+```
+
+macOS / Linux 示例：
+
+```bash
+TRENTHUB_HOST=0.0.0.0 \
+TRENTHUB_HTTP_TOKEN='请使用足够长的随机Token' \
+npm run start:http
+```
+
+远程 MCP 客户端需要发送：
+
+```text
+Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
+```
+
+鉴权保护 `/mcp` 与 `/api/*`。即使启用 Token，也建议只放在受信任局域网或 Tailscale 等私有组网，不直接将 8333 端口暴露到公开互联网。
+
+## 安全与数据边界（准确口径）
+
+- **无模型 Key**：TrendHub 本身不需要、也不存储任何大模型 API Key；调用方 AI 使用自己的模型能力。
+- **无第三方遥测**：TrendHub 不做使用统计、埋点或行为上报。
+- **无 TrendHub 中央数据回传**：没有中央 TrendHub 服务接收使用者数据。
+- **不是“完全无出站网络”**：实时取数需要请求目标公开数据源；安装访问 npm registry/npmmirror；更新访问 GitHub Stable Release。
+- 仓库公开后，任何人都可以查看 / fork；MIT 许可允许商用与修改。不要把 `XHS_COOKIE`、账号凭据、公司内部资料或其他敏感信息提交到仓库。

@@ -1,0 +1,94 @@
+name: Stable Release
+
+on:
+  workflow_run:
+    workflows: ["Node.js CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: trendhub-mcp
+
+    steps:
+      - name: Checkout verified commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Re-run release gate
+        run: npm run release:gate
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Refusing non-stable version: $VERSION" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: existing
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "$TAG already exists; verified commit will not create a duplicate release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack release artifact
+        if: steps.existing.outputs.exists == 'false'
+        shell: bash
+        run: |
+          mkdir -p release-artifacts
+          npm pack --pack-destination release-artifacts
+          (cd release-artifacts && sha256sum *.tgz > SHA256SUMS.txt)
+
+      - name: Create stable tag
+        if: steps.existing.outputs.exists == 'false'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          TAG="${{ steps.version.outputs.tag }}"
+          git tag -a "$TAG" "${{ github.event.workflow_run.head_sha }}" -m "TrendHub $TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Stable Release
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          gh release create "$TAG" \
+            release-artifacts/*.tgz release-artifacts/SHA256SUMS.txt \
+            --title "TrendHub $TAG" \
+            --generate-notes \
+            --verify-tag
