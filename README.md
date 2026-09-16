@@ -2,21 +2,45 @@
 
 全员可用的 **AI Skill / MCP 插件仓库**。每个技能都与具体大模型解耦：无论使用 ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI，均可挂载使用；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
-> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、TrendHub 账号或中央服务器。安装说明见 [`trendhub-mcp/docs/access.md`](./trendhub-mcp/docs/access.md)。
+> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。安装说明见 [`trendhub-mcp/docs/access.md`](./trendhub-mcp/docs/access.md)。
 
 ## 给 AI 的安装合同
 
-如果你把本仓库链接直接交给一个可以执行终端命令的 AI / Coding Agent，它应按以下固定流程安装，不需要猜目录或依赖：
+如果你把本仓库链接直接交给一个可以执行终端命令的 AI / Coding Agent，它应按以下固定流程安装，不需要用户自己准备 Node.js：
+
+1. 检查 `git`。如机器尚未安装 Git，AI 应先通过操作系统可信的软件源或 Git 官方安装方式补齐 Git，再执行公开仓库 clone；正式安装推荐使用 `git clone`，以保持 Stable Release 更新能力。
+2. clone 并进入 `trendhub-mcp`。
+3. 执行对应平台的 **Node-free bootstrap**：已有 Node >=22 时直接复用；没有 Node 或版本过低时，bootstrap 会从 `nodejs.org` 获取最新 Node 24 LTS 的便携版，使用官方 `SHASUMS256.txt` 校验 SHA-256 后放入用户缓存目录，不需要管理员权限，也不会替换系统 Node。
+4. bootstrap 自动继续现有 `setup.mjs -> npm ci -> build -> smoke` 安装链。
+5. bootstrap 成功后最后输出一行 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取其中的 `node` 与 `launcher` **绝对路径**，并用 `command=<node>`、`args=[<launcher>]` 写入 MCP 配置；这样即使用户系统 PATH 中没有 Node，也能直接启动 TrendHub。
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 cd Zachary-Skill/trendhub-mcp
-node --version                 # 必须 >= 22；推荐 Node 24 LTS
-node scripts/setup.mjs         # package-lock.json + npm ci -> build -> smoke
+
+# macOS / Linux：没有 Node 也可以直接运行
+bash scripts/bootstrap.sh
+
+# 已经有 Node >=22 时，也可以直接走原安装入口
+node scripts/setup.mjs
 npm run smoke                  # 成功标志：SMOKE OK tools=16
 ```
 
-安装成功后，MCP stdio 入口固定为：
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/Zachary-1012/Zachary-Skill.git
+cd Zachary-Skill\trendhub-mcp
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
+```
+
+bootstrap 成功时的机器可读结果示例：
+
+```text
+AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
+```
+
+AI 应按这两个真实绝对路径配置 MCP。只有在确认系统 Node 已经全局可用时，才可以简写为：
 
 ```text
 command: node
@@ -33,7 +57,9 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 ## 一键安装（以 TrendHub 为例）
 
-前置：**Node.js ≥ 22**，推荐 **Node 24 LTS**。Windows / macOS / Linux 可本地安装；手机 / 平板通常通过一台常开主机以受保护 HTTP URL 接入，详见 [setup-clients](./trendhub-mcp/docs/setup-clients.md)。
+推荐让具备终端执行能力的 AI 直接运行上面的 bootstrap。**Node.js 不再要求用户预先安装**：bootstrap 会复用现有 Node >=22；否则自动准备经 SHA-256 校验的 Node 24 LTS 便携运行时。Windows / macOS / Linux 均可本地安装；手机 / 平板通常通过一台常开主机以受保护 HTTP URL 接入，详见 [setup-clients](./trendhub-mcp/docs/setup-clients.md)。
+
+已有 Node >=22 的用户仍可直接执行：
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
@@ -45,7 +71,7 @@ node scripts/setup.mjs
 
 `setup.mjs` 严格使用已提交的 `package-lock.json` 与 `npm ci`，不会在用户安装时重新求解依赖。看到 `SMOKE OK tools=16` 即安装就绪。
 
-- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置，入口为 `scripts/launcher.mjs`。
+- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置；Node-free bootstrap 用户必须优先使用 `AI_BOOTSTRAP_OK` 返回的绝对 Node / launcher 路径。
 - 只想用本地界面看榜：在 `trendhub-mcp` 目录运行 `npm run ui`。
 - 外部信源体检：`npm run source:health`。旧命令 `npm run selftest` 保留兼容，但它**不属于安装或 release gate**。
 
@@ -87,6 +113,6 @@ node scripts/upgrade.mjs
 ## 权限与数据边界
 
 - 仓库公开，**把链接发给谁，谁就能查看并安装**；MIT 许可允许 fork / 商用。
-- 仓库不应包含任何密钥、Cookie 或内部资料。小红书增强能力所需 `XHS_COOKIE` 只配置在使用者本机环境变量中。
-- “无中央数据回传”不等于“无任何出站网络”：平台取数会访问对应平台，依赖安装访问 npm registry/npmmirror，Stable Release 更新访问 GitHub。
+- 无需注册或登录；仓库不应包含任何密钥、Cookie 或内部资料。小红书增强能力所需 `XHS_COOKIE` 只配置在使用者本机环境变量中。
+- “无中央数据回传”不等于“无任何出站网络”：平台取数会访问对应平台，依赖安装访问 npm registry/npmmirror，Node bootstrap 访问 `nodejs.org`，Stable Release 更新访问 GitHub。
 - 各技能的具体数据口径、已知限制与第三方归因见对应 README 与 `NOTICE`。

@@ -1,22 +1,62 @@
 # 访问与安装说明
 
-TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁保持简单：**拿到仓库链接的人，就能 clone 安装使用**，无需审批、协作者权限、TrendHub 账号或中央服务器。
+TrendHub 通过 GitHub **公开仓库** `Zachary-Skill` 分发。门禁保持简单：**拿到仓库链接的人，就能 clone 安装使用**，无需审批、注册、登录或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
 
 ## 给 AI 的安装流程
 
-如果使用者把仓库链接交给一个具备终端执行能力的 AI / Coding Agent，按下面流程即可完成安装：
+如果使用者把仓库链接交给一个具备终端执行能力的 AI / Coding Agent，推荐按下面流程完成安装：
+
+1. 检查 `git`。如机器没有 Git，AI 应先通过操作系统可信的软件源或 Git 官方安装方式补齐 Git。
+2. clone 公开仓库并进入 `trendhub-mcp`。
+3. 执行平台对应的 Node-free bootstrap。已有 Node >=22 时 bootstrap 会直接复用；没有 Node 或版本过低时，会从 `nodejs.org/dist/latest-v24.x` 获取最新 Node 24 LTS 便携运行时，并使用官方 `SHASUMS256.txt` 校验 SHA-256 后再执行。
+4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
+5. 成功后 bootstrap 最后一行固定输出 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取 JSON 中的 `node` 和 `launcher` 绝对路径，并按 `command=<node>`、`args=[<launcher>]` 配置 MCP；这样系统 PATH 里即使没有 Node，也能稳定启动。
+
+macOS / Linux：
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 cd Zachary-Skill/trendhub-mcp
-node --version                 # 必须 >= 22；推荐 Node 24 LTS
-node scripts/setup.mjs         # package-lock.json + npm ci -> build -> smoke
-npm run smoke                  # 成功标志：SMOKE OK tools=16
+bash scripts/bootstrap.sh
 ```
 
-之后把 MCP stdio 入口配置为：
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/Zachary-1012/Zachary-Skill.git
+cd Zachary-Skill\trendhub-mcp
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
+```
+
+bootstrap 的 Node 24 运行时只放在用户缓存目录：
+
+- Windows：`%LOCALAPPDATA%\TrendHub\node24\...`
+- macOS / Linux：`${XDG_CACHE_HOME:-~/.cache}/trendhub/node24/...`
+
+它不要求管理员权限，不卸载或覆盖系统 Node；如果机器本来已有 Node >=22，就不会下载 Node。
+
+已有 Node >=22 的机器仍可直接走原安装入口：
+
+```bash
+node scripts/setup.mjs
+npm run smoke
+```
+
+成功标志固定为：
+
+```text
+SMOKE OK tools=16
+```
+
+bootstrap 完成时还会输出类似：
+
+```text
+AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
+```
+
+Node-free 安装时，MCP stdio 必须使用这两个绝对路径。只有确认系统 Node 全局可用时，才可简写为：
 
 ```text
 command: node
@@ -26,6 +66,8 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 机器可读安装信息也写在 `manifest.json -> aiInstall`。
 
 ## 人工安装
+
+如果已经有 Node >=22：
 
 ```bash
 # 1) 克隆公开仓库
@@ -39,6 +81,8 @@ node scripts/setup.mjs
 # 国内网络若官方源慢： node scripts/setup.mjs --cn
 # 海外网络：           node scripts/setup.mjs --global
 ```
+
+如果没有 Node 或 Node <22，不需要先手工安装 Node，直接运行本页上方对应平台的 bootstrap 即可。
 
 安装脚本严格使用已提交的 `package-lock.json` 与 `npm ci`，随后构建并执行不联网的 MCP smoke。看到 `SMOKE OK tools=16` 即代表服务就绪。
 
@@ -128,8 +172,9 @@ Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
 
 ## 安全与数据边界（准确口径）
 
+- **无需注册 / 登录**：TrendHub 没有独立账号体系，公开仓库本身就是分发入口。
 - **无模型 Key**：TrendHub 本身不需要、也不存储任何大模型 API Key；调用方 AI 使用自己的模型能力。
 - **无第三方遥测**：TrendHub 不做使用统计、埋点或行为上报。
 - **无 TrendHub 中央数据回传**：没有中央 TrendHub 服务接收使用者数据。
-- **不是“完全无出站网络”**：实时取数需要请求目标公开数据源；安装访问 npm registry/npmmirror；更新访问 GitHub Stable Release。
+- **不是“完全无出站网络”**：实时取数需要请求目标公开数据源；安装访问 npm registry/npmmirror；Node bootstrap 访问 `nodejs.org`；更新访问 GitHub Stable Release。
 - 仓库公开后，任何人都可以查看 / fork；MIT 许可允许商用与修改。不要把 `XHS_COOKIE`、账号凭据、公司内部资料或其他敏感信息提交到仓库。
