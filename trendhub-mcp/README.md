@@ -55,7 +55,7 @@
 - ✅ **零遥测、零数据回传、纯本地**：不内置任何统计/埋点/上报，所有抓取与缓存只在本机发生。
 - ✅ **公开仓库即分发**：仓库公开，**拿到仓库链接的人即可 clone 安装**，无需审批、无需中央服务器。
 - ✅ **附带本地可视化控制台**：`npm run ui` 一键拉起一个 GPT 风格网页（仅本机），可直接看热榜、小红书专区、共振、曲线并复制素材给 AI；控制台**不接任何模型**。
-- ❌ **不是**一个需要部署到服务器、大家连一个公网地址的中央服务（HTTP/控制台都只绑定本机 `127.0.0.1`）。
+- ❌ **不是**一个需要部署到公网服务器、大家连一个公网地址的中央服务（HTTP/控制台默认只绑定本机 `127.0.0.1`；仅当你自己需要手机接入时，可改成限局域网 / Tailscale 的私有地址，见 [接入文档](./docs/setup-clients.md) 第 10 节，始终不对公众开放）。
 - ❌ **不编造数据**：拿不到就明确标记 `missing`/`degraded`，绝不静默填 0 或“未知”。
 
 ---
@@ -88,7 +88,7 @@ npm run selftest
 
 自检看到大部分平台 `OK` 即成功。少数平台 `MISS` 通常是**当前网络访问不到该平台**（例如海外网络访问知乎/百度），不影响其他工具；在对应地区网络下会恢复。
 
-> Windows 用户：以上命令在 PowerShell / Git Bash 均可；macOS 在终端（Terminal）同样适用。
+> Windows 在 PowerShell / Git Bash、macOS 在终端（Terminal）、Linux 在任意终端均可，三平台都只需 Node ≥ 18.14。
 
 ### 三种运行方式
 
@@ -123,6 +123,10 @@ npm run selftest
 各客户端的具体入口见 **[docs/setup-clients.md](./docs/setup-clients.md)**：ChatGPT（桌面端/自定义连接器）、Claude Desktop、Cursor、VS Code（Cline 等）、豆包桌面端、DeepSeek（经 Cherry Studio / ChatBox / LobeHub 挂自己的 Key）、通用 HTTP 接入。
 
 安装与访问说明见 [docs/access.md](./docs/access.md)（公开仓库，有链接即可安装）。
+
+### 手机 / 平板（iOS、安卓）能用吗
+
+电脑端（Windows / macOS / Linux）本地安装即用；手机/平板系统不能本地常驻 Node，需要在一台常开电脑或小主机上用 `TRENTHUB_HOST=0.0.0.0 npm run start:http` 运行 HTTP 模式，再让手机经同一局域网或 Tailscale 私有组网以 `http://主机IP:8333/mcp` 接入（**严禁映射公网**，该端点无鉴权）。完整步骤、设备支持矩阵与安卓 Termux 本地进阶方案见 [docs/setup-clients.md](./docs/setup-clients.md) 第 10 节。
 
 ---
 
