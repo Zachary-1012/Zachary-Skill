@@ -49,7 +49,7 @@ jobs:
           test "$TAG" = "v$VERSION"
           npm run smoke | tee /tmp/trendhub-smoke.txt
           grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
-          node -e "const m=require('./manifest.json'); if(m.version!==VERSION || m.aiInstall?.successMarker!=='SMOKE OK tools=19' || m.tools?.length!==19) process.exit(1)" -- "$VERSION"
+          node -e "const m=require('./manifest.json'); const v=process.argv[1]; if(m.version!==v || m.aiInstall?.successMarker!=='SMOKE OK tools=19' || m.tools?.length!==19) process.exit(1)" "$VERSION"
 
       - name: Public install contract result
         if: success()
