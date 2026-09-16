@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { ROOT, INDEX_JS } from "./lib-trendhub.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+void HERE;
 const EXPECTED_TOOLS = 16;
 const HANDSHAKE_TIMEOUT_MS = 20_000;
 
@@ -111,7 +112,8 @@ function succeed(names) {
     /* 忽略 */
   }
   const ms = Date.now() - started;
-  console.log(`SMOKE OK  tools=${EXPECTED_TOOLS}  entry=${entryRel}  in ${ms}ms`);
+  // 该前缀是 README/SKILL/manifest 与 Public Install E2E 使用的机器可读成功标志；勿随意改空格。
+  console.log(`SMOKE OK tools=${EXPECTED_TOOLS} entry=${entryRel} in ${ms}ms`);
   console.log(`tools: ${names.join(", ")}`);
   process.exit(0);
 }
@@ -125,11 +127,11 @@ function fail(reason) {
   } catch {
     /* 忽略 */
   }
-  console.error(`SMOKE FAIL  ${reason}`);
+  console.error(`SMOKE FAIL ${reason}`);
   if (stderrBuf.trim()) {
     console.error("--- stderr 末尾 ---");
     console.error(stderrBuf.trim().slice(-1500));
   }
-  console.error("排查：1) 确认已运行 node scripts/setup.mjs；2) Node>=18.14；3) 重新 npm run build 看报错。");
+  console.error("排查：1) 确认已运行 node scripts/setup.mjs；2) Node>=22；3) 重新 npm run build 看报错。");
   process.exit(1);
 }
