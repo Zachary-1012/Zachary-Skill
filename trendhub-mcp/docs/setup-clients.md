@@ -1,26 +1,31 @@
 # 把 TrendHub 接入你的 AI 客户端
 
-先完成一键安装（见 [README](../README.md) 的快速开始）：`git clone` → `cd trendhub-mcp` → `node scripts/setup.mjs`（自动选最快 npm 源、装依赖、构建并做数秒握手验证；国内网络加 `--cn`）。安装时**不要**跑约 2 分钟的 `npm run selftest`，它仅用于排障。
+先完成一键安装：
 
-下文把 `/ABS/PATH/` 统一记为你本机 `trendhub-mcp` 目录的**绝对路径**，请替换：
+```bash
+git clone https://github.com/Zachary-1012/Zachary-Skill.git
+cd Zachary-Skill/trendhub-mcp
+node --version                 # 必须 >=22；推荐 Node 24 LTS
+node scripts/setup.mjs         # lockfile + npm ci -> build -> smoke
+```
 
-- Windows：`C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp`（建议用正斜杠 `/`）
+看到 `SMOKE OK tools=16` 即安装完成。外部第三方信源体检使用 `npm run source:health`；旧命令 `npm run selftest` 仍兼容，但它不属于安装、CI 或 release gate。
+
+下文把 `/ABS/PATH/` 记为本机 `trendhub-mcp` 的绝对路径：
+
+- Windows：`C:/Users/你的用户名/Documents/Zachary-Skill/trendhub-mcp`
 - macOS：`/Users/你/Zachary-Skill/trendhub-mcp`
 - Linux：`/home/你/Zachary-Skill/trendhub-mcp`
 
-启动入口（stdio，推荐启动包装器，重启客户端即自动更新）：`node /ABS/PATH/scripts/launcher.mjs`；不想要自动更新可改用 `node /ABS/PATH/dist/src/index.js`。
-本地 HTTP（需要 URL 时）：先 `npm run start:http`，地址 `http://127.0.0.1:8333/mcp`
+推荐 stdio 启动入口：`node /ABS/PATH/scripts/launcher.mjs`。launcher 会立即启动当前版本，并仅在后台检查 **GitHub Stable Release**；不会跟随 `main` HEAD。
+
+本地 HTTP：`npm run start:http`，默认地址 `http://127.0.0.1:8333/mcp`。
 
 ---
 
 ## 1. Claude Desktop
 
-打开配置文件（没有就新建）：
-
-- Windows：`%APPDATA%\Claude\claude_desktop_config.json`
-- macOS：`~/Library/Application Support/Claude/claude_desktop_config.json`
-
-写入：
+配置 MCP：
 
 ```json
 {
@@ -33,11 +38,11 @@
 }
 ```
 
-保存后**完全退出并重启 Claude Desktop**。新对话里能看到 16 个 trendhub 工具即成功。若 node 不在 PATH，把 `command` 换成 node 的绝对路径（终端 `which node` / `where node` 查询）。
+保存后完全退出并重启客户端。看到 16 个 trendhub 工具即成功。若 `node` 不在 PATH，把 `command` 换成 `where node` / `which node` 查到的绝对路径。
 
 ## 2. Cursor
 
-`Settings` → `MCP` → `Add new global MCP server`，在打开的 `~/.cursor/mcp.json` 中写入：
+在 MCP 设置中新增全局 server：
 
 ```json
 {
@@ -50,11 +55,13 @@
 }
 ```
 
-保存后 MCP 列表中 `trendhub` 显示绿色 enabled、工具数 16 即可。
+工具数显示 16 即代表加载成功。
 
 ## 3. VS Code
 
-### 方式 A：VS Code 原生 MCP（工作区 `.vscode/mcp.json`）
+### 原生 MCP
+
+工作区 `.vscode/mcp.json`：
 
 ```json
 {
@@ -68,59 +75,96 @@
 }
 ```
 
-### 方式 B：Cline / Roo Code 等扩展
+### Cline / Roo Code 等扩展
 
-在扩展的 MCP Servers 设置里选 `stdio`，command 填 `node`，args 填 `/ABS/PATH/scripts/launcher.mjs`；或直接粘贴上面 Cursor 的 `mcpServers` JSON。
+选择 stdio，command=`node`，args=`/ABS/PATH/scripts/launcher.mjs`。
 
-## 4. ChatGPT（桌面端）
+## 4. ChatGPT
 
-ChatGPT 桌面端支持开发者 MCP：进入 `Settings` → 搜索 `MCP` / `Connectors` → `Add MCP server`（部分版本在「Manage connectors / Developer」里）。
+如果当前客户端版本支持本地 MCP / stdio，优先使用：
 
-- **推荐 stdio**：类型选 `Local / stdio`，命令 `node`，参数 `/ABS/PATH/scripts/launcher.mjs`。
-- **或用 URL**：先在终端运行 `npm run start:http`，再添加 `http://127.0.0.1:8333/mcp`。
+```text
+command = node
+args    = /ABS/PATH/scripts/launcher.mjs
+```
 
-> ChatGPT 各版本入口名称略有差异；若你的版本只接受 URL，用第二种 HTTP 方式。
+如果只支持 MCP URL，则先运行：
+
+```bash
+npm run start:http
+```
+
+再配置：`http://127.0.0.1:8333/mcp`。
+
+不同版本的入口名称可能变化，以客户端当前 MCP / Connector / Developer 设置为准。
 
 ## 5. 豆包
 
-豆包工作模式同时支持 **Skill** 与 **MCP** 两种形态：
+TrendHub 可作为 Skill 描述 + MCP 工具使用：
 
-- **Skill 形态**：仓库根与本目录提供了 `SKILL.md` 描述，可按豆包「导入 Skill / 自定义技能」流程指向本目录。
-- **MCP 形态**：在豆包桌面端设置中找到「MCP / 自定义工具 / 插件」入口，新增一个本地（stdio）服务，命令 `node`，参数 `/ABS/PATH/scripts/launcher.mjs`；若该版本只接受 URL，则运行 `npm run start:http` 后填 `http://127.0.0.1:8333/mcp`。
+- Skill：读取本目录 `SKILL.md`；
+- MCP：stdio command=`node`，args=`/ABS/PATH/scripts/launcher.mjs`；
+- 若客户端只支持 URL，本机运行 `npm run start:http` 后使用 `http://127.0.0.1:8333/mcp`。
 
-具体 UI 以你所用豆包版本为准；两种形态背后是同一套 16 个工具。
+无论入口形式，背后均是同一套 16 个工具。
 
-## 6. DeepSeek（经支持 MCP 的客户端）
+## 6. DeepSeek 与其他模型
 
-DeepSeek 官方 App/网页本身不直接挂 MCP；用一个支持 MCP 的开源客户端，把模型设为 DeepSeek（填你自己的 DeepSeek API Key），再挂上 TrendHub。**模型算力走你的 DeepSeek Key，插件仍在本机取数。**
+TrendHub 与模型供应商解耦。只要使用的 AI 客户端支持 MCP，就可以将模型设为 DeepSeek、GPT、Claude、Gemini 或其他模型，再挂载 TrendHub。
 
-### Cherry Studio
-1. `设置` → `模型服务` → 添加/启用 DeepSeek，填入 API Key。
-2. `设置` → `MCP 服务器` → `添加`：类型选 `stdio`，命令 `node`，参数 `/ABS/PATH/scripts/launcher.mjs`（或类型选 `SSE/Streamable HTTP`，URL 填 `http://127.0.0.1:8333/mcp`）。
-3. 回到对话，模型选 DeepSeek，确认 trendhub 工具已加载。
+模型 API Key（如果客户端本身需要）属于客户端/模型供应商，不应交给 TrendHub。
 
-### ChatBox / LobeHub
-- ChatBox：`设置` → `MCP` → 新建本地服务（stdio），命令与参数同上；模型提供方选 DeepSeek 并填 Key。
-- LobeHub：`设置` → `MCP` → 新增，stdio 填 `node` + 入口路径，或填 HTTP URL；模型选 DeepSeek。
+## 7. 通用 MCP 配置
 
-## 7. 其它任何支持 MCP 的 AI（通用）
+### stdio（推荐）
 
-- **stdio 客户端**：command=`node`，args=`["/ABS/PATH/scripts/launcher.mjs"]`，环境变量无需配置。
-- **HTTP/SSE 客户端**：运行 `npm run start:http`（可 `node scripts/launcher.mjs --http --port=9000` 改端口），填 `http://127.0.0.1:8333/mcp`。HTTP 默认仅监听本机回环（127.0.0.1）；需要让手机/平板或其他电脑接入时，用环境变量 `TRENTHUB_HOST=0.0.0.0` 限定在受信任局域网或 Tailscale 私有组网（见第 10 节），**切勿**把端口直接映射到公网。
+```text
+command=node
+args=["/ABS/PATH/scripts/launcher.mjs"]
+```
 
-## 8. 本地可视化控制台（可选，给人用）
+### HTTP（本机）
 
-不想记工具名时，直接在终端运行：
+```bash
+npm run start:http
+```
+
+URL：`http://127.0.0.1:8333/mcp`
+
+默认 loopback 模式无需额外 Token。
+
+### HTTP（局域网 / Tailscale / 其他设备）
+
+任何非 loopback 监听都必须同时设置：
+
+```text
+TRENTHUB_HOST=<非loopback地址或0.0.0.0>
+TRENTHUB_HTTP_TOKEN=<足够长的随机Token>
+```
+
+否则服务会拒绝启动。远程 MCP 请求必须带：
+
+```http
+Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
+```
+
+因此远程客户端需要支持自定义 HTTP Authorization header。若客户端不支持自定义 header，不要通过关闭鉴权规避；改用支持 header 的 MCP 客户端、stdio 主机接入，或在受控环境使用可信反向代理。
+
+## 8. 本地可视化控制台
 
 ```bash
 npm run ui
 ```
 
-会自动打开 `http://127.0.0.1:8333/`，一个 GPT 风格的本地控制台：小红书主打专区（热门笔记卡片 + 话题词 + 一键复制选题素材）、当下热榜、跨平台共振、关键词曲线、未来信号、节点日历、话题情报与创作简报。控制台是纯前端 + 本机只读 API，**不接任何大模型**；同一端口也提供 `/mcp` 给 AI 客户端接入。
+浏览器打开 `http://127.0.0.1:8333/`。控制台包含小红书专区、当下热榜、跨平台共振、关键词曲线、未来信号、节点日历、话题情报与创作简报。
+
+控制台本身不接任何大模型；同端口提供 `/mcp`。
+
+如果在受信任局域网/Tailscale 中以非 loopback 地址打开控制台，前端首次访问受保护 `/api/*` 时会提示输入 `TRENTHUB_HTTP_TOKEN`。Token 仅保存在当前浏览器 `sessionStorage`，关闭会话后失效，不写入服务器、URL 或仓库。
 
 ## 9. 解锁小红书官方词榜 / 关键词搜索（可选）
 
-游客模式零配置即可刷小红书热门笔记与派生词；需要官方热搜词榜与关键词爆款搜索时，在客户端的服务配置里加 `env.XHS_COOKIE`（需含 `a1` 与 `web_session`）：
+游客模式零配置即可使用小红书热门推荐笔记与派生词。需要官方热搜词榜与关键词爆款搜索时，在 MCP 服务环境变量中加入 `XHS_COOKIE`（包含 `a1` 与 `web_session`）：
 
 ```json
 {
@@ -128,69 +172,139 @@ npm run ui
     "trendhub": {
       "command": "node",
       "args": ["/ABS/PATH/scripts/launcher.mjs"],
-      "env": { "XHS_COOKIE": "a1=xxxx; web_session=xxxx" }
+      "env": {
+        "XHS_COOKIE": "a1=xxxx; web_session=xxxx"
+      }
     }
   }
 }
 ```
 
-也可在系统环境变量里设置 `XHS_COOKIE` 后重启。Cookie 只存本机、只发给小红书官方，**请勿提交到仓库**。
+Cookie 只配置在使用者本机，禁止提交到仓库。使用该能力时，Cookie 会随必要请求发送给小红书目标服务；TrendHub 不把它回传到中央服务。
 
 ---
 
-## 10. 手机 / 平板（iOS、安卓）与跨设备接入
+## 10. 手机 / 平板与跨设备接入
 
-先说清边界：TrendHub 是一个需要在本机运行的 Node 进程。**Windows / macOS / Linux 电脑**可直接本地安装、用 stdio 接入（见上文 1–9）；**手机/平板系统不允许普通 App 在本地常驻运行 Node + npm**，因此移动端不能像电脑那样零部署本地安装，标准做法是：**在一台常开的电脑或小主机上运行 TrendHub 的 HTTP 模式，手机经私有网络以 URL 接入**。
+TrendHub 是 Node 进程。Windows / macOS / Linux 可以直接本地运行；iPhone / iPad 通常通过一台常开主机的 HTTP 模式接入。安卓也可以用常开主机；Termux 属于进阶方案。
 
 ### 支持矩阵
 
-| 设备 | 本地 stdio（子进程） | HTTP URL 接入 | 说明 |
+| 设备 | 本地 stdio | HTTP URL | 说明 |
 | --- | --- | --- | --- |
-| Windows 电脑 | 支持 | 支持 | 完全本地，推荐 |
-| macOS 电脑 | 支持 | 支持 | 完全本地，推荐 |
-| Linux 电脑 / 小主机 | 支持 | 支持 | 适合做常开主机供手机连 |
-| 安卓手机 / 平板 | 进阶（Termux，见方案 B） | 支持（推荐方案 A） | 需支持 MCP URL 的客户端 |
-| iPhone / iPad | 不支持本地常驻 | 支持（方案 A） | iOS 沙箱无法本地跑 Node |
+| Windows | 支持 | 支持 | stdio 推荐 |
+| macOS | 支持 | 支持 | stdio 推荐 |
+| Linux / 小主机 | 支持 | 支持 | 适合常开主机 |
+| Android | Termux 进阶 | 支持 | HTTP 更易维护 |
+| iPhone / iPad | 不支持普通本地常驻 Node | 支持 | 经常开主机 |
 
-### 方案 A（推荐）：常开主机 + 私有组网，手机用 URL 接入
+### 方案 A：常开主机 + 私有网络
 
-1. 在一台常开的 Windows / macOS / Linux 机器上完成安装与构建（见 README 快速开始）。
-2. 让 HTTP 服务监听所有网卡（默认只听 127.0.0.1，手机连不上）：
-   - Windows PowerShell：`$env:TRENTHUB_HOST='0.0.0.0'; npm run start:http`
-   - macOS / Linux：`TRENTHUB_HOST=0.0.0.0 npm run start:http`
-   - 同一 WiFi 用局域网即可；外出跨网络请在主机和手机各装一个 **Tailscale**（免费、加密、需登录同一私有网络），主机仍按上面 `0.0.0.0` 启动。
-3. 在主机上查接入地址：局域网用 `ipconfig`（Windows）或 `ip addr` / `ifconfig`（Mac/Linux）找形如 `192.168.x.x` 的 IPv4；Tailscale 用其 App 中显示的 `100.x.x.x` 地址。
-4. 在手机上**支持「自定义 MCP 服务器 URL / Streamable HTTP」的 AI 客户端**里新增服务器，URL 填 `http://192.168.x.x:8333/mcp`（局域网）或 `http://100.x.x.x:8333/mcp`（Tailscale），再把模型设为你自己的 GPT / 豆包 / DeepSeek / Claude 等（填你自己的 Key、走你自己的额度）。ChatBox、LobeHub 等通用客户端的移动版通常支持 MCP URL；各官方 App 是否开放第三方 MCP URL 随版本变化，不支持时改用通用客户端。
-5. 人也可以直接用手机浏览器打开控制台看榜、复制素材：`http://主机IP:8333/`（纯数据页面，不接模型）。
+先在主机安装 TrendHub，然后配置非 loopback HTTP。
 
-> 让主机长期后台运行（可选）：Linux/macOS 用 systemd / launchd / `nohup`，Windows 用「任务计划程序」设开机启动。这不是必须项。
+Windows PowerShell：
 
-### 安全红线（务必遵守）
+```powershell
+$env:TRENTHUB_HOST='0.0.0.0'
+$env:TRENTHUB_HTTP_TOKEN='使用足够长的随机Token'
+npm run start:http
+```
 
-- HTTP 端点**本身没有登录鉴权**，谁能访问该地址谁就能调用取数。**绝对不要**把 8333 端口直接做公网端口映射 / 转发到互联网。
-- 跨网络只用 **Tailscale 这类私有、加密、需登录同一网络的组网**，或在受信任的局域网内使用，不需要、也不应该开放公网。
-- 即便开放到私有网络，插件依然**零模型 Key、零遥测、零数据回传**；私有组网只是把「本机回环」扩展到「你自己的私有设备网络」，仍然不是面向公众的互联网信息服务。
+macOS / Linux：
 
-### 方案 B（进阶）：安卓用 Termux 本地运行
+```bash
+TRENTHUB_HOST=0.0.0.0 \
+TRENTHUB_HTTP_TOKEN='使用足够长的随机Token' \
+npm run start:http
+```
 
-安卓可安装 Termux，在其中执行 `pkg install nodejs git`，之后与电脑相同地 `git clone` → `cd trendhub-mcp` → `node scripts/setup.mjs` → `TRENTHUB_HOST=0.0.0.0 npm run start:http`，再让本机或局域网内支持 MCP URL 的客户端 / 浏览器连 `http://127.0.0.1:8333/mcp`。该方式门槛较高、需自行保持 Termux 后台存活，普通同事建议用方案 A。iOS / iPadOS 没有等价的本地常驻 Node 环境，请走方案 A。
+同一 Wi‑Fi 可使用主机局域网地址；跨网络建议使用 Tailscale 等私有组网。MCP URL 示例：
+
+```text
+http://192.168.x.x:8333/mcp
+http://100.x.x.x:8333/mcp
+```
+
+MCP 客户端同时配置：
+
+```http
+Authorization: Bearer <Token>
+```
+
+手机浏览器也可以打开 `http://主机IP:8333/` 查看控制台；首次 API 请求会要求输入同一个 Token。
+
+### 安全红线
+
+- **非 loopback 无 Token 时服务直接拒绝启动**，不要修改代码绕过。
+- 即便已有 Bearer Token，也不要把 8333 直接映射到公开互联网；优先受信任局域网 / 私有组网。
+- HTTP Token 与 `XHS_COOKIE` 是两类不同凭据：前者保护 TrendHub HTTP 服务，后者仅用于小红书增强取数。
+- 无模型 Key、无第三方遥测、无 TrendHub 中央数据回传；但取数本身仍会访问目标数据源。
+
+### 方案 B：Android + Termux（进阶）
+
+可在 Termux 安装 Node.js 与 Git，然后与电脑相同地 clone → `cd trendhub-mcp` → `node scripts/setup.mjs`。Node 版本仍必须 >=22。
+
+若只在 Android 本机浏览器/客户端使用，可保持 `127.0.0.1`；若监听非 loopback，同样必须配置 `TRENTHUB_HTTP_TOKEN`。
 
 ---
 
 ## 11. 验证是否接好
 
-接好后对 AI 说一句：**「列出 trendhub 的所有平台」** 或 **「用 trendhub 拉一下 Hacker News 现在的热榜」**。能返回平台清单 / 真实榜单即成功。
+命令行：
 
-**安装是否就绪的快速判断**：命令行跑 `node scripts/smoke.mjs`（数秒、不联网，打印 `SMOKE OK tools=16`）。`npm run selftest` 约 2 分钟、会真实抓取全部平台，仅用于排障，安装接入时不必跑。
+```bash
+npm run smoke
+```
 
-**以后升级（重启客户端即更新）**：上文配置指向的是 `scripts/launcher.mjs` 启动包装器，它每次启动先秒开当前已装版本、再在后台非阻塞检查 GitHub 更新，发现新版才拉取重建，**重启一次 AI 客户端即生效**；连不上 GitHub（国内网络常见）、超时或本地有改动时静默跳过、继续用当前版本，绝不影响使用，日志在 `logs/autoupdate.log`。设环境变量 `TRENTHUB_AUTOUPDATE=0` 可完全关闭；想手动升级跑 `node scripts/upgrade.mjs`。
+应看到：
 
-## 12. 常见问题
+```text
+SMOKE OK tools=16
+```
 
-- **启动报错 `node` 找不到**：把 `command` 换成 node 绝对路径（`where node` / `which node`）。
-- **工具列表为空**：重跑 `node scripts/setup.mjs`（自动构建并做 smoke 验证），确认 `dist/src/index.js` 已生成后重启客户端。
-- **个别平台 missing**：多为当前网络访问不到（如海外访问知乎/百度），属预期降级，换网络或 `git pull` 更新。
-- **安装慢**：国内网络用 `node scripts/setup.mjs --cn` 走 npmmirror 镜像，海外用 `--global`；安装只需跑 setup（结尾是数秒 smoke），不要跑约 2 分钟的全量 `selftest`。
-- **stdio 启动慢 / 日志噪音**：冷启动已优化（聚合源改为首次取数才懒加载，握手约 1 秒）；`Redis ECONNREFUSED` 是聚合源自动回退内存缓存的提示，不影响结果。
-- **手机连不上主机**：确认主机已用 `TRENTHUB_HOST=0.0.0.0` 启动、手机与主机在同一局域网（或都连着 Tailscale 并用 `100.x` 地址）、主机防火墙已放行 8333 入站；先用手机浏览器打开 `http://主机IP:8333/` 验证网络可达，再在 AI 客户端填 `…/mcp` 的 URL。
-- **Linux 无图形界面 / 打不开浏览器**：`--ui` 自动开浏览器失败无妨，手动用浏览器访问 `http://127.0.0.1:8333/` 即可；纯 AI 接入用默认 stdio 或 `npm run start:http`，不需要桌面环境。
+然后可以让 AI 执行例如：
+
+- 「列出 trendhub 的所有平台」
+- 「用 trendhub 拉一下 Hacker News 当前热榜」
+
+代码级 deterministic test：
+
+```bash
+npm test
+```
+
+外部平台健康检查：
+
+```bash
+npm run source:health
+```
+
+## 12. 更新与常见问题
+
+### 更新
+
+`launcher.mjs` 只跟随 GitHub **Stable Release**，不追 `main`：
+
+- 先启动当前版本；
+- 后台发现更高 `vX.Y.Z` 才更新；
+- tracked 工作区被修改时跳过；
+- 安装/构建失败时尽力回滚；
+- `TRENTHUB_AUTOUPDATE=0` 可关闭。
+
+手动更新：
+
+```bash
+node scripts/upgrade.mjs
+```
+
+### 常见问题
+
+- **`node` 找不到 / 版本低**：安装 Node >=22，推荐 Node 24 LTS；用 `where node` / `which node` 确认路径。
+- **工具列表为空**：重跑 `node scripts/setup.mjs`，确认最终出现 `SMOKE OK tools=16`，再完全重启 AI 客户端。
+- **个别平台 `missing/degraded`**：运行 `npm run source:health` 看具体信源；第三方平台临时不可达不会被伪装成 0，也不会影响 deterministic CI 的定义。
+- **安装慢**：国内可用 `node scripts/setup.mjs --cn`，海外可用 `--global`。
+- **`npm ci` 报 lockfile 错误**：不要自行删 lockfile；确认仓库 clone 完整并使用官方发布版本。
+- **非 loopback 启动被拒绝**：这是安全门，不是故障；同时配置 `TRENTHUB_HTTP_TOKEN`。
+- **远程 MCP 返回 401**：客户端没有带 `Authorization: Bearer <token>`，或 Token 不匹配。
+- **手机控制台提示 Token**：输入主机端的 `TRENTHUB_HTTP_TOKEN`；它只保存在当前浏览器会话。
+- **Linux 无桌面环境**：不用 `--ui`，直接运行默认 stdio 或 `npm run start:http`；控制台可从其他受信任设备浏览器访问。
