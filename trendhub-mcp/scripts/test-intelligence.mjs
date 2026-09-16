@@ -7,7 +7,7 @@ import path from "node:path";
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "trendhub-intelligence-test-"));
 process.env.TRENTHUB_DATA_DIR = temp;
 
-const { appendHistory } = await import("../dist/src/store/history.js");
+const { appendHistory, readHistory } = await import("../dist/src/store/history.js");
 const { recordSourceObservation, getSourceReliability, classifyFailure } = await import("../dist/src/store/reliability.js");
 const { analyzeTrendIntelligence, benchmarkTrendLead } = await import("../dist/src/analysis/intelligence.js");
 
@@ -33,6 +33,12 @@ for (const r of fixtures) {
   recordSourceObservation(r, 100 + (r.items[0].rank ?? 0));
 }
 
+// A deliberately future-dated point must never leak into an earlier evaluation time.
+appendHistory(result("p1", new Date(now.getTime() + 3_600_000).toISOString(), 1));
+const bounded = readHistory("p1", 168, now);
+assert.equal(bounded.length, 3, "readHistory must exclude observations after the evaluation time");
+assert.equal(bounded.at(-1)?.items[0]?.rank, 5, "future evidence must not replace current point-in-time evidence");
+
 assert.equal(classifyFailure("HTTP 429 rate limited", "missing"), "rate_limited");
 assert.equal(classifyFailure("Cookie expired, login required", "missing"), "auth_required");
 assert.equal(classifyFailure("response schema unrecognized", "degraded"), "schema_drift");
@@ -55,4 +61,4 @@ assert.equal(benchmark.detected24hAhead, true);
 assert.equal(benchmark.detected72hAhead, false);
 
 fs.rmSync(temp, { recursive: true, force: true });
-console.log(`INTELLIGENCE TEST OK lifecycle=${intel.lifecycle} confidence=${intel.confidence} leadHours=${benchmark.leadHours}`);
+console.log(`INTELLIGENCE TEST OK lifecycle=${intel.lifecycle} confidence=${intel.confidence} leadHours=${benchmark.leadHours} lookahead=blocked`);
