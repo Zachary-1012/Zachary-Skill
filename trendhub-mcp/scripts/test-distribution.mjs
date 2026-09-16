@@ -22,11 +22,11 @@ const must = (condition, message) => {
   if (!condition) throw new Error(`DISTRIBUTION TEST FAILED: ${message}`);
 };
 
-must(gateway.includes('process.env.PORT || process.env.TRENHUB_REMOTE_PORT'), "remote gateway must honor hosting PORT");
+must(/process\.env\.PORT\s*\|\|\s*process\.env\.TRENTHUB_REMOTE_PORT/.test(gateway), "remote gateway must honor hosting PORT");
 must(/TRENTHUB_HOST\s*:\s*["']127\.0\.0\.1["']/.test(gateway), "core must remain loopback-only behind the public gateway");
-must(gateway.includes("randomBytes(32)"), "internal bearer token must be generated per process");
-must(gateway.includes('TRENHUB_HTTP_TOKEN: INTERNAL_TOKEN'), "gateway must authenticate to the private core");
-must(gateway.includes('TRENHUB_AUTOUPDATE: "0"'), "hosted deployments must not self-mutate via local auto-update");
+must(/randomBytes\(32\)/.test(gateway), "internal bearer token must be generated per process");
+must(/TRENTHUB_HTTP_TOKEN\s*:\s*INTERNAL_TOKEN/.test(gateway), "gateway must authenticate to the private core");
+must(/TRENTHUB_AUTOUPDATE\s*:\s*["']0["']/.test(gateway), "hosted deployments must not self-mutate via local auto-update");
 must(gateway.includes('url.pathname === "/mcp"'), "public MCP endpoint missing");
 must(gateway.includes('url.pathname === "/health"'), "public health endpoint missing");
 must(gateway.includes('url.pathname === "/privacy"'), "public privacy endpoint missing");
