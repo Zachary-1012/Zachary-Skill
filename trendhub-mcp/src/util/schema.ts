@@ -22,6 +22,10 @@ export interface HotItem {
   author: string | null;
   /** 平台内部 id；无则 null */
   externalId: string | null;
+  /** 封面/缩略图 URL（仅图文/视频类平台有，如小红书笔记）；无则 null */
+  imageUrl?: string | null;
+  /** 内容类型（如小红书 normal=图文 / video=视频）；无则 null */
+  kind?: string | null;
 }
 
 /** 单个平台一次抓取结果 */

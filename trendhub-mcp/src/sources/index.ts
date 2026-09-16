@@ -6,6 +6,15 @@ import type { HotResult } from "../util/schema.js";
 import { DOMESTIC_PLATFORMS, fetchDomestic } from "./domestic.js";
 import { INTERNATIONAL, fetchInternational } from "./international.js";
 import { fetchWeibo, fetchZhihu, fetchBaidu } from "./overrides.js";
+import {
+  fetchXiaohongshu,
+  fetchXiaohongshuHotlist,
+  XHS_PLATFORM,
+  XHS_HOTLIST_PLATFORM,
+  XHS_LABEL,
+  XHS_HOTLIST_LABEL,
+  XHS_CATEGORY,
+} from "./xiaohongshu.js";
 
 export interface PlatformInfo {
   platform: string;
@@ -15,13 +24,17 @@ export interface PlatformInfo {
 }
 
 const OVERRIDES: Record<string, (limit: number) => Promise<HotResult>> = {
+  [XHS_PLATFORM]: fetchXiaohongshu,
+  [XHS_HOTLIST_PLATFORM]: fetchXiaohongshuHotlist,
   weibo: fetchWeibo,
   zhihu: fetchZhihu,
   baidu: fetchBaidu,
 };
 
-/** 国内核心 + 长尾平台（dailyhot name） */
+/** 国内核心 + 长尾平台（小红书置顶，其后 dailyhot name） */
 export const PLATFORMS: PlatformInfo[] = [
+  { platform: XHS_PLATFORM, label: XHS_LABEL, category: XHS_CATEGORY, source: "self" },
+  { platform: XHS_HOTLIST_PLATFORM, label: XHS_HOTLIST_LABEL, category: XHS_CATEGORY, source: "self" },
   ...DOMESTIC_PLATFORMS.map((p) => ({
     platform: p.name,
     label: p.label,
@@ -55,13 +68,17 @@ export async function getHot(platform: string, limit = 50): Promise<HotResult> {
   if (ov) {
     const r = await ov(limit);
     if (r.dataQuality === "ok") return r;
-    const fb = await fetchDomestic(platform, limit);
-    if (fb.dataQuality === "ok") {
-      fb.note = `自研源不可用，已回退聚合源。${r.note ?? ""}`.trim();
-      return fb;
+    // 仅当聚合源确实支持该平台时才回退（小红书为纯自研源，聚合源无此平台，不做无效回退）
+    const aggregatorHas = DOMESTIC_PLATFORMS.some((p) => p.name === platform);
+    if (aggregatorHas) {
+      const fb = await fetchDomestic(platform, limit);
+      if (fb.dataQuality === "ok") {
+        fb.note = `自研源不可用，已回退聚合源。${r.note ?? ""}`.trim();
+        return fb;
+      }
+      // 两个都失败，返回自研的（带原因），并附回退原因
+      r.note = `${r.note ?? ""}；聚合源也不可用：${fb.note ?? ""}`.replace(/^；/, "");
     }
-    // 两个都失败，返回自研的（带原因），并附回退原因
-    r.note = `${r.note ?? ""}；聚合源也不可用：${fb.note ?? ""}`.replace(/^；/, "");
     return r;
   }
   // 2) 国际源
@@ -88,7 +105,7 @@ export async function getMany(platforms: string[], limit = 30): Promise<HotResul
 }
 
 const CATEGORY_DEFAULT: Record<string, string[]> = {
-  social: ["weibo", "zhihu", "baidu", "tieba", "hupu"],
+  social: ["xiaohongshu", "weibo", "zhihu", "baidu", "tieba", "hupu"],
   video: ["bilibili", "douyin", "kuaishou"],
   news: ["toutiao", "thepaper", "qq-news", "netease-news", "sina-news"],
   tech: ["36kr", "ithome", "huxiu", "sspai", "ifanr", "hackernews", "producthunt"],
