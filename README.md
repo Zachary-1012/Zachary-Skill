@@ -12,7 +12,7 @@
 
 ## 三步安装任意技能（以 TrendHub 为例）
 
-前置：Node.js ≥ 18.14（推荐 20/22 LTS，https://nodejs.org 安装）。
+前置：Node.js ≥ 18.14（推荐 20/22 LTS，https://nodejs.org 安装）。**Windows / macOS / Linux 电脑**本地安装即用；**手机 / 平板（iOS、安卓）**受系统限制不能本地跑 Node，需经一台常开主机 + 私有组网以 URL 接入（见 [setup-clients 第 10 节](./trendhub-mcp/docs/setup-clients.md)）。
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
@@ -22,7 +22,7 @@ npm run build
 npm run selftest     # 自检数据源，多数 OK 即成功
 ```
 
-- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置（ChatGPT / Claude / Cursor / VS Code / 豆包 / DeepSeek 等）。
+- 挂到 AI 客户端：按 [trendhub-mcp/docs/setup-clients.md](./trendhub-mcp/docs/setup-clients.md) 配置（ChatGPT / Claude / Cursor / VS Code / 豆包 / DeepSeek 等）；电脑端看第 1–9 节，手机/平板与跨设备接入看第 10 节。
 - 只想用界面看榜：在 `trendhub-mcp` 目录运行 `npm run ui`，浏览器自动打开本地控制台（含小红书专区，仅本机、不接模型）。
 
 更新：
@@ -34,7 +34,7 @@ cd trendhub-mcp && npm install && npm run build
 
 ## 设计原则
 
-1. **本地插件，非中央服务**：跑在你自己电脑上，数据不经过第三方服务器；HTTP / 控制台都只绑定本机 `127.0.0.1`。
+1. **本地插件，非中央服务**：跑在你自己电脑上，数据不经过第三方服务器；HTTP / 控制台默认只绑定本机 `127.0.0.1`，手机接入时可改为限局域网 / Tailscale 的私有地址（严禁映射公网），见接入文档第 10 节。
 2. **自带算力（Bring Your Own AI）**：技能只给数据、确定性分析与脚手架；理解、解读、成文由你当前的 AI 完成。
 3. **零 Key、零遥测、零回传**：不内置任何模型 Key，不做统计埋点、不上传使用数据，抓取与缓存只在本机。
 4. **不造假**：取不到的数据显式标 `missing/degraded`，绝不静默填 0 或编造；每条数据带来源与采集时间。
