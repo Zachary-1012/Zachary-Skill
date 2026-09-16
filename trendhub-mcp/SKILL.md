@@ -5,7 +5,7 @@ description: 全网热点趋势专家，以小红书热点与趋势为主打。�
 
 # TrendHub · 全网热点趋势专家（小红书主打）
 
-本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 16 个工具。模型只负责理解需求、调用工具、解读结果与成文；**数据与确定性分析由工具提供，成稿由当前对话模型用自身算力完成**。插件零模型 Key、零遥测、纯本地运行。
+本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 16 个工具。模型只负责理解需求、调用工具、解读结果与成文；**数据与确定性分析由工具提供，成稿由当前对话模型用自身算力完成**。插件不内置模型 Key、不做第三方遥测，也不把使用数据回传到 TrendHub 中央服务；为完成取数会向目标公开数据源发起必要网络请求。
 
 ## 何时使用
 
@@ -41,11 +41,25 @@ description: 全网热点趋势专家，以小红书热点与趋势为主打。�
 - 每条数据以工具返回的 `capturedAt` / `sourceUrl` 为准；跨平台聚类、派生词与规则情感是辅助信号，定性结论由模型结合证据给出并提示不确定性。
 - 成稿中所有具体数字/案例必须来自工具证据，缺失处保留 `[待补充]`。
 
-## 安装与本地服务启动
+## AI 安装合同
 
-- 一键安装：clone 后在 `trendhub-mcp` 目录运行 `node scripts/setup.mjs`（自动选国内外最快 npm 源、装依赖、构建、数秒 smoke 握手；国内网络加 `--cn`、海外加 `--global`）。**安装时不要运行 `npm run selftest`**——它约 2 分钟、会真实抓取全部平台，仅用于排障。
-- stdio 客户端：命令 `node`，参数 `<trendhub-mcp 绝对路径>/scripts/launcher.mjs`（推荐：启动即用 + 后台非阻塞自动更新，重启客户端即生效、失败安全）；不想要自动更新可用 `dist/src/index.js`。
-- 需要 URL 的客户端：先 `npm run start:http`，端点 `http://127.0.0.1:8333/mcp`。
-- 可视化控制台：`npm run ui`，浏览器打开 `http://127.0.0.1:8333/`（含小红书专区，仅本机、不接模型）。
-- 快速验证安装：`node scripts/smoke.mjs`（数秒、不联网，确认 16 个工具）；手动升级 `node scripts/upgrade.mjs`；设环境变量 `TRENTHUB_AUTOUPDATE=0` 可关闭自动更新。
-- 各客户端（Claude / Cursor / VS Code / ChatGPT / 豆包 / DeepSeek / 移动端 HTTP）配置见 `README.md` 与 `docs/setup-clients.md`。
+如果当前 AI 具备终端/代码执行能力，并且用户只给出仓库链接，按以下顺序安装：
+
+1. clone `https://github.com/Zachary-1012/Zachary-Skill.git`；
+2. 进入 `Zachary-Skill/trendhub-mcp`；
+3. 检查 `node --version`，要求 **Node >=22**，推荐 Node 24 LTS；
+4. 执行 `node scripts/setup.mjs`；
+5. 验证 `npm run smoke`，成功标志为 **`SMOKE OK tools=16`**；
+6. 把 MCP stdio 配置指向 `node <trendhub-mcp绝对路径>/scripts/launcher.mjs`。
+
+安装不需要 TrendHub 账号、模型 API Key 或中央服务。依赖使用已提交 `package-lock.json` + `npm ci`，不要在安装时自行删除/重建 lockfile。
+
+## 本地服务与更新
+
+- stdio 客户端：命令 `node`，参数 `<trendhub-mcp绝对路径>/scripts/launcher.mjs`。
+- 本地 HTTP：`npm run start:http`，默认端点 `http://127.0.0.1:8333/mcp`。
+- 可视化控制台：`npm run ui`，浏览器打开 `http://127.0.0.1:8333/`。
+- 默认 loopback 无需额外 Token；任何非 loopback 监听都必须配置 `TRENTHUB_HTTP_TOKEN`，客户端使用 `Authorization: Bearer <token>`。
+- 快速验证：`npm run smoke`；deterministic tests：`npm test`；外部信源健康：`npm run source:health`。旧命令 `npm run selftest` 仍兼容，但只是 source health 别名。
+- `launcher.mjs` **只跟随 GitHub Stable Release，不追 main HEAD**；手动升级 `node scripts/upgrade.mjs`；`TRENTHUB_AUTOUPDATE=0` 可关闭自动更新。
+- 各客户端配置见 `README.md` 与 `docs/setup-clients.md`。
