@@ -52,6 +52,7 @@ must(plugin.version === version, "portable plugin version must match package.jso
 must(gateway.includes(`const VERSION = "${version}"`), "remote gateway version must match package.json");
 must(registry.name === "io.github.Zachary-1012/trendhub", "Official MCP Registry namespace mismatch");
 must(registry.$schema === "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "Official MCP Registry schema mismatch");
+must(typeof registry.description === "string" && registry.description.length <= 100, "Official MCP Registry description must be <= 100 characters");
 must(registry.remotes?.length === 1 && registry.remotes[0].type === "streamable-http", "Official MCP Registry must expose one Streamable HTTP remote");
 must(registry.remotes[0].url === REMOTE, "Official MCP Registry remote URL mismatch");
 must(plugin.$schema === "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json", "Agent Plugins schema mismatch");
