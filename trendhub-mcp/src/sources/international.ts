@@ -2,7 +2,7 @@
  * 国际平台热榜采集（自研，使用各平台官方/公开端点）：
  * - Hacker News：官方 Firebase API（免费、稳定、无需 key）
  * - GitHub Trending：公开页面解析（cheerio）
- * - Reddit：公开 .rss（.json 被反爬，RSS 不含票数故 hot 如实置 null）
+ * - Reddit：公开 .json（需浏览器 UA）
  * - Product Hunt：官方公开 RSS
  */
 import { load } from "cheerio";
@@ -110,7 +110,7 @@ async function fetchGithubTrending(limit: number, since: string, language?: stri
   }
 }
 
-/* ---------------- Reddit（公开 RSS） ---------------- */
+/* ---------------- Reddit（公开 JSON） ---------------- */
 const REDDIT_SUBS: Record<string, string> = {
   technology: "r/technology",
   worldnews: "r/worldnews",
@@ -127,7 +127,7 @@ async function fetchReddit(limit: number, sub: string): Promise<HotResult> {
   const hit = cache.get(key);
   if (hit) return hit;
   try {
-    // Reddit 对 .json 端点加强反爬，公开 .rss 更稳定；RSS 不含票数，hot 如实置 null
+    // Reddit 近年对 .json 端点加强反爬，公开 .rss 更稳定；RSS 不含票数，hot 如实置 null
     const feed = await rssParser.parseURL(`https://www.reddit.com/r/${encodeURIComponent(subName)}/hot/.rss?limit=${limit}`);
     const items: HotItem[] = feed.items.slice(0, limit).map((it, i) => ({
       rank: i + 1,
