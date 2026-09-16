@@ -33,7 +33,15 @@ function Invoke-Setup([string]$NodePath) {
   $env:Path = "$nodeDir;$env:Path"
   $version = & $NodePath --version
   Write-Bootstrap "Using Node $version"
+
   & $NodePath (Join-Path $Root "scripts\setup.mjs") @SetupArgs
+  $status = $LASTEXITCODE
+  if ($status -ne 0) {
+    exit $status
+  }
+
+  $launcher = Join-Path $Root "scripts\launcher.mjs"
+  & $NodePath -e 'const launcher=process.argv[1]; console.log("AI_BOOTSTRAP_OK "+JSON.stringify({node:process.execPath,launcher}));' $launcher
   exit $LASTEXITCODE
 }
 
