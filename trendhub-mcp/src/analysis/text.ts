@@ -13,7 +13,7 @@ export function normalize(s: string): string {
 }
 
 function cjkRuns(s: string): string[] {
-  return s.match(/[一-鿿]{2,}/g) ?? [];
+  return s.match(/[\u4e00-\u9fff]{2,}/g) ?? [];
 }
 function latinTokens(s: string): string[] {
   return s.toLowerCase().match(/[a-z0-9][a-z0-9+#.\-]{1,}/g) ?? [];

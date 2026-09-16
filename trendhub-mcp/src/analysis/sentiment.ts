@@ -28,8 +28,7 @@ const DEGREE: Record<string, number> = {
 };
 // 注意：不放单字"非"，以免误伤极高频的"非常"
 const NEGATION = ["不是", "不会", "不能", "没有", "并非", "难以", "不", "没", "无", "别", "莫", "未", "勿"];
-const CLAUSE_BREAK = /[，,。！？!?.；;、
-	]/;
+const CLAUSE_BREAK = /[，,。！？!?.；;、\n\r\t]/;
 
 export interface SentimentResult {
   score: number; // -1(极负) ~ 1(极正)
