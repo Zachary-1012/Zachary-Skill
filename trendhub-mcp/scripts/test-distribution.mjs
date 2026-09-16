@@ -4,9 +4,19 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const REPO = join(ROOT, "..");
+const REMOTE = "https://trendhub-remote-production.up.railway.app/mcp";
 const gateway = readFileSync(join(ROOT, "scripts", "remote-gateway.mjs"), "utf8");
 const privacy = readFileSync(join(ROOT, "docs", "privacy.md"), "utf8");
 const terms = readFileSync(join(ROOT, "docs", "terms.md"), "utf8");
+const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+const lock = JSON.parse(readFileSync(join(ROOT, "package-lock.json"), "utf8"));
+const manifest = JSON.parse(readFileSync(join(ROOT, "manifest.json"), "utf8"));
+const registry = JSON.parse(readFileSync(join(REPO, "server.json"), "utf8"));
+const cursor = JSON.parse(readFileSync(join(REPO, ".cursor-plugin", "plugin.json"), "utf8"));
+const mcp = JSON.parse(readFileSync(join(REPO, "mcp.json"), "utf8"));
+const glama = JSON.parse(readFileSync(join(REPO, "glama.json"), "utf8"));
+const skill = readFileSync(join(REPO, "skills", "trendhub", "SKILL.md"), "utf8");
 
 const must = (condition, message) => {
   if (!condition) throw new Error(`DISTRIBUTION TEST FAILED: ${message}`);
@@ -31,4 +41,24 @@ must(privacy.includes("third-party cloud infrastructure"), "privacy notice must 
 must(terms.includes("not affiliated with or endorsed"), "terms must disclose third-party platform independence");
 must(terms.includes("not factual guarantees"), "terms must bound analytical indicators");
 
-console.log("DISTRIBUTION TEST OK remote-gateway=isolated public-routes=5 privacy=present terms=present");
+const version = pkg.version;
+must(version === "1.4.1", `expected distribution patch 1.4.1, got ${version}`);
+must(lock.version === version && lock.packages?.[""]?.version === version, "package-lock version metadata must match package.json");
+must(manifest.version === version, "manifest version must match package.json");
+must(registry.version === version, "Official MCP Registry version must match package.json");
+must(cursor.version === version, "Cursor plugin version must match package.json");
+must(gateway.includes(`const VERSION = "${version}"`), "remote gateway version must match package.json");
+must(registry.name === "io.github.Zachary-1012/trendhub", "Official MCP Registry namespace mismatch");
+must(registry.$schema === "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "Official MCP Registry schema mismatch");
+must(registry.remotes?.length === 1 && registry.remotes[0].type === "streamable-http", "Official MCP Registry must expose one Streamable HTTP remote");
+must(registry.remotes[0].url === REMOTE, "Official MCP Registry remote URL mismatch");
+must(mcp.mcpServers?.trendhub?.url === REMOTE, "Cursor MCP remote URL mismatch");
+must(cursor.name === "trendhub" && cursor.mcpServers === "mcp.json", "Cursor plugin manifest mismatch");
+must(cursor.skills === "skills/", "Cursor plugin must include portable TrendHub skill");
+must(glama.$schema === "https://glama.ai/mcp/schemas/server.json", "Glama schema mismatch");
+must(Array.isArray(glama.maintainers) && glama.maintainers.includes("Zachary-1012"), "Glama maintainer mismatch");
+must(skill.includes("name: trendhub") && skill.includes("Missing is not zero"), "portable TrendHub skill contract missing");
+must(manifest.runtime?.remote?.url === REMOTE, "canonical manifest remote URL mismatch");
+must(manifest.runtime?.remote?.accountRequired === false, "remote must not claim an account requirement");
+
+console.log(`DISTRIBUTION TEST OK version=${version} remote-gateway=isolated registries=official+cursor+glama remote=${REMOTE}`);
