@@ -8,8 +8,7 @@ VIEWS.curve = function (content, params) {
         ${["now 7-d", "today 1-m", "today 3-m", "today 12-m"].map((t) => `<option ${params.timeframe === t ? "selected" : ""}>${t}</option>`).join("")}
       </select>
       <button class="btn primary" id="btn-go">查询趋势</button>
-    </div>
-    <div id="out">${empty("输入关键词后查询")}</div>`;
+    </div><div id="out">${empty("输入关键词后查询")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -38,8 +37,7 @@ VIEWS.related = function (content, params) {
       <input class="input" id="f-kw" placeholder="关键词" value="${esc(params.keyword || "")}">
       <input class="input" id="f-geo" placeholder="地区代码，留空全球" style="flex:0 1 150px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">查询相关词</button>
-    </div>
-    <div id="out">${empty("输入关键词后查询")}</div>`;
+    </div><div id="out">${empty("输入关键词后查询")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入关键词");
@@ -66,8 +64,7 @@ VIEWS.signals = function (content, params) {
       <input class="input" id="f-kw" placeholder="按关键词过滤标题/摘要（可选）" value="${esc(params.keyword || "")}">
       <select id="f-limit" class="input" style="flex:0 1 110px">${[20, 40, 60, 100].map((n) => `<option ${String(params.limit) === String(n) ? "selected" : ""}>${n}</option>`).join("")}</select>
       <button class="btn primary" id="btn-go">拉取信号</button>
-    </div>
-    <div id="out">${loading()}</div>`;
+    </div><div id="out">${loading()}</div>`;
   const run = async () => {
     $("#out").innerHTML = loading();
     try {
@@ -101,8 +98,7 @@ VIEWS.events = function (content, params) {
       <select id="f-days" class="input" style="flex:0 1 140px">${[30, 90, 180, 365].map((n) => `<option ${String(params.days_ahead || 90) === String(n) ? "selected" : ""}>未来 ${n} 天</option>`).join("")}</select>
       <select id="f-cat" class="input" style="flex:0 1 200px">${catOpts}</select>
       <button class="btn primary" id="btn-go">查询节点</button>
-    </div>
-    <div id="out">${loading()}</div>`;
+    </div><div id="out">${loading()}</div>`;
   const run = async () => {
     const qs = new URLSearchParams({ days_ahead: $("#f-days").value, category: $("#f-cat").value });
     const d = await api(`/api/events?${qs}`);
@@ -130,8 +126,7 @@ VIEWS.topic = function (content, params) {
       <input class="input" id="f-kw" placeholder="要分析的话题" value="${esc(params.keyword || "")}">
       <input class="input" id="f-geo" placeholder="地区代码，留空全球" style="flex:0 1 150px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">生成情报包</button>
-    </div>
-    <div id="out">${empty("输入话题后生成")}</div>`;
+    </div><div id="out">${empty("输入话题后生成")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const kw = $("#f-kw").value.trim();
     if (!kw) return toast("请输入话题");

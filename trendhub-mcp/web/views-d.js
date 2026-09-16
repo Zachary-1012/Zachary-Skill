@@ -16,8 +16,7 @@ VIEWS.brief = async function (content, params) {
       <input class="input" id="f-aud" placeholder="目标人群画像（可选）" value="${esc(params.audience || "")}">
       <input class="input" id="f-geo" placeholder="趋势地区（可选）" style="flex:0 1 140px" value="${esc(params.geo || "")}">
       <button class="btn primary" id="btn-go">生成创作简报</button>
-    </div>
-    <div id="out">${empty("填写主题后生成证据简报")}</div>`;
+    </div><div id="out">${empty("填写主题后生成证据简报")}</div>`;
   $("#btn-go").addEventListener("click", async () => {
     const topic = $("#f-topic").value.trim();
     if (!topic) return toast("请填写创作主题");
