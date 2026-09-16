@@ -7,8 +7,23 @@ import type { HotItem, HotResult } from "../util/schema.js";
 import { missingResult, nowIso } from "../util/schema.js";
 import { TtlCache } from "../util/http.js";
 import { config } from "../config.js";
-// @ts-ignore 无官方类型，见 src/types/dailyhot-api.d.ts
-import dailyHotApp from "dailyhot-api/dist/app.js";
+
+/**
+ * dailyhot-api 聚合库体积较大，改为首次真正抓取国内聚合源时才动态加载，
+ * 避免在 MCP 冷启动 / tools-list 握手阶段就加载整个聚合库，显著加快接入速度。
+ * 类型见 src/types/dailyhot-api.d.ts。
+ */
+type DailyHotApp = { fetch: (request: Request, ...rest: unknown[]) => Promise<Response> };
+let dailyHotAppPromise: Promise<DailyHotApp> | null = null;
+function loadDailyHotApp(): Promise<DailyHotApp> {
+  if (!dailyHotAppPromise) {
+    dailyHotAppPromise = import("dailyhot-api/dist/app.js").then((m) => {
+      const mod = m as { default?: DailyHotApp } & Partial<DailyHotApp>;
+      return mod.default ?? (mod as DailyHotApp);
+    });
+  }
+  return dailyHotAppPromise;
+}
 
 export interface PlatformMeta {
   name: string;
@@ -99,6 +114,7 @@ export async function fetchDomestic(name: string, limit = 50): Promise<HotResult
 
   try {
     const req = new Request(`http://127.0.0.1/${encodeURIComponent(name)}?limit=${limit}&cache=false`);
+    const dailyHotApp = await loadDailyHotApp();
     const res = await dailyHotApp.fetch(req);
     const ct = res.headers.get("content-type") ?? "";
     if (!ct.includes("json")) {
