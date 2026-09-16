@@ -1,8 +1,11 @@
 /**
  * 数据源统一调度：自研核心源(优先) + dailyhot-api(MIT, 国内长尾) + 国际源。
  * 对调用方只暴露 getHot / listPlatforms / getByCategory，屏蔽来源差异。
+ * 每次最终 source attempt 都写入本地 Source Reliability 观测（不记录查询内容/Cookie/用户信息）。
  */
 import type { HotResult } from "../util/schema.js";
+import { missingResult } from "../util/schema.js";
+import { recordSourceObservation } from "../store/reliability.js";
 import { DOMESTIC_PLATFORMS, fetchDomestic } from "./domestic.js";
 import { INTERNATIONAL, fetchInternational } from "./international.js";
 import { fetchWeibo, fetchZhihu, fetchBaidu } from "./overrides.js";
@@ -61,8 +64,8 @@ function isInternational(platform: string): boolean {
   );
 }
 
-/** 拉取单个平台热榜（自动选择最优源 + 兜底） */
-export async function getHot(platform: string, limit = 50): Promise<HotResult> {
+/** 实际拉取逻辑；外层 getHot 负责统一 reliability 计时和异常归一化。 */
+async function getHotRaw(platform: string, limit = 50): Promise<HotResult> {
   // 1) 自研核心源优先，失败回退 dailyhot
   const ov = OVERRIDES[platform];
   if (ov) {
@@ -89,16 +92,30 @@ export async function getHot(platform: string, limit = 50): Promise<HotResult> {
   return fetchDomestic(platform, limit);
 }
 
+/** 拉取单个平台热榜，并记录可量化 Source Reliability。 */
+export async function getHot(platform: string, limit = 50): Promise<HotResult> {
+  const started = Date.now();
+  let result: HotResult;
+  try {
+    result = await getHotRaw(platform, limit);
+  } catch (e) {
+    const info = PLATFORMS.find((p) => p.platform === platform);
+    result = missingResult(
+      platform,
+      info?.label ?? platform,
+      info?.category ?? "unknown",
+      `source request failed: ${(e as Error).message}`,
+    );
+  }
+  recordSourceObservation(result, Date.now() - started);
+  return result;
+}
+
 export async function getMany(platforms: string[], limit = 30): Promise<HotResult[]> {
   const out: HotResult[] = [];
   const BATCH = 6;
   for (let i = 0; i < platforms.length; i += BATCH) {
-    const chunk = await Promise.all(
-      platforms.slice(i, i + BATCH).map((p) => getHot(p, limit).catch((e) => ({
-        platform: p, label: p, category: "unknown", capturedAt: new Date().toISOString(),
-        sourceUpdatedAt: null, dataQuality: "missing" as const, items: [], note: e.message,
-      })))
-    );
+    const chunk = await Promise.all(platforms.slice(i, i + BATCH).map((p) => getHot(p, limit)));
     out.push(...chunk);
   }
   return out;
