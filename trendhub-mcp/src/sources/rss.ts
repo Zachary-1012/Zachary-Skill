@@ -1,6 +1,6 @@
 /**
  * 未来趋势信号：高质量科技 / AI / 商业 / 营销信源 RSS 聚合。
- * 工具只提供“信号素材”，趋势判断与成文由调用方 AI 完成。
+ * 工具只提供"信号素材"，趋势判断与成文由调用方 AI 完成。
  */
 import fs from "node:fs";
 import Parser from "rss-parser";

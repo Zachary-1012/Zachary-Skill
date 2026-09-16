@@ -10,6 +10,7 @@ import { sentiment } from "../src/analysis/sentiment.js";
 import { listTemplates } from "../src/analysis/produce.js";
 
 const PLATFORMS = [
+  "xiaohongshu",
   "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome",
   "juejin", "csdn", "v2ex", "thepaper", "qq-news",
   "hackernews", "github-trending", "producthunt", "reddit-technology",

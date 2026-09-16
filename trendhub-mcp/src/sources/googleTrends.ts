@@ -1,5 +1,5 @@
 /**
- * Google Trends 趋势走势（自研，Node 无同质量开源库；pytrends 已 archived）。
+ * Google Trends 趋势走势（自研，Node 无同质量开源库；对标维护中的 Python trendspy/trendspyg）。
  * 管线：首页 warmup 取 cookie → explore 拿 widget token → widgetdata 取时间序列/相关词。
  * 重要口径：返回 0-100 相对热度（区间峰值=100），不是绝对搜索量；非官方端点，可能随 Google 调整失效。
  */
@@ -125,5 +125,5 @@ export async function relatedQueries(keyword: string, geo = ""): Promise<{ keywo
 }
 
 // 说明：Google 旧版 dailytrends / realtimetrends 公开端点（含 RSS）已于 2024-2025 年陆续下线
-// （官方 alpha API 明确不提供 Trending Now）。“此刻正在爆发的热点”改由各平台原生实时热榜
+// （官方 alpha API 明确不提供 Trending Now）。"此刻正在爆发的热点"改由各平台原生实时热榜
 // （get_trending / discover_trending_topics）覆盖，不再请求已失效端点，避免 404 与假数据。
