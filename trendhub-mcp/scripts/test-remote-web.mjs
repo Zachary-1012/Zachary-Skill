@@ -45,6 +45,8 @@ if (!index.includes('data-view="professional"') || !index.includes('data-view="s
 if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js"')) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
+if (!responsive.includes("display: grid !important") || !responsive.includes("flex-direction: initial !important")) fail("mobile shell must override legacy horizontal navigation flex");
+if (!responsive.includes("@media (max-width: 900px)") || !responsive.includes(".app { display: block; }")) fail("defensive compact shell breakpoint missing");
 if (!responsive.includes("100dvh") || !responsive.includes("safe-area-inset")) fail("mobile safe-area/dynamic viewport support missing");
 if (!responsive.includes("overflow-x: auto") || !responsive.includes("table-wrap")) fail("mobile tables must remain horizontally usable");
 if (!responsive.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") || !responsive.includes("white-space: normal")) fail("mobile navigation must wrap instead of clipping");
