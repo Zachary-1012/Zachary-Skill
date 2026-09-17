@@ -23,7 +23,9 @@ jobs:
           cache: npm
           cache-dependency-path: trendhub-mcp/package-lock.json
       - name: Apply patch
-        run: python3 .github/scripts/v144_finalize.py
+        run: |
+          sed -i '/replace_once(".github\/workflows\/node.js.yml"/d' .github/scripts/v144_finalize.py
+          python3 .github/scripts/v144_finalize.py
       - name: Regenerate lockfile
         working-directory: trendhub-mcp
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
@@ -35,9 +37,9 @@ jobs:
         run: npm run release:gate
       - name: Diff check
         run: git diff --check
-      - name: Commit clean release branch
+      - name: Commit product patch
         run: |
-          rm .github/workflows/v144-finalize.yml .github/scripts/v144_finalize.py
+          rm .github/scripts/v144_finalize.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
