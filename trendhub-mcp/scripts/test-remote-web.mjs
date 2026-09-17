@@ -45,6 +45,9 @@ if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone 
 if (!responsive.includes("100dvh") || !responsive.includes("safe-area-inset")) fail("mobile safe-area/dynamic viewport support missing");
 if (!responsive.includes("overflow-x: auto") || !responsive.includes("table-wrap")) fail("mobile tables must remain horizontally usable");
 if (!responsive.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") || !responsive.includes("white-space: normal")) fail("mobile navigation must wrap instead of clipping");
+if (!index.includes('id="navToggle"') || !app.includes("navToggle")) fail("mobile navigation toggle wiring missing");
+if (!responsive.includes(".nav-toggle") || !responsive.includes(".sidebar.nav-open .nav")) fail("mobile navigation open/closed states missing");
+if (!responsive.includes("max-height: 0")) fail("mobile navigation must be collapsed by default");
 if (!responsive.includes("pointer: coarse")) fail("touch target contract missing");
 if (!viewsB.includes("实时话题词组图") || !viewsB.includes('qs.set("topic", topic)')) fail("topic radar/filter UX missing");
 if (!viewsC.includes("动态趋势曲线")) fail("dynamic trend curve explanation missing");
