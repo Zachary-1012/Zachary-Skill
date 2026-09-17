@@ -1,6 +1,13 @@
 name: Distribution Health
 
 on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "README.md"
+      - "DISTRIBUTION.md"
+      - ".github/workflows/distribution-health.yml"
+      - "trendhub-mcp/scripts/distribution-health.mjs"
   push:
     branches: ["main"]
     paths:
@@ -16,7 +23,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: trendhub-distribution-health
+  group: trendhub-distribution-health-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,4 +44,4 @@ jobs:
         run: |
           echo "This monitor checks public discovery, not third-party trend-source availability."
           echo "It requires the Official MCP Registry entry to be active/latest and publicly searchable, and the Glama connector page to remain discoverable."
-          echo "Cursor, Smithery and OpenAI directory states remain review/account-gated until those marketplaces publish the listing."
+          echo "Cursor Marketplace, Smithery and the ChatGPT/Codex Plugins Directory remain review/account-gated until those marketplaces publish the listing."
