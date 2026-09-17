@@ -1,8 +1,8 @@
 # TrendHub Professional Intelligence v2 — Release Candidate
 
-Status: **READY TO RELEASE, NOT PUBLISHED**.
+Status: **APPROVED FOR RELEASE; publication remains workflow-gated**.
 
-This candidate is intentionally isolated on `dev/professional-intelligence-v2`. Stable production remains v1.4.4 until explicit approval.
+The approved candidate is isolated on `dev/professional-intelligence-v2` until the protected `main` merge. Stable production remains v1.4.4 until the matching v1.5.0 deployment passes health and MCP checks.
 
 ## What “ready to release” means
 
@@ -11,7 +11,7 @@ This candidate is intentionally isolated on `dev/professional-intelligence-v2`. 
 - public Remote MCP/Web security smoke must be green;
 - release, Registry and public-install workflows use a dynamic MCP tool count instead of assuming 19 tools;
 - v1.5.0 is the sole next intended stable version; v1.4.5 is explicitly forbidden;
-- no merge, tag, GitHub Release, Railway deployment or MCP Registry publication is performed by candidate preparation.
+- publication is still blocked unless main CI, production health and the Registry preflight all pass in order.
 
 ## Promotion
 
@@ -27,7 +27,7 @@ npm run release:gate
 
 `release:promote` changes release metadata only. It synchronizes package/lock/manifest/Registry/plugin/runtime versions, promotes the canonical manifest to the 21-tool contract and marks `professional-manifest.json` as `release-ready`.
 
-On the RC branch, `npm run release:preflight` is a non-mutating RC check. It confirms that the current v1.4.4 runtime/production metadata is untouched and that the v1.5.0 promotion contract is complete.
+Before promotion, `npm run release:preflight` is a non-mutating RC check. After the approved metadata promotion, the same command validates the complete v1.5.0 release metadata contract.
 
 After those checks pass, the normal protected `main` path may be used. The existing release automation then creates the tag and GitHub Release only after main CI succeeds. The Registry workflow waits for the public Railway health endpoint to report both the matching version and matching tool count before publishing metadata.
 

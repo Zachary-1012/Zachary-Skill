@@ -50,11 +50,12 @@ must(terms.includes("TrendHub Free Use License 1.0") && !terms.includes("distrib
 must(webApi.includes("live-with-snapshot-fallback") && webApi.includes("snapshotFallback"), "hosted Web snapshot fallback contract missing");
 
 const version = pkg.version;
-must(version === "1.4.4", `expected distribution patch 1.4.4, got ${version}`);
+must(version === "1.5.0", `expected distribution patch 1.5.0, got ${version}`);
 must(/envBool\(\s*["']TRENTHUB_REMOTE_SNAPSHOT_ENABLED["']/.test(gateway), "remote snapshot scheduler feature flag missing");
 must(gateway.includes("snapshotScheduler"), "remote snapshot scheduler health state missing");
 must(lock.version === version && lock.packages?.[""]?.version === version, "package-lock version metadata must match package.json");
 must(manifest.version === version, "manifest version must match package.json");
+must(manifest.tools?.length === 21, "v1.5.0 manifest must declare 21 MCP tools");
 must(registry.version === version, "Official MCP Registry version must match package.json");
 must(plugin.version === version, "portable plugin version must match package.json");
 must(pkg.license === "SEE LICENSE IN LICENSE", "package.json must point to the repository LICENSE");

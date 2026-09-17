@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, "..");
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "trendhub-professional-e2e-"));
 
 function getFreePort() {
@@ -64,7 +65,7 @@ child.stderr.on("data", (x) => logs.push(String(x)));
 
 try {
   const health = await waitReady(base, child, logs);
-  assert.equal(health.version, "1.4.4");
+  assert.equal(health.version, pkg.version);
 
   const shell = await (await fetch(`${base}/`)).text();
   assert.match(shell, /responsive-v2\.css/);

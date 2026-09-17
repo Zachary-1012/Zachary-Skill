@@ -16,6 +16,7 @@ const REPO = dirname(ROOT);
 const pkg = JSON.parse(await readFile(join(ROOT, "package.json"), "utf8"));
 const lock = JSON.parse(await readFile(join(ROOT, "package-lock.json"), "utf8"));
 const manifest = JSON.parse(await readFile(join(ROOT, "manifest.json"), "utf8"));
+const expectedTools = 21;
 const repoReadme = await readFile(join(REPO, "README.md"), "utf8");
 const accessDoc = await readFile(join(ROOT, "docs", "access.md"), "utf8");
 const setupClientsDoc = await readFile(join(ROOT, "docs", "setup-clients.md"), "utf8");
@@ -53,8 +54,8 @@ assert.equal(typeof pkg.scripts?.test, "string", "deterministic npm test command
 assert.equal(typeof pkg.scripts?.["release:gate"], "string", "release gate command must exist");
 assert.equal(pkg.files.includes("SKILL.md"), true, "release package must contain SKILL.md");
 assert.equal(pkg.files.includes("docs"), true, "release package must contain setup docs");
-assert.equal(manifest.aiInstall?.successMarker, "SMOKE OK tools=19", "AI install success marker must remain machine readable");
-assert.equal(manifest.tools?.length, 19, "manifest must declare exactly 19 MCP tools");
+assert.equal(manifest.aiInstall?.successMarker, `SMOKE OK tools=${expectedTools}`, "AI install success marker must remain machine readable");
+assert.equal(manifest.tools?.length, expectedTools, `manifest must declare exactly ${expectedTools} MCP tools`);
 for (const name of ["source_reliability", "trend_intelligence", "benchmark_trend_lead"]) {
   assert.equal(manifest.tools.some((x) => x.name === name), true, `manifest missing professional tool ${name}`);
 }
@@ -88,7 +89,7 @@ for (const [name, text] of [
   assert.equal(text.includes("TrendHub 账号"), false, `${name} must not imply that a TrendHub account system exists`);
 }
 assert.match(repoReadme, /无需审批、注册、登录或中央服务器/);
-assert.match(repoReadme, /19 个 MCP 工具|19 MCP|tools=19/);
+assert.match(repoReadme, /21 个 MCP 工具|21 MCP|tools=21/);
 assert.match(accessDoc, /无需审批、注册、登录或中央服务器/);
 assert.match(repoReadme, /AI_BOOTSTRAP_OK/);
 assert.match(accessDoc, /AI_BOOTSTRAP_OK/);
@@ -99,7 +100,7 @@ assert.match(methodologyDoc, /Source Reliability/);
 assert.match(methodologyDoc, /24h \/ 72h Lead-time Benchmark/);
 assert.match(rootLicense, /TrendHub Free Use License 1\.0/);
 assert.match(changelog, /\[1\.4\.0\]/);
-assert.match(contributing, /SMOKE OK tools=19/);
+assert.match(contributing, /SMOKE OK tools=21/);
 assert.match(security, /TRENTHUB_HTTP_TOKEN/);
 assert.match(governance, /main-protection/);
 assert.match(governance, /TrendHub Free Use License 1\.0/);

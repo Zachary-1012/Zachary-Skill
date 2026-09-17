@@ -15,6 +15,7 @@ function writeJson(file, value, dryRun) {
   return text;
 }
 function replaceRequired(text, pattern, replacement, label) {
+  if (text.includes(replacement)) return text;
   const next = text.replace(pattern, replacement);
   if (next === text) throw new Error(`PROMOTION FAILED: expected ${label} marker was not found`);
   return next;

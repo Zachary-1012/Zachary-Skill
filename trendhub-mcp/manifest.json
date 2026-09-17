@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.4.4",
-  "description": "专业级全网趋势情报 MCP Skill，以小红书为深度主打：覆盖 38 个平台/趋势信源、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h lead benchmark 与内容生产，共 19 个 MCP 工具。BYO-AI、零模型 Key、本地优先。",
+  "version": "1.5.0",
+  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具，覆盖实时热点、Source Reliability、Professional Intelligence v2、多年度历史、异常/预测/回测、品牌与信源宇宙、报告和工作区；BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -39,7 +39,7 @@
     },
     "install": "node scripts/setup.mjs",
     "verify": "npm run smoke",
-    "successMarker": "SMOKE OK tools=19",
+    "successMarker": "SMOKE OK tools=21",
     "mcpStdio": {
       "command": "node",
       "args": [
@@ -309,7 +309,37 @@
       "name": "get_content_brief",
       "group": "produce",
       "summary": "聚合真实证据+爆款样本+模板，产出创作简报与成稿指令"
+    },
+    {
+      "name": "professional_intelligence",
+      "group": "analysis",
+      "summary": "Professional Intelligence v2：多年度证据、异常、6/24/48/72h 预测与回测、受众/创作者代理、媒体证据、品牌实体、告警和高管报告"
+    },
+    {
+      "name": "workspace_manage",
+      "group": "collaboration",
+      "summary": "本地工作区：RBAC、watchlist、saved query、alert rule 与 audit log；不上传中央服务"
     }
   ],
-  "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT)."
+  "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT).",
+  "professionalIntelligence": {
+    "methodologyVersion": "professional-intelligence-v2",
+    "expectedToolCount": 21,
+    "history": "sqlite-indexed-multi-year-with-json-fallback",
+    "forecastHorizonsHours": [
+      6,
+      24,
+      48,
+      72
+    ],
+    "forecastValidation": "holdout-backtest-with-uncertainty",
+    "sourceUniverse": "priority-tiered-cn-apac-global",
+    "userSetup": "zero-config-first",
+    "responsiveWeb": true,
+    "externalConstraints": [
+      "licensed-firehose-coverage",
+      "proprietary-demographic-panels",
+      "long-lived-real-user-usage-and-outcome-data"
+    ]
+  }
 }

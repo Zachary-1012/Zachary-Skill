@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.4.4",
-  "description": "TrendHub MCP — 专业级全网趋势情报 Skill：Stable v1.4.4 + Professional Intelligence v2 release candidate；BYO-AI、Evidence-first、本地优先。",
+  "version": "1.5.0",
+  "description": "TrendHub MCP — Professional Intelligence v2 release 1.5.0；21 MCP tools、Evidence-first、BYO-AI、本地优先。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"

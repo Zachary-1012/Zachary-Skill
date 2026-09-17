@@ -12,7 +12,7 @@ The Professional Intelligence layer is additive. Existing snapshots, source reli
 
 The development RC exposes 21 tools: the stable 19 plus `professional_intelligence` and `workspace_manage`. Clients should discover the tool list from the MCP handshake and not hard-code 19.
 
-The public stable endpoint remains the v1.4.4 19-tool contract until an explicitly approved release and matching health check.
+After the approved release and matching health check, the public stable endpoint becomes the v1.5.0 21-tool contract. The immutable v1.4.4 release remains the rollback target.
 
 ## Upgrade procedure after approval
 

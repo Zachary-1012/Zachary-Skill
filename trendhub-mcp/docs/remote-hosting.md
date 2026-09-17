@@ -54,4 +54,4 @@ Local-only mutating routes such as `/api/snapshot` are not published: `GET` retu
 
 The scheduler wraps the same `takeSnapshots()` pipeline as the local edition and is **disabled by default**. When enabling it on the host, mount a persistent volume at `TRENTHUB_DATA_DIR` (e.g. `/data/trendhub`); without it, the bounded history is lost on every redeploy. Collection failures only set `snapshotScheduler.lastError` and never exit the MCP process, and overlapping runs are skipped (`skippedBecauseRunning`). State is exposed on `GET /health` as `snapshotScheduler` (`enabled`/`running`/`intervalMs`/`lastRunAt`/`lastSuccessAt`/`lastOk`/`lastTotal`/`lastError`/`skippedBecauseRunning`). See `scheduled-snapshots.md` for local cron / Windows Task Scheduler equivalents.
 
-The remote gateway is a distribution adapter. It does not change TrendHub's 19-tool contract or weaken the local edition's non-loopback bearer-token requirement.
+The remote gateway is a distribution adapter. v1.5.0 exposes the 21-tool contract and does not weaken the local edition's non-loopback bearer-token requirement.
