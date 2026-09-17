@@ -136,9 +136,10 @@ export function registerTools(server: McpServer): void {
     {
       min_platforms: z.number().min(2).max(6).optional().describe("至少在几个平台出现，默认2"),
       platforms: z.string().optional().describe("可选，限定平台，逗号分隔"),
+      topic: z.string().optional().describe("可选，按话题/关键词筛选聚类结果；支持品牌、campaign、行业议题或平台标签"),
     },
     WEB_READ,
-    async ({ min_platforms, platforms }) => json(await discoverClusters(splitList(platforms), min_platforms ?? 2))
+    async ({ min_platforms, platforms, topic }) => json(await discoverClusters(splitList(platforms), min_platforms ?? 2, 20, topic))
   );
 
   server.tool(
