@@ -25,8 +25,9 @@ const must = (condition, message) => {
   if (!condition) throw new Error(`DISTRIBUTION TEST FAILED: ${message}`);
 };
 
-// Static contract checks intentionally avoid formatting-sensitive matching.
-// Runtime isolation is verified separately by remote-smoke.mjs in the release gate.
+// Static distribution boundaries only. Scheduler timing semantics are exercised by
+// test-snapshot-scheduler.mjs; keeping that runtime contract out of this text-inspection
+// test avoids duplicate/brittle assertions over implementation formatting.
 must(/PUBLIC_PORT\s*=\s*Number\(\s*process\.env\.PORT\s*\|\|\s*process\.env\.TRENHUB_REMOTE_PORT\s*\|\|\s*8080\s*\)/.test(gateway), "remote gateway must honor hosting PORT and TRENHUB_REMOTE_PORT");
 must(gateway.includes("TRENTHUB_HOST") && gateway.includes("127.0.0.1"), "core must remain loopback-only behind the public gateway");
 must(gateway.includes("randomBytes(32)") && gateway.includes("INTERNAL_TOKEN"), "internal bearer token must be generated per process");
@@ -51,7 +52,6 @@ must(webApi.includes("live-with-snapshot-fallback") && webApi.includes("snapshot
 const version = pkg.version;
 must(version === "1.4.4", `expected distribution patch 1.4.4, got ${version}`);
 must(/envBool\(\s*["']TRENTHUB_REMOTE_SNAPSHOT_ENABLED["']/.test(gateway), "remote snapshot scheduler feature flag missing");
-must(/envNumber\(\s*["']TRENTHUB_SNAPSHOT_INTERVAL_MIN["']/.test(gateway) && /intervalMs:\s*SNAPSHOT_INTERVAL_MIN\s*\*\s*60_000/.test(gateway), "remote snapshot interval config/wiring missing");
 must(gateway.includes("snapshotScheduler"), "remote snapshot scheduler health state missing");
 must(lock.version === version && lock.packages?.[""]?.version === version, "package-lock version metadata must match package.json");
 must(manifest.version === version, "manifest version must match package.json");
