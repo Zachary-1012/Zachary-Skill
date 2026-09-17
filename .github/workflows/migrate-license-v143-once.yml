@@ -1,0 +1,78 @@
+name: Migrate License v1.4.3 Once
+
+on:
+  push:
+    branches:
+      - release/v1.4.3-license-final
+    paths:
+      - .github/workflows/migrate-license-v143-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Apply source and metadata migration
+        run: python3 .github/scripts/migrate_license_v143.py
+
+      - name: Align deterministic license assertions
+        run: python3 .github/scripts/patch_license_tests.py
+
+      - name: Regenerate package lock metadata
+        working-directory: trendhub-mcp
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Verify migration invariants
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          pkg = json.loads(Path('trendhub-mcp/package.json').read_text())
+          lock = json.loads(Path('trendhub-mcp/package-lock.json').read_text())
+          manifest = json.loads(Path('trendhub-mcp/manifest.json').read_text())
+          plugin = json.loads(Path('plugin.json').read_text())
+          server = json.loads(Path('server.json').read_text())
+          assert pkg['version'] == '1.4.3'
+          assert lock['version'] == '1.4.3'
+          assert lock['packages']['']['version'] == '1.4.3'
+          assert pkg['license'] == 'SEE LICENSE IN LICENSE'
+          assert lock['packages']['']['license'] == 'SEE LICENSE IN LICENSE'
+          assert manifest['version'] == plugin['version'] == server['version'] == '1.4.3'
+          assert manifest['license'] == plugin['license'] == 'LicenseRef-TrendHub-Free-Use-1.0'
+          license_text = Path('LICENSE').read_text()
+          assert 'TrendHub Free Use License 1.0' in license_text
+          assert 'v1.4.2 and earlier' in license_text
+          print('LICENSE MIGRATION INVARIANTS OK')
+          PY
+
+      - name: Full release gate
+        working-directory: trendhub-mcp
+        run: |
+          npm ci --no-audit --no-fund
+          npm run release:gate
+
+      - name: Remove one-time migration files and commit
+        run: |
+          set -euo pipefail
+          rm .github/workflows/migrate-license-v143-once.yml
+          rm .github/scripts/migrate_license_v143.py
+          rm .github/scripts/patch_license_tests.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "release: establish TrendHub v1.4.3 free-use license boundary"
+          git push origin HEAD:release/v1.4.3-license-final
