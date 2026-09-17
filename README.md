@@ -1,10 +1,12 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.2** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.3** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
 > 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。
+
+> **许可边界（v1.4.3+）**：个人和公司/组织可免费使用未修改的 TrendHub，包括内部商业运营；允许安装、备份和内部部署所需的合理副本。**禁止修改、派生、再发布、再分发、转售、转授权或向第三方托管提供 TrendHub 软件本身。** 使用 TrendHub 产生的报告/分析/内容不受该软件分发限制，但仍须遵守第三方数据或内容权利。完整条款见 [`LICENSE`](./LICENSE)。v1.4.2 及更早版本保留其发布时已经授予的 MIT 权利，不能追溯收回。
 
 ## 最快使用：直接连接公开 Remote MCP
 
@@ -102,7 +104,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## TrendHub v1.4.2 能力
+## TrendHub v1.4.3 能力
 
 | 能力层 | 当前能力 |
 | --- | --- |
@@ -187,6 +189,6 @@ TrendHub 不跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 *
 - 仓库不应包含任何模型 Key、Cookie、Token 或内部资料；`XHS_COOKIE` 只保存在使用者本机环境变量。
 - `main` 受保护：必须 PR、Node 22/24 required checks、up-to-date、禁止 force push、禁止删除、无 bypass。
 - upstream 原仓库只允许 owner 与 owner 邀请的 Collaborators 修改；公开用户只有读取/clone/使用 upstream 的权限。
-- 软件当前仍按 **MIT License** 分发；MIT 在法律层面允许使用者对自己的副本进行 fork/修改/再分发，这与“不能修改原 upstream 仓库”是两个不同概念。若未来要改成“法律上仅允许使用、禁止修改/再分发”，需要单独做许可证变更。
+- 软件从 **TrendHub v1.4.3** 起按 **TrendHub Free Use License 1.0** 分发：个人与公司可免费使用未修改版本，但不得修改、制作派生版本、再发布或再分发软件本身；第三方依赖/代码仍按各自许可证执行。v1.4.2 及以前已经授予的 MIT 权利不追溯撤销。
 
 详细规则：[`GOVERNANCE.md`](./GOVERNANCE.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`CHANGELOG.md`](./CHANGELOG.md) · [`DISTRIBUTION.md`](./DISTRIBUTION.md)

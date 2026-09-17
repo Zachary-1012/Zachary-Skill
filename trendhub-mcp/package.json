@@ -1,6 +1,6 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "TrendHub MCP — 专业级全网趋势情报 Skill：19 个 MCP 工具覆盖实时热榜、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、24h/72h lead benchmark 与内容生产；BYO-AI、零模型 Key、本地优先。",
   "type": "module",
   "bin": {
@@ -53,7 +53,7 @@
     "bilibili",
     "google-trends"
   ],
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=22"
   },
