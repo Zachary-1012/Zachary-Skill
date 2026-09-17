@@ -1,6 +1,10 @@
-/* TrendHub 本地控制台前端 —— 原生 JS、零依赖、离线运行、不接任何大模型。
-   只通过同源 /api/* 调用本机插件能力；分析与成稿由调用方 AI 完成。 */
+/* TrendHub 控制台前端 —— 原生 JS、零依赖；同一 UI 同时支持本地与公网只读/查询模式。
+   只通过同源 /api/* 调用 TrendHub 能力；分析与成稿由调用方 AI 完成。 */
 "use strict";
+
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+window.TRENHUB_IS_REMOTE = !LOOPBACK_HOSTS.has(location.hostname);
+window.TRENHUB_RUNTIME_MODE = window.TRENHUB_IS_REMOTE ? "公网" : "本地";
 
 const COLORS = ["#10a37f", "#2563eb", "#d97706", "#dc2626", "#7c3aed"];
 const ICON = {
@@ -213,7 +217,10 @@ async function route() {
     await ensureMeta();
     await fn(content, params);
   } catch (e) {
-    content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + '<div class="card"><p class="sub">请确认控制台正在运行（npm run ui），且能访问各平台公开接口。</p></div>';
+    const hint = window.TRENHUB_IS_REMOTE
+      ? "请稍后重试，并检查 /health 是否正常。"
+      : "请确认控制台正在运行（npm run ui），且能访问各平台公开接口。";
+    content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + `<div class="card"><p class="sub">${hint}</p></div>`;
   }
 }
 document.querySelectorAll(".nav-item").forEach((n) =>
