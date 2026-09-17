@@ -1,6 +1,6 @@
 # TrendHub v1.5.0 Release Candidate — Release Notes
 
-Status: **approved release candidate; publication is gated by main CI, production health and Registry verification**. v1.4.4 remains the immutable rollback release.
+Status: **published and production-verified**. v1.4.4 remains the immutable rollback release.
 
 ## Included
 
@@ -22,4 +22,4 @@ This RC does not claim licensed firehose scale, proprietary demographic panels, 
 
 ## Safety boundary
 
-The release workflow may merge the approved PR, create only the new v1.5.0 tag/release, deploy the approved main revision through the configured Railway path, and publish Registry metadata only after matching production health. The existing v1.4.4 tag/release is not modified.
+The release workflow merged the approved PR, created only the new v1.5.0 tag/release, deployed the approved main revision through the configured Railway path, and published Registry metadata after matching production health. The existing v1.4.4 tag/release was not modified.

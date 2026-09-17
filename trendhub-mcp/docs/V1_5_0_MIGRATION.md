@@ -1,6 +1,6 @@
 # TrendHub v1.5.0 Migration Guide
 
-Status: preparation only; no migration is run by the RC.
+Status: published migration guidance; no automatic data migration is run by the release.
 
 ## Data
 
@@ -12,7 +12,7 @@ The Professional Intelligence layer is additive. Existing snapshots, source reli
 
 The development RC exposes 21 tools: the stable 19 plus `professional_intelligence` and `workspace_manage`. Clients should discover the tool list from the MCP handshake and not hard-code 19.
 
-After the approved release and matching health check, the public stable endpoint becomes the v1.5.0 21-tool contract. The immutable v1.4.4 release remains the rollback target.
+The public stable endpoint is now the v1.5.0 21-tool contract. The immutable v1.4.4 release remains the rollback target.
 
 ## Upgrade procedure after approval
 
