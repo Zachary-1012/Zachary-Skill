@@ -14,6 +14,7 @@ const forecast = await import("../dist/src/analysis/forecast.js");
 const audience = await import("../dist/src/analysis/audience.js");
 const media = await import("../dist/src/analysis/media.js");
 const professional = await import("../dist/src/analysis/professional.js");
+const professionalSignals = await import("../dist/src/analysis/professional-signals.js");
 const reports = await import("../dist/src/reports/executive.js");
 const workspace = await import("../dist/src/collaboration/workspace.js");
 const observability = await import("../dist/src/observability/local.js");
@@ -21,6 +22,8 @@ const professionalApi = await import("../dist/src/web/professional-api.js");
 const sourceCatalog = await import("../dist/src/sources/professional-catalog.js");
 const accessPlan = await import("../dist/src/sources/access-plan.js");
 const brands = await import("../dist/src/entities/brand-catalog.js");
+const urlSecurity = await import("../dist/src/security/url.js");
+const htmlSecurity = await import("../dist/src/security/html.js");
 
 try {
   // Robust statistics and holdout validation.
@@ -41,6 +44,11 @@ try {
   ]) {
     assert.ok(allSources.some((s) => s.id === required), `professional source universe missing ${required}`);
   }
+  for (const required of ["luxe-co", "ladymax", "bluesky", "youtube-podcasts", "podcast-index", "public-rss-atom"]) {
+    assert.ok(allSources.some((s) => s.id === required), `extended professional source universe missing ${required}`);
+  }
+  assert.equal(sourceCatalog.sourceSpec("bluesky")?.status, "live");
+  assert.equal(sourceCatalog.sourceSpec("podcast-index")?.status, "planned");
   const xhs = sourceCatalog.sourceSpec("xiaohongshu");
   assert.equal(sourceCatalog.sourceUserSetup(xhs).mode, "optional-local-session");
   assert.equal(sourceCatalog.sourceUserSetup(xhs).blocksBasicUse, false);
@@ -48,6 +56,10 @@ try {
   assert.equal(sourceCatalog.sourceUserSetup(baiduIndex).mode, "required-local-session");
   const instagram = sourceCatalog.sourceSpec("instagram");
   assert.equal(sourceCatalog.sourceUserSetup(instagram).mode, "user-oauth");
+  assert.throws(() => urlSecurity.assertSafeHttpUrl("http://127.0.0.1:8080/feed.xml"), /private, loopback or metadata/);
+  assert.throws(() => urlSecurity.assertSafeHttpUrl("file:///etc/passwd"), /only http\(s\)/);
+  assert.match(htmlSecurity.sanitizeHtml('<img src="x" onerror="alert(1)"><script>alert(1)</script>'), /<img/);
+  assert.doesNotMatch(htmlSecurity.sanitizeHtml('<img src="x" onerror="alert(1)"><script>alert(1)</script>'), /onerror|script/i);
 
   const fashionPlan = accessPlan.buildSourceAccessPlan({ verticals: ["fashion-luxury"], includePriority: "P1", maxDefaultLive: 12 });
   assert.ok(fashionPlan.zeroConfig.length > 0);
@@ -123,6 +135,15 @@ try {
   assert.ok(Array.isArray(intel.alerts.triggered));
   assert.ok(intel.evidenceSummary.totalHistorySamples >= 96);
   assert.equal(intel.entityContext.matched, false);
+  assert.ok(intel.professionalSignals.crossSignalConfirmation.score != null);
+  assert.equal(intel.professionalSignals.firstSeen.firstSeenAt != null, true);
+  assert.ok(["new", "recurring", "insufficient_evidence"].includes(intel.professionalSignals.novelty.status));
+  assert.ok(Array.isArray(intel.professionalSignals.scoreExplanations));
+  assert.ok(intel.professionalSignals.scoreExplanations.every((x) => x.evidenceRefs && x.transformation && x.missingData));
+  assert.equal(intel.professionalSignals.forecastCalibration.latestGrade, f.validation.grade);
+  const standaloneSignals = professionalSignals.buildProfessionalSignalPack("Alpha trend", ["alpha", "beta"], null, now, f.validation);
+  assert.equal(standaloneSignals.methodologyVersion, "professional-signals-v1");
+  assert.ok(standaloneSignals.volatility.observations >= 6);
 
   const brandIntel = professional.buildProfessionalIntelligence("LV", fashionPlan.defaultLivePlatforms.slice(0, 4), now);
   assert.equal(brandIntel.entityContext.entity?.id, "louis-vuitton");

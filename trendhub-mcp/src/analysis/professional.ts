@@ -11,6 +11,7 @@ import { evaluateProfessionalAlerts, type AlertEvaluation } from "../alerts/engi
 import { historyStoreInfo } from "../store/history.js";
 import { sourceFamilyCoverage, sourceSpec, sourceUserSetup } from "../sources/professional-catalog.js";
 import { entityQueryTerms, resolveBrandEntity, type BrandEntity } from "../entities/brand-catalog.js";
+import { buildProfessionalSignalPack, type ProfessionalSignalPack } from "./professional-signals.js";
 
 export interface ProfessionalIntelligence {
   methodologyVersion: "professional-intelligence-v2";
@@ -34,6 +35,7 @@ export interface ProfessionalIntelligence {
   forecast: TrendForecast;
   audience: AudienceSignals;
   media: MediaEvidence;
+  professionalSignals: ProfessionalSignalPack;
   alerts: AlertEvaluation;
   storage: ReturnType<typeof historyStoreInfo>;
   sourceArchitecture: {
@@ -77,6 +79,7 @@ export function buildProfessionalIntelligence(
   const audience = analyzeAudienceSignals(keyword, platforms, now);
   const media = collectMediaEvidence(keyword, platforms, now);
   const alerts = evaluateProfessionalAlerts(keyword, core, forecast, undefined, now);
+  const professionalSignals = buildProfessionalSignalPack(keyword, platforms, entity, now, forecast.validation);
   const familyCoverage = sourceFamilyCoverage(platforms);
   const selectedSources = platforms.map((requestedId) => {
     const spec = sourceSpec(requestedId);
@@ -140,6 +143,7 @@ export function buildProfessionalIntelligence(
     forecast,
     audience,
     media,
+    professionalSignals,
     alerts,
     storage: historyStoreInfo(),
     sourceArchitecture: {

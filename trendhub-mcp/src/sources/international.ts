@@ -172,6 +172,39 @@ async function fetchProductHunt(limit: number): Promise<HotResult> {
   }
 }
 
+/* ---------------- Bluesky public AppView GET ---------------- */
+async function fetchBluesky(limit: number): Promise<HotResult> {
+  const key = `int:bluesky:${limit}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+  try {
+    // Bluesky's public AppView exposes search without a private session. This
+    // is intentionally a public-search evidence adapter, not a fabricated
+    // global hotlist or a user-level propagation feed.
+    const endpoint = `https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=${encodeURIComponent("trending")}&limit=${Math.min(limit, 100)}`;
+    const payload = await httpGet(endpoint) as { posts?: Array<Record<string, unknown>> };
+    const items = (payload.posts ?? []).slice(0, limit).map((post, index) => {
+      const record = (post.record ?? {}) as Record<string, unknown>;
+      const author = (post.author ?? {}) as Record<string, unknown>;
+      const uri = post.uri ? String(post.uri) : null;
+      return {
+        rank: index + 1,
+        title: String(record.text ?? "").replace(/\s+/g, " ").trim(),
+        url: post.uri ? `https://bsky.app/profile/${String(author.handle ?? author.did ?? "")}/post/${uri?.split("/").at(-1) ?? ""}` : null,
+        hot: null,
+        hotText: "public AppView search result; popularity unavailable",
+        desc: null,
+        author: author.handle ? String(author.handle) : null,
+        externalId: uri,
+      };
+    }).filter((item) => item.title);
+    return mapAndCache(key, "bluesky", "Bluesky public search", "social", items,
+      "Public AppView GET with query=trending; not a universal Bluesky popularity rank.");
+  } catch (e) {
+    return missingResult("bluesky", "Bluesky public search", "social", `抓取失败：${(e as Error).message}`);
+  }
+}
+
 export interface IntlSpec {
   platform: string;
   label: string;
@@ -192,6 +225,7 @@ export const INTERNATIONAL: IntlSpec[] = [
 ];
 
 export async function fetchInternational(platform: string, limit = 30): Promise<HotResult> {
+  if (platform === "bluesky") return fetchBluesky(limit);
   if (platform === "github-trending-weekly") return fetchGithubTrending(limit, "weekly");
   if (platform === "github-trending-monthly") return fetchGithubTrending(limit, "monthly");
   if (platform.startsWith("reddit:")) return fetchReddit(limit, platform.slice(7));

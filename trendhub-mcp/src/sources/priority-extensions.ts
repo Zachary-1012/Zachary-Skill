@@ -15,6 +15,8 @@ export const PRIORITY_SOURCE_EXTENSIONS: ProfessionalSourceSpec[] = [
   { id: "wechat-mini-program", label: "微信小程序", region: "CN", families: ["commerce-discovery", "search-intent"], access: "licensed-connector", priority: "P1", verticals: ["general", "retail-commerce", "fashion-luxury", "beauty", "business-corporate"] },
   { id: "wecom", label: "企业微信 / WeCom", region: "CN", families: ["community-discussion", "commerce-discovery"], access: "byo-api", setupOverride: "user-oauth", priority: "P1", verticals: ["business-corporate", "retail-commerce", "marketing-advertising"] },
   { id: "meituan", label: "美团", region: "CN", families: ["commerce-discovery", "search-intent"], access: "licensed-connector", priority: "P1", verticals: ["retail-commerce", "general"] },
+  { id: "luxe-co", label: "Luxe.CO / 华丽志", region: "CN", families: ["news-authority", "web-domain"], access: "adapter-planned", priority: "P1", verticals: ["fashion-luxury", "beauty", "business-corporate"] },
+  { id: "ladymax", label: "LADYMAX", region: "CN", families: ["news-authority", "web-domain"], access: "adapter-planned", priority: "P1", verticals: ["fashion-luxury", "beauty", "marketing-advertising"] },
 
   // China: authoritative general / policy / corporate-news context
   { id: "xinhua", label: "新华社 / Xinhua", region: "CN", families: ["news-authority", "web-domain"], access: "adapter-planned", priority: "P0", verticals: ["general", "business-corporate", "technology", "automotive", "finance-markets"] },
@@ -26,7 +28,7 @@ export const PRIORITY_SOURCE_EXTENSIONS: ProfessionalSourceSpec[] = [
 
   // Global/APAC: additional high-signal social ecosystems
   { id: "line", label: "LINE", region: "APAC", families: ["social-attention", "community-discussion"], access: "byo-api", setupOverride: "user-oauth", priority: "P1", verticals: ["general", "retail-commerce", "fashion-luxury", "beauty", "culture-entertainment"] },
-  { id: "bluesky", label: "Bluesky", region: "GLOBAL", families: ["social-attention", "community-discussion"], access: "byo-api", priority: "P1", verticals: ["general", "technology", "business-corporate", "culture-entertainment"] },
+  { id: "bluesky", label: "Bluesky", region: "GLOBAL", families: ["social-attention", "community-discussion"], access: "live-public", livePlatformId: "bluesky", priority: "P1", verticals: ["general", "technology", "business-corporate", "culture-entertainment"], notes: "Public AppView GET only; this adapter exposes public search evidence and never requires a private session." },
   { id: "lemon8", label: "Lemon8", region: "GLOBAL", families: ["social-attention", "commerce-discovery"], access: "licensed-connector", priority: "P1", verticals: ["fashion-luxury", "beauty", "retail-commerce", "culture-entertainment"] },
   { id: "kakao", label: "Kakao ecosystem", region: "APAC", families: ["social-attention", "community-discussion", "commerce-discovery"], access: "byo-api", setupOverride: "user-oauth", priority: "P1", verticals: ["general", "fashion-luxury", "beauty", "culture-entertainment"] },
 
@@ -41,4 +43,7 @@ export const PRIORITY_SOURCE_EXTENSIONS: ProfessionalSourceSpec[] = [
   { id: "harpers-bazaar-global", label: "Harper's BAZAAR", region: "GLOBAL", families: ["news-authority", "web-domain", "social-attention"], access: "adapter-planned", priority: "P1", verticals: ["fashion-luxury", "beauty", "culture-entertainment"] },
   { id: "gq-global", label: "GQ", region: "GLOBAL", families: ["news-authority", "web-domain", "social-attention"], access: "adapter-planned", priority: "P1", verticals: ["fashion-luxury", "beauty", "automotive", "culture-entertainment"] },
   { id: "allure", label: "Allure", region: "GLOBAL", families: ["news-authority", "web-domain", "social-attention"], access: "adapter-planned", priority: "P1", verticals: ["beauty", "fashion-luxury"] },
+  { id: "youtube-podcasts", label: "YouTube Podcasts", region: "GLOBAL", families: ["podcast-audio", "long-video"], access: "byo-api", priority: "P1", verticals: ["general", "business-corporate", "technology", "culture-entertainment"] },
+  { id: "podcast-index", label: "Podcast Index", region: "GLOBAL", families: ["podcast-audio"], access: "byo-api", priority: "P0", verticals: ["general", "business-corporate", "technology", "culture-entertainment"], notes: "Official API credentials are required; chart/rank metadata is not listener count." },
+  { id: "public-rss-atom", label: "Public RSS / Atom", region: "GLOBAL", families: ["news-authority", "podcast-audio", "web-domain"], access: "live-public", priority: "P0", verticals: ["general", "business-corporate", "fashion-luxury", "beauty", "marketing-advertising"], notes: "User-configured public feeds only; URL validation blocks local-network and metadata endpoints." },
 ];

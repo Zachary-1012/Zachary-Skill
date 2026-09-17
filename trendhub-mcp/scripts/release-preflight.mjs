@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildPromotionPlan } from "./promote-professional-release.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, "..");
@@ -18,10 +19,47 @@ const registry = json(path.join(REPO, "server.json"));
 const plugin = json(path.join(REPO, "plugin.json"));
 const gateway = read(path.join(ROOT, "scripts", "remote-gateway.mjs"));
 const serverTs = read(path.join(ROOT, "src", "server.ts"));
+const requiredDocs = [
+  "RELEASE_CANDIDATE.md",
+  "V1_5_0_RELEASE_NOTES.md",
+  "V1_5_0_MIGRATION.md",
+  "V1_5_0_ROLLBACK.md",
+  "V1_5_0_READINESS_SCORECARD.md",
+];
+for (const doc of requiredDocs) must(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
+
+const target = professional.targetStableVersion ?? professional.candidateVersion;
+must(target === "1.5.0", `targetStableVersion=${target}; v1.5.0 is the only allowed next stable target`);
+must(target !== "1.4.5", "v1.4.5 is forbidden");
+
+// Candidate mode validates the current stable runtime and the complete future
+// promotion contract without mutating 1.4.4 metadata. After an authorized
+// metadata promotion, the same command automatically switches to full mode.
+if (professional.releaseStatus === "release-candidate-ready") {
+  must(pkg.version === professional.stableBase, "RC package must remain on immutable stable base");
+  must(professional.candidateVersion === target, "RC candidateVersion must match targetStableVersion");
+  must(lock.version === pkg.version && lock.packages?.[""]?.version === pkg.version, "RC package-lock version mismatch");
+  must(manifest.version === pkg.version, "RC manifest version mismatch");
+  must(registry.version === pkg.version, "RC server.json must remain on v1.4.4");
+  must(plugin.version === pkg.version, "RC plugin.json must remain on v1.4.4");
+  must(gateway.includes(`const VERSION = "${pkg.version}"`), "RC remote gateway must remain on stable version");
+  must(serverTs.includes(`export const SERVER_VERSION = "${pkg.version}"`), "RC MCP server must remain on stable version");
+  const expected = Number(professional.expectedToolCount);
+  must(expected === 21, `expected tool count=${expected}`);
+  must(manifest.tools?.length === Number(professional.stableToolCount), `stable manifest tools=${manifest.tools?.length}, expected ${professional.stableToolCount}`);
+  must(manifest.aiInstall?.successMarker === `SMOKE OK tools=${professional.stableToolCount}`, "stable AI install success marker mismatch");
+  const promotion = buildPromotionPlan(target, { dryRun: true });
+  must(promotion.ok && promotion.expectedTools === expected && promotion.dryRun, "v1.5.0 dry-run promotion contract failed");
+  must(registry.description.length <= 100, "registry description exceeds 100 characters");
+  must(registry.remotes?.[0]?.url === "https://trendhub-remote-production.up.railway.app/mcp", "registry remote URL mismatch");
+  console.log(`RELEASE PREFLIGHT RC OK target=${target} stable=${pkg.version} tools=${expected} status=ready-not-published`);
+  process.exit(0);
+}
 
 must(professional.releaseStatus === "release-ready", `professional-manifest releaseStatus=${professional.releaseStatus}`);
 must(/^\d+\.\d+\.\d+$/.test(pkg.version), `package version=${pkg.version}`);
 must(professional.candidateVersion === pkg.version, "candidateVersion must match package version");
+must(professional.targetStableVersion === pkg.version, "targetStableVersion must match promoted package version");
 must(pkg.version !== professional.stableBase, "candidate version must differ from stable base");
 must(lock.version === pkg.version && lock.packages?.[""]?.version === pkg.version, "package-lock version mismatch");
 must(manifest.version === pkg.version, "manifest version mismatch");

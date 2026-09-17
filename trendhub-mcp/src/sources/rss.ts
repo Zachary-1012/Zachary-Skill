@@ -8,6 +8,8 @@ import { config } from "../config.js";
 import { readSeedJson } from "../util/paths.js";
 import { nowIso } from "../util/schema.js";
 import type { RssArticle } from "../util/schema.js";
+import { assertSafeHttpUrl, assertSafeRemoteUrl } from "../security/url.js";
+import { stripHtml } from "../security/html.js";
 
 interface SourceDef {
   name: string;
@@ -25,7 +27,10 @@ export function loadSources(): SourceDef[] {
   if (config.rssSourcesFile && fs.existsSync(config.rssSourcesFile)) {
     try {
       const j = JSON.parse(fs.readFileSync(config.rssSourcesFile, "utf-8"));
-      if (Array.isArray(j.sources)) return j.sources;
+      if (Array.isArray(j.sources)) return j.sources.filter((source: unknown): source is SourceDef => {
+        const candidate = source as Partial<SourceDef>;
+        try { assertSafeHttpUrl(String(candidate?.url ?? "")); return Boolean(candidate?.name && candidate?.category); } catch { return false; }
+      });
     } catch {
       /* 落到内置 */
     }
@@ -35,14 +40,15 @@ export function loadSources(): SourceDef[] {
 
 async function fetchOne(src: SourceDef, perSource: number): Promise<{ articles: RssArticle[]; error?: string }> {
   try {
-    const feed = await getParser().parseURL(src.url);
+    const safeUrl = await assertSafeRemoteUrl(src.url);
+    const feed = await getParser().parseURL(safeUrl.toString());
     const articles: RssArticle[] = feed.items.slice(0, perSource).map((it) => ({
       title: String(it.title ?? "").trim(),
       url: it.link ?? null,
       publishedAt: it.isoDate ? new Date(it.isoDate).toISOString() : null,
       source: src.name,
       category: src.category,
-      summary: it.contentSnippet ? it.contentSnippet.replace(/<[^>]+>/g, "").slice(0, 280) : null,
+      summary: it.contentSnippet ? stripHtml(it.contentSnippet).slice(0, 280) : null,
     })).filter((a) => a.title);
     return { articles };
   } catch (e) {

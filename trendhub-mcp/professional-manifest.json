@@ -2,7 +2,8 @@
   "schemaVersion": "professional-intelligence-v2-rc",
   "releaseStatus": "release-candidate-ready",
   "stableBase": "1.4.4",
-  "candidateVersion": null,
+  "targetStableVersion": "1.5.0",
+  "candidateVersion": "1.5.0",
   "stableToolCount": 19,
   "professionalTools": [
     "professional_intelligence",
@@ -13,7 +14,7 @@
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
     "rule": "Promotion changes release metadata only. It does not merge, tag, publish, deploy, or update Registry.",
-    "versionPolicy": "No next stable version is reserved while this candidate remains unpublished."
+    "versionPolicy": "v1.5.0 is the sole next intended stable version; v1.4.5 is forbidden. Promotion remains metadata-only until explicit release approval."
   },
   "capabilities": {
     "history": "sqlite-indexed-multi-year-with-json-fallback",

@@ -50,6 +50,10 @@ export function buildExecutiveReport(intel: ProfessionalIntelligence): Executive
     { signal: "anomaly", value: intel.forecast.anomaly.direction, evidenceRef: "forecast.anomaly" },
     { signal: "forecast48hDelta", value: forecast48?.deltaFromNow ?? null, evidenceRef: "forecast.forecast[48h]" },
     { signal: "forecastValidation", value: intel.forecast.validation.grade, evidenceRef: "forecast.validation" },
+    { signal: "crossSignalConfirmation", value: intel.professionalSignals.crossSignalConfirmation.score, evidenceRef: "professionalSignals.crossSignalConfirmation" },
+    { signal: "novelty", value: intel.professionalSignals.novelty.status, evidenceRef: "professionalSignals.novelty" },
+    { signal: "volatility", value: intel.professionalSignals.volatility.coefficientOfVariation, evidenceRef: "professionalSignals.volatility" },
+    { signal: "newsCanonicalClusters", value: intel.professionalSignals.news.canonicalClusters, evidenceRef: "professionalSignals.news" },
   ];
 
   const evidenceAppendix: Array<Record<string, unknown>> = [];
@@ -69,6 +73,7 @@ export function buildExecutiveReport(intel: ProfessionalIntelligence): Executive
   }
   for (const item of intel.media.items.slice(0, 20)) evidenceAppendix.push({ type: "media_evidence", ...item });
   for (const creator of intel.audience.creatorSignals.slice(0, 20)) evidenceAppendix.push({ type: "creator_signal", ...creator });
+  evidenceAppendix.push({ type: "professional_signal_pack", ...intel.professionalSignals });
 
   const report: ExecutiveReport = {
     schemaVersion: "trendhub-executive-report-v1",
@@ -107,6 +112,7 @@ export function buildExecutiveReport(intel: ProfessionalIntelligence): Executive
       "Forecasts use a damped Holt model selected by holdout MAE; every forecast includes validation grade and uncertainty bounds.",
       "Audience signals are public-content/creator proxies only; sensitive demographics are not inferred.",
       "AI narrative is downstream of evidence and must preserve missing/degraded states and citations.",
+      "Professional signal pack adds source-normalized cross-family confirmation, first-seen/lead-lag, deduplicated media, novelty/seasonality, volatility and evidence-bound brand context.",
     ],
     caveats: [...new Set(intel.caveats)],
     evidenceAppendix,

@@ -41,6 +41,8 @@ export function buildPromotionPlan(version, { dryRun = true } = {}) {
   if (!VERSION_RE.test(version || "")) throw new Error("PROMOTION FAILED: pass a stable semantic version x.y.z");
   const professionalPath = path.join(ROOT, "professional-manifest.json");
   const professional = readJson(professionalPath);
+  if (version === "1.4.5") throw new Error("PROMOTION FAILED: v1.4.5 is forbidden; the next intended stable version is v1.5.0");
+  if (professional.targetStableVersion && version !== professional.targetStableVersion) throw new Error(`PROMOTION FAILED: target must be ${professional.targetStableVersion}`);
   const base = professional.stableBase;
   if (!VERSION_RE.test(base || "") || !isGreater(version, base)) throw new Error(`PROMOTION FAILED: target ${version} must be greater than stable base ${base}`);
   const expectedTools = Number(professional.expectedToolCount);

@@ -5,6 +5,7 @@
  * A source being listed here never implies that TrendHub can fetch it without the declared
  * access mode. This prevents coverage marketing from silently becoming fabricated evidence.
  */
+import { PRIORITY_SOURCE_EXTENSIONS } from "./priority-extensions.js";
 
 export type SourceRegion = "CN" | "APAC" | "GLOBAL";
 export type SignalFamily =
@@ -58,6 +59,9 @@ export interface ProfessionalSourceSpec {
   setupOverride?: UserSetupMode;
   livePlatformId?: string;
   priority: "P0" | "P1" | "P2";
+  /** Implementation status is separate from access mode: a credentialed or licensed adapter may still be planned. */
+  status?: "live" | "planned";
+  evidenceProvenance?: "runtime-adapter" | "catalogued-access-contract";
   notes?: string;
 }
 
@@ -199,11 +203,24 @@ export const PROFESSIONAL_SOURCE_CATALOG: ProfessionalSourceSpec[] = [
 ];
 
 export function professionalSourceCatalog(): ProfessionalSourceSpec[] {
-  return PROFESSIONAL_SOURCE_CATALOG.map((x) => ({ ...x, families: [...x.families], verticals: [...(x.verticals ?? ["general"])] }));
+  const seen = new Set<string>();
+  return [...PROFESSIONAL_SOURCE_CATALOG, ...PRIORITY_SOURCE_EXTENSIONS]
+    .filter((x) => {
+      if (seen.has(x.id)) return false;
+      seen.add(x.id);
+      return true;
+    })
+    .map((x) => ({
+      ...x,
+      families: [...x.families],
+      verticals: [...(x.verticals ?? ["general"])],
+      status: x.status ?? (x.livePlatformId ? "live" : "planned"),
+      evidenceProvenance: x.evidenceProvenance ?? (x.livePlatformId ? "runtime-adapter" : "catalogued-access-contract"),
+    }));
 }
 
 export function sourceSpec(id: string): ProfessionalSourceSpec | null {
-  return PROFESSIONAL_SOURCE_CATALOG.find((x) => x.id === id || x.livePlatformId === id) ?? null;
+  return professionalSourceCatalog().find((x) => x.id === id || x.livePlatformId === id) ?? null;
 }
 
 export function sourceUserSetup(source: ProfessionalSourceSpec): {
