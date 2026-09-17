@@ -29,13 +29,15 @@ https://trendhub-remote-production.up.railway.app/mcp
 
 公开 Remote MCP 不要求 TrendHub 账号，也不要求模型 API Key；它与本地版共用同一套 19-tool 能力合同。生产协议监控会用官方 MCP SDK 验证 `initialize`、`tools/list=19` 与 `list_platforms=38`。
 
-Cursor 可直接使用官方 MCP 安装链接：
+Cursor 可使用官方 MCP deeplink 直接安装：
 
-[**Add TrendHub MCP to Cursor**](https://cursor.com/en/install-mcp?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
+[**Add TrendHub MCP to Cursor**](cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
+
+如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
 
 ## 已上架 / 可搜索渠道
 
-以下状态按 **2026-09-17 的实际外部检索结果**记录；“兼容 / 可提交”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
+以下状态按 **2026-09-17 的实际外部检索结果**记录；“兼容 / 可提交 / 可直连”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
 
 | 渠道 | 当前状态 | 入口 |
 | --- | --- | --- |
@@ -43,11 +45,11 @@ Cursor 可直接使用官方 MCP 安装链接：
 | Official MCP Registry | **PUBLISHED · SEARCHABLE** | [`io.github.Zachary-1012/trendhub`](https://registry.modelcontextprotocol.io/?q=trendhub) |
 | Glama MCP Directory | **PUBLISHED · SEARCHABLE** | [TrendHub on Glama](https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub) |
 | Agent Plugins | **READY · DIRECT INSTALL** | 根目录 `plugin.json` + `mcp.json` |
-| Cursor | **DIRECT MCP INSTALL READY** | 上方一键安装；公共 Marketplace 上架仍需 Cursor 人工审核 |
-| Smithery | **SUBMISSION READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者账号/namespace |
-| ChatGPT / OpenAI Plugins Directory | **APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；公共目录需开发者提交、审核与发布 |
+| Cursor | **NOT LISTED · DIRECT MCP READY** | 上方官方 MCP deeplink 可直接安装；公共 Cursor Marketplace 上架仍需仓库提交与人工审核 |
+| Smithery | **NOT LISTED · URL PUBLISH READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者登录及 namespace |
+| ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；当前目录搜索不到 TrendHub，正式公开发现仍需提交、审核与发布 |
 
-**对外口径：目前可以明确写“已上架并可搜索”的商店是 Official MCP Registry 与 Glama。** Cursor、Smithery、ChatGPT/OpenAI 只有在各自审核/发布完成后才升级为“PUBLISHED · SEARCHABLE”。
+**对外口径：目前可以明确写“已上架并可搜索”的目录是 Official MCP Registry 与 Glama。** Cursor、Smithery、ChatGPT/Codex Plugins Directory 只有在各自发布或审核完成并能真实搜索到之后，才升级为 `PUBLISHED · SEARCHABLE`。
 
 ## 给 AI 的安装合同
 
