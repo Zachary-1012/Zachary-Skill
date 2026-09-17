@@ -1,0 +1,267 @@
+name: Migrate License v1.4.3 Once
+
+on:
+  push:
+    branches:
+      - release/v1.4.3-license-boundary
+    paths:
+      - .github/workflows/migrate-license-v143-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Apply v1.4.3 license boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          import json
+
+          root = Path('.')
+          version = '1.4.3'
+          license_ref = 'LicenseRef-TrendHub-Free-Use-1.0'
+
+          license_text = '''TrendHub Free Use License 1.0
+
+Copyright (c) 2026 Zachary. All rights reserved except as expressly granted below.
+
+This is a source-available license. It is not an open-source license.
+
+1. Scope
+
+This License applies to the portions of TrendHub authored and owned by the Licensor (the "Software"). Third-party software, vendored code, dependencies, data, trademarks, and other materials identified in NOTICE or in their own notices remain governed by their respective licenses and rights; this License does not restrict rights granted by those third parties.
+
+2. Free Use Grant
+
+Subject to compliance with this License, the Licensor grants you a non-exclusive, worldwide, royalty-free, non-transferable, non-sublicensable right to download, install, execute, and use unmodified copies of the Software for:
+
+(a) personal use; and
+(b) internal business use, including commercial internal operations.
+
+You may make reasonable copies solely for installation, backup, disaster recovery, and internal deployment within the same legal entity and for its employees acting on that entity's behalf.
+
+3. Outputs
+
+Reports, analyses, briefs, content, and other outputs created through lawful use of the Software may be used, copied, shared, or commercialized by you, subject to any rights or terms applicable to third-party source data or content. "Outputs" do not include the Software itself or substantial portions of its source code.
+
+4. Restrictions
+
+Except where applicable law expressly requires otherwise, you may not:
+
+(a) modify, patch, adapt, translate, alter, or create derivative works of the Software;
+(b) distribute, publish, republish, mirror, sublicense, sell, rent, lease, transfer, or otherwise make the Software or copies of it available to any third party;
+(c) bundle, embed, or include the Software in another product, software distribution, appliance, extension, plugin, or downloadable package for third parties;
+(d) host, expose, or provide the Software itself as a service, API, MCP server, managed service, or other remotely accessible product for third parties; or
+(e) remove or alter copyright, license, attribution, or proprietary notices.
+
+Using documented environment variables, MCP client configuration, runtime settings, or deployment settings without changing the Software's source or packaged files is permitted and is not considered a modification under this License.
+
+5. No Transfer or Trademark Grant
+
+No rights are granted except those expressly stated in this License. No trademark, trade name, logo, or branding rights are granted except the limited right to make truthful nominative reference to TrendHub when describing lawful use of the Software.
+
+6. Prior Versions and Prior Grants
+
+TrendHub v1.4.2 and earlier were released under the license terms that applied to those releases. This License does not revoke or retroactively restrict rights that a recipient validly received under an earlier license for an earlier copy or version. TrendHub distributions released as v1.4.3 and later are offered under this License unless a later release expressly states otherwise. Code or materials that remain available under a third-party or earlier license continue to carry the rights granted by that license for the applicable copy or material.
+
+7. Termination
+
+Your rights under this License terminate automatically if you violate its terms. Upon termination, you must stop using and delete copies of the Software covered by this License, except copies that you are legally required to retain. Rights under independently applicable third-party licenses are unaffected.
+
+8. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR IS NOT LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
+
+9. Entire License
+
+This License states the complete permission granted by the Licensor for the Software covered by it. Any broader right, including modification, redistribution, republication, sublicensing, resale, or third-party hosted access, requires separate written permission from the Licensor.
+'''
+          (root / 'LICENSE').write_text(license_text, encoding='utf-8')
+
+          def load_json(path):
+              return json.loads(Path(path).read_text(encoding='utf-8'))
+
+          def save_json(path, obj):
+              Path(path).write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          pkg_path = root / 'trendhub-mcp/package.json'
+          pkg = load_json(pkg_path)
+          pkg['version'] = version
+          pkg['license'] = 'SEE LICENSE IN LICENSE'
+          save_json(pkg_path, pkg)
+
+          manifest_path = root / 'trendhub-mcp/manifest.json'
+          manifest = load_json(manifest_path)
+          manifest['version'] = version
+          manifest['license'] = license_ref
+          save_json(manifest_path, manifest)
+
+          plugin_path = root / 'plugin.json'
+          plugin = load_json(plugin_path)
+          plugin['version'] = version
+          plugin['license'] = license_ref
+          save_json(plugin_path, plugin)
+
+          server_path = root / 'server.json'
+          server = load_json(server_path)
+          server['version'] = version
+          save_json(server_path, server)
+
+          def replace_exact(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'expected text not found in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
+          replace_exact('trendhub-mcp/scripts/remote-gateway.mjs', 'const VERSION = "1.4.2";', 'const VERSION = "1.4.3";')
+          replace_exact('trendhub-mcp/src/server.ts', 'export const SERVER_VERSION = "1.4.2";', 'export const SERVER_VERSION = "1.4.3";')
+          replace_exact('trendhub-mcp/scripts/test-distribution.mjs', 'must(version === "1.4.2", `expected distribution patch 1.4.2, got ${version}`);', 'must(version === "1.4.3", `expected distribution patch 1.4.3, got ${version}`);')
+
+          td = Path('trendhub-mcp/scripts/test-distribution.mjs')
+          t = td.read_text(encoding='utf-8')
+          anchor = 'const skill = readFileSync(join(REPO, "skills", "trendhub", "SKILL.md"), "utf8");\n'
+          if anchor not in t:
+              raise SystemExit('distribution test license anchor missing')
+          t = t.replace(anchor, anchor + 'const productLicense = readFileSync(join(REPO, "LICENSE"), "utf8");\n')
+          anchor2 = 'must(plugin.version === version, "portable plugin version must match package.json");\n'
+          additions = '''must(pkg.license === "SEE LICENSE IN LICENSE", "package.json must point to the repository LICENSE");
+must(lock.packages?.[""]?.license === pkg.license, "package-lock root license must match package.json");
+must(manifest.license === "LicenseRef-TrendHub-Free-Use-1.0", "manifest license boundary mismatch");
+must(plugin.license === "LicenseRef-TrendHub-Free-Use-1.0", "plugin license boundary mismatch");
+must(productLicense.includes("TrendHub Free Use License 1.0"), "root product license title missing");
+must(productLicense.includes("you may not") && productLicense.includes("modify") && productLicense.includes("distribute"), "root product license restrictions missing");
+'''
+          if anchor2 not in t:
+              raise SystemExit('distribution test version anchor missing')
+          t = t.replace(anchor2, anchor2 + additions)
+          td.write_text(t, encoding='utf-8')
+
+          gov = root / 'GOVERNANCE.md'
+          g = gov.read_text(encoding='utf-8')
+          old = '''## License vs upstream permissions
+
+Repository permissions and software licensing are different concepts. The upstream repository remains owner-controlled, while the software is currently distributed under the MIT License. MIT permits recipients to use, copy, modify, fork and redistribute copies subject to the license terms. Changing those legal rights would require an explicit license decision; repository write protection alone does not revoke MIT rights in copies or forks.
+'''
+          new = '''## License vs upstream permissions
+
+Repository permissions and software licensing are different concepts. Starting with TrendHub v1.4.3, TrendHub-authored portions are distributed under the **TrendHub Free Use License 1.0** (`LicenseRef-TrendHub-Free-Use-1.0`). It permits free personal use and free internal company/business use of unmodified copies, while prohibiting modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself. Reasonable internal copies for installation, backup, disaster recovery, and internal deployment are permitted. Third-party components remain under their own licenses.
+
+TrendHub v1.4.2 and earlier remain governed by the license terms that applied when those versions were released. The v1.4.3 license boundary does not revoke prior MIT grants for earlier copies or code already received under MIT.
+'''
+          if old not in g:
+              raise SystemExit('GOVERNANCE license section not found')
+          gov.write_text(g.replace(old, new), encoding='utf-8')
+
+          readme = root / 'README.md'
+          r = readme.read_text(encoding='utf-8')
+          r = r.replace('当前主技能 **TrendHub v1.4.2**', '当前主技能 **TrendHub v1.4.3**', 1)
+          r = r.replace('## TrendHub v1.4.2 能力', '## TrendHub v1.4.3 能力', 1)
+          public_line = '> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。\n'
+          license_note = '''
+> **许可边界（v1.4.3+）**：个人和公司/组织可免费使用未修改的 TrendHub，包括内部商业运营；允许安装、备份和内部部署所需的合理副本。**禁止修改、派生、再发布、再分发、转售、转授权或向第三方托管提供 TrendHub 软件本身。** 使用 TrendHub 产生的报告/分析/内容不受该软件分发限制，但仍须遵守第三方数据或内容权利。完整条款见 [`LICENSE`](./LICENSE)。v1.4.2 及更早版本保留其发布时已经授予的 MIT 权利，不能追溯收回。
+'''
+          if public_line not in r:
+              raise SystemExit('README public distribution anchor missing')
+          r = r.replace(public_line, public_line + license_note, 1)
+          old_mit = '软件当前仍按 **MIT License** 分发；MIT 在法律层面允许使用者对自己的副本进行 fork/修改/再分发，这与“不能修改原 upstream 仓库”是两个不同概念。若未来要改成“法律上仅允许使用、禁止修改/再分发”，需要单独做许可证变更。'
+          new_license = '软件从 **TrendHub v1.4.3** 起按 **TrendHub Free Use License 1.0** 分发：个人与公司可免费使用未修改版本，但不得修改、制作派生版本、再发布或再分发软件本身；第三方依赖/代码仍按各自许可证执行。v1.4.2 及以前已经授予的 MIT 权利不追溯撤销。'
+          if old_mit not in r:
+              raise SystemExit('README old MIT statement not found')
+          r = r.replace(old_mit, new_license, 1)
+          readme.write_text(r, encoding='utf-8')
+
+          dist = root / 'DISTRIBUTION.md'
+          d = dist.read_text(encoding='utf-8')
+          d = d.replace('Stable tool contract: **TrendHub v1.4.2, 19 MCP tools, 38 public trend sources**', 'Stable tool contract: **TrendHub v1.4.3, 19 MCP tools, 38 public trend sources**', 1)
+          d = d.replace('v1.4.2 is `active`, `isLatest=true`, remote URL points to the production Streamable HTTP endpoint', 'the latest published release is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint', 1)
+          d = d.replace('Portable Agent Plugin metadata and remote MCP configuration are version-locked to v1.4.2', 'Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release', 1)
+          license_section = '''
+## License boundary
+
+Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub Free Use License 1.0** (`LicenseRef-TrendHub-Free-Use-1.0`): free personal use and free internal company/business use of unmodified copies are permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited. Third-party components remain under their own licenses. v1.4.2 and earlier retain the license rights granted when those releases were published.
+
+Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
+
+'''
+          marker = '## Direct-use paths\n'
+          if marker not in d:
+              raise SystemExit('DISTRIBUTION insertion point missing')
+          d = d.replace(marker, license_section + marker, 1)
+          dist.write_text(d, encoding='utf-8')
+
+          notice = root / 'trendhub-mcp/NOTICE'
+          n = notice.read_text(encoding='utf-8')
+          n = n.replace('TrendHub MCP is distributed under the MIT License (see LICENSE).', 'TrendHub-authored portions of TrendHub MCP v1.4.3+ are distributed under the TrendHub Free Use License 1.0 (see repository root LICENSE). Third-party components listed below remain under their own licenses, including the MIT-licensed vendored code identified in this NOTICE.', 1)
+          n = n.replace('NO TrendRadar code is copied or integrated into this MIT project.', 'NO TrendRadar code is copied or integrated into TrendHub-authored code.', 1)
+          notice.write_text(n, encoding='utf-8')
+
+          # Validate all intended source metadata before lockfile regeneration.
+          assert load_json('trendhub-mcp/package.json')['version'] == version
+          assert load_json('trendhub-mcp/manifest.json')['version'] == version
+          assert load_json('plugin.json')['version'] == version
+          assert load_json('server.json')['version'] == version
+          PY
+
+          cd trendhub-mcp
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          cd ..
+
+      - name: Verify migration invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import json
+          from pathlib import Path
+          pkg = json.loads(Path('trendhub-mcp/package.json').read_text())
+          lock = json.loads(Path('trendhub-mcp/package-lock.json').read_text())
+          manifest = json.loads(Path('trendhub-mcp/manifest.json').read_text())
+          plugin = json.loads(Path('plugin.json').read_text())
+          server = json.loads(Path('server.json').read_text())
+          assert pkg['version'] == '1.4.3'
+          assert lock['version'] == '1.4.3'
+          assert lock['packages']['']['version'] == '1.4.3'
+          assert pkg['license'] == 'SEE LICENSE IN LICENSE'
+          assert lock['packages']['']['license'] == 'SEE LICENSE IN LICENSE'
+          assert manifest['version'] == plugin['version'] == server['version'] == '1.4.3'
+          assert manifest['license'] == plugin['license'] == 'LicenseRef-TrendHub-Free-Use-1.0'
+          lic = Path('LICENSE').read_text()
+          assert 'TrendHub Free Use License 1.0' in lic
+          assert 'v1.4.2 and earlier' in lic
+          print('LICENSE MIGRATION INVARIANTS OK')
+          PY
+
+      - name: Full release gate
+        working-directory: trendhub-mcp
+        run: |
+          npm ci --no-audit --no-fund
+          npm run release:gate
+
+      - name: Remove one-time workflow and commit migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/migrate-license-v143-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "release: establish TrendHub v1.4.3 free-use license boundary"
+          git push origin HEAD:release/v1.4.3-license-boundary
