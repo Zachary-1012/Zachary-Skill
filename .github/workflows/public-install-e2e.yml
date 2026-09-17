@@ -36,21 +36,24 @@ jobs:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
         run: |
           set -euo pipefail
+          EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:m.tools.length))")"
           bash scripts/bootstrap.sh --global | tee /tmp/trendhub-bootstrap.txt
           grep -F "AI_BOOTSTRAP_OK " /tmp/trendhub-bootstrap.txt
-          grep -F "SMOKE OK tools=19" /tmp/trendhub-bootstrap.txt
+          grep -F "SMOKE OK tools=${EXPECTED}" /tmp/trendhub-bootstrap.txt
 
       - name: Verify stable pin and MCP readiness
         working-directory: /tmp/zachary-skill-public/trendhub-mcp
         shell: bash
         run: |
+          set -euo pipefail
           VERSION="$(node -p "require('./package.json').version")"
+          EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';const m=JSON.parse(fs.readFileSync('manifest.json','utf8'));process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:m.tools.length))")"
           TAG="$(git describe --tags --exact-match HEAD)"
           test "$TAG" = "v$VERSION"
           npm run smoke | tee /tmp/trendhub-smoke.txt
-          grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
-          node -e "const m=require('./manifest.json'); const v=process.argv[1]; if(m.version!==v || m.aiInstall?.successMarker!=='SMOKE OK tools=19' || m.tools?.length!==19) process.exit(1)" "$VERSION"
+          grep -F "SMOKE OK tools=${EXPECTED}" /tmp/trendhub-smoke.txt
+          node -e "const m=require('./manifest.json');const v=process.argv[1];const expected=Number(process.argv[2]);if(m.version!==v || m.aiInstall?.successMarker!==`SMOKE OK tools=${expected}` || m.tools?.length!==expected) process.exit(1)" "$VERSION" "$EXPECTED"
 
       - name: Public install contract result
         if: success()
-        run: echo "PUBLIC INSTALL E2E OK — public repo -> verified portable Node 24 bootstrap -> stable release -> npm ci/build -> 19-tool professional MCP smoke"
+        run: echo "PUBLIC INSTALL E2E OK — public repo -> verified portable Node 24 bootstrap -> stable release -> npm ci/build -> dynamic MCP tool contract"

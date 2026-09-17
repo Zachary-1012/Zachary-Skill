@@ -61,6 +61,7 @@ jobs:
         run: |
           set -euo pipefail
           EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19))")"
+          VERSION="$(node -p "require('./package.json').version")"
           npm run start:remote >/tmp/trendhub-remote.log 2>&1 &
           PID=$!
           trap 'kill "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true' EXIT
@@ -70,7 +71,7 @@ jobs:
             fi
             sleep 0.25
           done
-          node -e "const h=require('/tmp/trendhub-health.json'); const fs=require('fs'); const p='professional-manifest.json'; const expected=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19; if(!h.ok || h.tools!==expected || h.version!=='1.4.4' || !h.web) process.exit(1)"
+          node -e "const h=require('/tmp/trendhub-health.json'); const expected=Number(process.argv[1]); const version=process.argv[2]; if(!h.ok || h.tools!==expected || h.version!==version || !h.web) process.exit(1)" "$EXPECTED" "$VERSION"
           npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
           grep -F "REMOTE SMOKE OK tools=${EXPECTED} platforms=38" /tmp/trendhub-remote-smoke.txt
           curl -fsS http://127.0.0.1:18444/ >/tmp/trendhub-web.html

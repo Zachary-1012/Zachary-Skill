@@ -1,13 +1,20 @@
 {
-  "schemaVersion": "professional-intelligence-v2-dev",
-  "releaseStatus": "development-only",
+  "schemaVersion": "professional-intelligence-v2-rc",
+  "releaseStatus": "release-candidate-ready",
   "stableBase": "1.4.4",
+  "candidateVersion": null,
   "stableToolCount": 19,
   "professionalTools": [
     "professional_intelligence",
     "workspace_manage"
   ],
   "expectedToolCount": 21,
+  "promotion": {
+    "command": "npm run release:promote -- <stable-version>",
+    "preflight": "npm run release:preflight",
+    "rule": "Promotion changes release metadata only. It does not merge, tag, publish, deploy, or update Registry.",
+    "versionPolicy": "No next stable version is reserved while this candidate remains unpublished."
+  },
   "capabilities": {
     "history": "sqlite-indexed-multi-year-with-json-fallback",
     "forecast": "damped-holt-holdout-validated",
@@ -18,8 +25,19 @@
     "sourceRouting": "zero-config-first-optional-auth-never-blocks-basic-use",
     "brandEntityResolution": "seeded-parent-child-alias-aware-user-extensible",
     "alerts": "deterministic-evidence-bound",
-    "reports": ["json", "markdown", "csv"],
-    "collaboration": ["rbac", "workspace", "watchlist", "saved-query", "alert-rule", "audit"],
+    "reports": [
+      "json",
+      "markdown",
+      "csv"
+    ],
+    "collaboration": [
+      "rbac",
+      "workspace",
+      "watchlist",
+      "saved-query",
+      "alert-rule",
+      "audit"
+    ],
     "responsiveWeb": "desktop-tablet-phone-safe-area-touch-aware",
     "observability": "local-otel-compatible-zero-export"
   },

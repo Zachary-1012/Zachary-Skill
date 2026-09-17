@@ -38,12 +38,14 @@ jobs:
           PKG_VERSION="$(node -p "require('./trendhub-mcp/package.json').version")"
           SERVER_VERSION="$(jq -r '.version' server.json)"
           MANIFEST_VERSION="$(jq -r '.version' trendhub-mcp/manifest.json)"
+          EXPECTED_TOOLS="$(node -e "const fs=require('fs');const p='trendhub-mcp/professional-manifest.json';const m=JSON.parse(fs.readFileSync('trendhub-mcp/manifest.json','utf8'));process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:m.tools.length))")"
           test "$PKG_VERSION" = "$SERVER_VERSION"
           test "$PKG_VERSION" = "$MANIFEST_VERSION"
+          test "$(jq '.tools | length' trendhub-mcp/manifest.json)" = "$EXPECTED_TOOLS"
           test "$(jq -r '.name' server.json)" = "io.github.Zachary-1012/trendhub"
           test "$(jq -r '.remotes[0].type' server.json)" = "streamable-http"
           test "$(jq -r '.remotes[0].url' server.json)" = "https://trendhub-remote-production.up.railway.app/mcp"
-          echo "Registry candidate version: $PKG_VERSION"
+          echo "Registry candidate version: $PKG_VERSION tools=$EXPECTED_TOOLS"
 
       - name: Install locked runtime dependencies
         working-directory: trendhub-mcp
@@ -54,22 +56,23 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="$(node -p "require('./trendhub-mcp/package.json').version")"
+          EXPECTED_TOOLS="$(node -e "const fs=require('fs');const p='trendhub-mcp/professional-manifest.json';const m=JSON.parse(fs.readFileSync('trendhub-mcp/manifest.json','utf8'));process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:m.tools.length))")"
           HEALTH="https://trendhub-remote-production.up.railway.app/health"
           for i in $(seq 1 60); do
             if BODY="$(curl -fsS --max-time 10 "$HEALTH" 2>/dev/null)"; then
               REMOTE_VERSION="$(printf '%s' "$BODY" | jq -r '.version // empty')"
               TOOLS="$(printf '%s' "$BODY" | jq -r '.tools // 0')"
-              if [ "$REMOTE_VERSION" = "$VERSION" ] && [ "$TOOLS" = "19" ]; then
+              if [ "$REMOTE_VERSION" = "$VERSION" ] && [ "$TOOLS" = "$EXPECTED_TOOLS" ]; then
                 echo "Remote MCP ready: v$REMOTE_VERSION tools=$TOOLS"
                 exit 0
               fi
-              echo "Remote reachable but not current yet: version=$REMOTE_VERSION tools=$TOOLS"
+              echo "Remote reachable but not current yet: version=$REMOTE_VERSION tools=$TOOLS expected=$EXPECTED_TOOLS"
             else
               echo "Remote not ready yet (attempt $i/60)"
             fi
             sleep 10
           done
-          echo "Remote MCP did not reach canonical version within 10 minutes" >&2
+          echo "Remote MCP did not reach canonical version/tool contract within 10 minutes" >&2
           exit 1
 
       - name: Real MCP handshake against public endpoint
