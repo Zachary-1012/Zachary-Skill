@@ -7,8 +7,8 @@
   --touch-min: 44px;
 }
 
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-body { overflow-x: hidden; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; }
+body { overflow-x: hidden; width: 100%; min-width: 0; font-size: clamp(14px, 0.25vw + 13px, 16px); }
 img, svg, video, canvas { max-width: 100%; }
 .main, .content, .card, .chart-card { min-width: 0; }
 .content {
@@ -21,6 +21,8 @@ img, svg, video, canvas { max-width: 100%; }
 /* Prevent intrinsic desktop-sized children from widening the page. */
 .main, .content, #content, .card, .chart-card, .grid, .grid > *,
 .xhs-layout, .xhs-main, .xhs-side, .form-row, .controls { min-width: 0; max-width: 100%; }
+.app, .sidebar, .main, .content, #content { width: 100%; max-width: 100%; }
+button, input, select, textarea { max-width: 100%; }
 .card h1, .card h2, .card h3, .section-title, .lead, .sub { overflow-wrap: anywhere; }
 
 /* Professional layouts */
@@ -210,10 +212,12 @@ img, svg, video, canvas { max-width: 100%; }
   .nav-toggle span { display: block; width: 22px; height: 2px; border-radius: 2px; background: currentColor; }
   .nav {
     width: 100%;
-    display: grid;
+    display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: initial !important;
     gap: 4px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     padding-bottom: 2px;
     max-height: 0;
     opacity: 0;
@@ -237,6 +241,7 @@ img, svg, video, canvas { max-width: 100%; }
     white-space: normal;
     overflow-wrap: anywhere;
     line-height: 1.25;
+    white-space: normal;
   }
   .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
   .nav-item svg { width: 16px; height: 16px; }
@@ -286,6 +291,16 @@ img, svg, video, canvas { max-width: 100%; }
     text-align: center;
   }
   pre.prompt { max-height: 55vh; overflow: auto; }
+}
+
+/* Defensive compact-shell rule: some embedded/mobile browsers report a wider
+   layout viewport. Keep the shell fluid even when the exact media query is late. */
+@media (max-width: 900px) {
+  .app { display: block; }
+  .sidebar { position: sticky; top: 0; z-index: 30; width: 100%; flex: none; height: auto; }
+  .main { width: 100%; }
+  .content { width: 100%; max-width: none; margin: 0; }
+  .topbar { width: 100%; }
 }
 
 @media (min-width: 721px) {
