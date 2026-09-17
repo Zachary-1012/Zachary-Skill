@@ -7,14 +7,14 @@ on:
       - "README.md"
       - "DISTRIBUTION.md"
       - ".github/workflows/distribution-health.yml"
-      - "trendhub-mcp/scripts/distribution-health.mjs"
+      - ".github/scripts/distribution-health.mjs"
   push:
     branches: ["main"]
     paths:
       - "README.md"
       - "DISTRIBUTION.md"
       - ".github/workflows/distribution-health.yml"
-      - "trendhub-mcp/scripts/distribution-health.mjs"
+      - ".github/scripts/distribution-health.mjs"
   workflow_dispatch:
   schedule:
     - cron: "53 */6 * * *"
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: 24.x
       - name: Verify searchable public distribution
-        run: node trendhub-mcp/scripts/distribution-health.mjs
+        run: node .github/scripts/distribution-health.mjs
       - name: Explain scope
         if: always()
         run: |
