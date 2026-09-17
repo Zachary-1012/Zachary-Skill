@@ -44,6 +44,9 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Verify public production MCP contract
+        env:
+          TRENTHUB_EXPECTED_TOOLS: "19"
+          TRENTHUB_EXPECTED_PLATFORMS: "38"
         run: |
           npm run smoke:remote -- https://trendhub-remote-production.up.railway.app/mcp | tee /tmp/trendhub-production-remote.txt
           grep -F "REMOTE SMOKE OK tools=19 platforms=38" /tmp/trendhub-production-remote.txt
@@ -51,6 +54,6 @@ jobs:
       - name: Explain scope
         if: always()
         run: |
-          echo "This job validates the public Railway Streamable HTTP endpoint using the official MCP SDK."
-          echo "It requires initialize/tools-list=19 and list_platforms=38 unique public source keys."
-          echo "It performs no write tool calls, sends no cookies, and stores no user telemetry."
+          echo "This job validates the currently released public Railway endpoint, not the unmerged development branch."
+          echo "Stable production remains 19 tools / 38 sources until a later explicit release is approved."
+          echo "It performs no write tool calls, no deployment, sends no cookies, and stores no user telemetry."

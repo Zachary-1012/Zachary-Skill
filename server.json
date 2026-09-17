@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Zachary-1012/trendhub",
   "title": "TrendHub",
-  "description": "Evidence-first trend intelligence across 38 public sources with 19 MCP tools and lead benchmarks.",
-  "version": "1.4.4",
+  "description": "Agent-native evidence-first trend intelligence with 21 MCP tools and Professional Intelligence v2.",
+  "version": "1.5.0",
   "remotes": [
     {
       "type": "streamable-http",

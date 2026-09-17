@@ -13,7 +13,7 @@ Only `@Zachary-1012` and collaborators invited by the owner may create upstream 
 3. Run `npm ci --no-audit --no-fund` in `trendhub-mcp`.
 4. Run `npm run build`.
 5. Run `npm test`.
-6. Run `npm run smoke` and require the exact marker `SMOKE OK tools=19`.
+6. Run `npm run smoke` and require the exact marker `SMOKE OK tools=21`.
 7. For source changes, run `npm run source:health` separately. Do not use third-party outages as release-gate failures.
 8. Open a PR to `main`; never bypass required Node 22/24 checks.
 9. Merge only when the protected-branch gate is green and the branch is up to date.

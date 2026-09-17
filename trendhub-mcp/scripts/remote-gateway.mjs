@@ -7,7 +7,7 @@
  * - /mcp stays the public Streamable HTTP MCP endpoint.
  * - The existing zero-dependency TrendHub web console is served at /.
  * - Only an explicit allowlist of read/query /api/* routes is proxied publicly.
- * - Mutating/local-only routes such as /api/snapshot are never exposed.
+ * - Mutating/local-only routes such as /api/snapshot and /api/workspaces are never exposed.
  */
 import { createServer, request as httpRequest } from "node:http";
 import { spawn } from "node:child_process";
@@ -27,7 +27,8 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.4.4";
+const VERSION = "1.5.0";
+const TOOL_COUNT = 21;
 
 function envBool(name, fallback = false) {
   const raw = String(process.env[name] ?? "").trim().toLowerCase();
@@ -41,16 +42,8 @@ function envNumber(name, fallback) {
 }
 
 const SNAPSHOT_ENABLED = envBool("TRENTHUB_REMOTE_SNAPSHOT_ENABLED", false);
-
-const SNAPSHOT_INTERVAL_MIN = Math.max(
-  15,
-  envNumber("TRENTHUB_SNAPSHOT_INTERVAL_MIN", 60),
-);
-
-const SNAPSHOT_INITIAL_DELAY_MS = Math.max(
-  1_000,
-  envNumber("TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS", 30_000),
-);
+const SNAPSHOT_INTERVAL_MIN = Math.max(15, envNumber("TRENHUB_SNAPSHOT_INTERVAL_MIN", 60));
+const SNAPSHOT_INITIAL_DELAY_MS = Math.max(1_000, envNumber("TRENHUB_SNAPSHOT_INITIAL_DELAY_MS", 30_000));
 
 const snapshotScheduler = createSnapshotScheduler({
   enabled: SNAPSHOT_ENABLED,
@@ -79,11 +72,17 @@ const PUBLIC_API_PATHS = new Set([
   "/api/brief",
   "/api/xhs/status",
   "/api/xhs/topics",
+  "/api/professional",
+  "/api/professional/report",
+  "/api/professional/audience",
+  "/api/professional/media",
+  "/api/professional/sources",
+  "/api/professional/entities",
 ]);
 
 const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-17\n\nTrendHub Remote provides a public MCP endpoint and a responsive read/query web console for trend intelligence. The service does not require a TrendHub account and does not intentionally store analytics identifiers, advertising identifiers, model prompts, usernames, or account identifiers. Public web-console queries and MCP tool arguments are processed only as needed to answer the request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a query retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. The public hosted edition does not use a visitor's private Xiaohongshu cookie. Local installation remains available for users who prefer local-only operation.\n\nFor source code, security reporting, and the local edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
 
-const termsText = `TrendHub Remote Terms of Use\n\nLast updated: 2026-09-17\n\nTrendHub provides evidence-oriented access to public trend sources and deterministic trend-analysis helpers through MCP and the public web console. It is not affiliated with or endorsed by the third-party platforms it reads. Source data may be incomplete, delayed, rate-limited, unavailable, or changed by the source platform at any time. TrendHub marks missing/degraded evidence rather than guaranteeing continuous source availability.\n\nTrend lifecycle, confidence, sentiment, and 24h/72h benchmark outputs are analytical indicators, not factual guarantees, investment advice, legal advice, medical advice, or predictions of future outcomes. Users remain responsible for verifying important decisions against primary sources and for complying with applicable law and third-party platform terms.\n\nDo not use the service to access private data, evade access controls, harass people, or perform unlawful activity. The hosted endpoint may apply capacity limits or be changed or withdrawn to protect reliability and security.\n\nTrendHub v1.4.3 and later TrendHub-authored code is source-available under the TrendHub Free Use License 1.0. Personal and internal company/business use of unmodified copies is permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited unless separately authorized. TrendHub v1.4.2 and earlier retain the rights granted when those releases were published. Third-party components remain under their own licenses.`;
+const termsText = `TrendHub Remote Terms of Use\n\nLast updated: 2026-09-17\n\nTrendHub provides evidence-oriented access to public trend sources and deterministic trend-analysis helpers through MCP and the public web console. It is not affiliated with or endorsed by the third-party platforms it reads. Source data may be incomplete, delayed, rate-limited, unavailable, or changed by the source platform at any time. TrendHub marks missing/degraded evidence rather than guaranteeing continuous source availability.\n\nTrend lifecycle, confidence, sentiment, anomaly, forecast, and 24h/72h benchmark outputs are analytical indicators, not factual guarantees, investment advice, legal advice, medical advice, or predictions of future outcomes. Forecasts are conditional extrapolations of captured evidence and include holdout validation and uncertainty when sufficient history exists. Users remain responsible for verifying important decisions against primary sources and for complying with applicable law and third-party platform terms.\n\nDo not use the service to access private data, evade access controls, harass people, or perform unlawful activity. The hosted endpoint may apply capacity limits or be changed or withdrawn to protect reliability and security.\n\nTrendHub v1.4.3 and later TrendHub-authored code is source-available under the TrendHub Free Use License 1.0. Personal and internal company/business use of unmodified copies is permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited unless separately authorized. TrendHub v1.4.2 and earlier retain the rights granted when those releases were published. Third-party components remain under their own licenses.`;
 
 function json(res, status, data, extraHeaders = {}) {
   res.writeHead(status, {
@@ -155,14 +154,7 @@ function proxyMcp(req, res, body) {
     headers["content-length"] = String(body.length);
 
     const upstream = httpRequest(
-      {
-        host: "127.0.0.1",
-        port: INTERNAL_PORT,
-        path: "/mcp",
-        method: "POST",
-        headers,
-        timeout: REQUEST_TIMEOUT_MS,
-      },
+      { host: "127.0.0.1", port: INTERNAL_PORT, path: "/mcp", method: "POST", headers, timeout: REQUEST_TIMEOUT_MS },
       (upstreamRes) => {
         const outHeaders = { ...upstreamRes.headers, ...corsHeaders() };
         delete outHeaders.connection;
@@ -190,11 +182,7 @@ function internalJson(path) {
         port: INTERNAL_PORT,
         path,
         method: "GET",
-        headers: {
-          host: `127.0.0.1:${INTERNAL_PORT}`,
-          authorization: `Bearer ${INTERNAL_TOKEN}`,
-          accept: "application/json",
-        },
+        headers: { host: `127.0.0.1:${INTERNAL_PORT}`, authorization: `Bearer ${INTERNAL_TOKEN}`, accept: "application/json" },
         timeout: REQUEST_TIMEOUT_MS,
       },
       (upstreamRes) => {
@@ -203,11 +191,7 @@ function internalJson(path) {
         upstreamRes.on("end", () => {
           const raw = Buffer.concat(chunks).toString("utf8");
           if ((upstreamRes.statusCode || 500) >= 400) return reject(new Error(`internal HTTP ${upstreamRes.statusCode}: ${raw.slice(0, 200)}`));
-          try {
-            resolve(JSON.parse(raw));
-          } catch (err) {
-            reject(err);
-          }
+          try { resolve(JSON.parse(raw)); } catch (err) { reject(err); }
         });
       },
     );
@@ -225,11 +209,7 @@ function proxyPublicApi(req, res, targetPath) {
         port: INTERNAL_PORT,
         path: targetPath,
         method: "GET",
-        headers: {
-          host: `127.0.0.1:${INTERNAL_PORT}`,
-          authorization: `Bearer ${INTERNAL_TOKEN}`,
-          accept: req.headers.accept || "application/json",
-        },
+        headers: { host: `127.0.0.1:${INTERNAL_PORT}`, authorization: `Bearer ${INTERNAL_TOKEN}`, accept: req.headers.accept || "application/json" },
         timeout: REQUEST_TIMEOUT_MS,
       },
       (upstreamRes) => {
@@ -258,9 +238,7 @@ function proxyPublicApi(req, res, targetPath) {
 async function servePublicStatic(pathname, res) {
   const sr = serveStatic(pathname);
   const headers = {};
-  sr.headers.forEach((value, key) => {
-    headers[key] = value;
-  });
+  sr.headers.forEach((value, key) => { headers[key] = value; });
   headers["X-Content-Type-Options"] = "nosniff";
   headers["Referrer-Policy"] = "no-referrer";
   headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
@@ -272,17 +250,11 @@ async function servePublicStatic(pathname, res) {
 
 function coreProbe() {
   return new Promise((resolve) => {
-    const req = httpRequest(
-      { host: "127.0.0.1", port: INTERNAL_PORT, path: "/", method: "GET", timeout: 1_500 },
-      (res) => {
-        res.resume();
-        resolve((res.statusCode || 500) < 500);
-      },
-    );
-    req.on("timeout", () => {
-      req.destroy();
-      resolve(false);
+    const req = httpRequest({ host: "127.0.0.1", port: INTERNAL_PORT, path: "/", method: "GET", timeout: 1_500 }, (res) => {
+      res.resume();
+      resolve((res.statusCode || 500) < 500);
     });
+    req.on("timeout", () => { req.destroy(); resolve(false); });
     req.on("error", () => resolve(false));
     req.end();
   });
@@ -308,11 +280,7 @@ const childEnv = {
 };
 delete childEnv.PORT;
 
-const core = spawn(process.execPath, [CORE_ENTRY, "--http", `--port=${INTERNAL_PORT}`], {
-  cwd: ROOT,
-  env: childEnv,
-  stdio: ["ignore", "inherit", "inherit"],
-});
+const core = spawn(process.execPath, [CORE_ENTRY, "--http", `--port=${INTERNAL_PORT}`], { cwd: ROOT, env: childEnv, stdio: ["ignore", "inherit", "inherit"] });
 core.on("exit", (code, signal) => {
   if (!shuttingDown) {
     console.error(`[trendhub-remote] core exited code=${code} signal=${signal || "none"}`);
@@ -329,17 +297,13 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === "/health") {
       let coreHealth = {};
-      try {
-        coreHealth = await internalJson("/api/health");
-      } catch {
-        coreHealth = {};
-      }
+      try { coreHealth = await internalJson("/api/health"); } catch { coreHealth = {}; }
       return json(res, 200, {
         ok: true,
         name: "trendhub-mcp",
         version: VERSION,
         transport: "streamable-http",
-        tools: 19,
+        tools: TOOL_COUNT,
         platforms: Number(coreHealth.platformCount || 38),
         web: true,
         snapshotScheduler: snapshotScheduler.getState(),
@@ -355,7 +319,7 @@ const server = createServer(async (req, res) => {
         name: "io.github.Zachary-1012/trendhub",
         title: "TrendHub",
         version: VERSION,
-        description: "Evidence-first trend intelligence across 38 public trend sources with 19 MCP tools.",
+        description: `Evidence-first trend intelligence across 38 public trend sources with ${TOOL_COUNT} MCP tools.`,
         transport: { type: "streamable-http", url: `${base}/mcp` },
         web: `${base}/`,
         privacy: `${base}/privacy`,
@@ -366,19 +330,11 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === "/mcp") {
       const cors = corsHeaders();
-      if (req.method === "OPTIONS") {
-        res.writeHead(204, cors);
-        return res.end();
-      }
+      if (req.method === "OPTIONS") { res.writeHead(204, cors); return res.end(); }
       if (req.method !== "POST") return json(res, 405, { error: "method_not_allowed", allowed: ["POST", "OPTIONS"] }, cors);
       if (activeRequests >= MAX_CONCURRENCY) return json(res, 429, { error: "busy", retryAfterSeconds: 2 }, { ...cors, "Retry-After": "2" });
       activeRequests += 1;
-      try {
-        const body = await readBody(req);
-        await proxyMcp(req, res, body);
-      } finally {
-        activeRequests -= 1;
-      }
+      try { await proxyMcp(req, res, await readBody(req)); } finally { activeRequests -= 1; }
       return;
     }
 
@@ -395,7 +351,7 @@ const server = createServer(async (req, res) => {
           version: VERSION,
           platformCount: internal.platformCount,
           categoryCount: internal.categoryCount,
-          tools: 19,
+          tools: TOOL_COUNT,
           runtime: "remote",
           mcpEndpoint: `${publicBase(req)}/mcp`,
           time: new Date().toISOString(),
@@ -403,17 +359,11 @@ const server = createServer(async (req, res) => {
       }
 
       activeRequests += 1;
-      try {
-        await proxyPublicApi(req, res, `${url.pathname}${url.search}`);
-      } finally {
-        activeRequests -= 1;
-      }
+      try { await proxyPublicApi(req, res, `${url.pathname}${url.search}`); } finally { activeRequests -= 1; }
       return;
     }
 
-    if (req.method !== "GET" && req.method !== "HEAD") {
-      return json(res, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
-    }
+    if (req.method !== "GET" && req.method !== "HEAD") return json(res, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
     return servePublicStatic(url.pathname, res);
   } catch (err) {
     const status = Number(err?.statusCode) || 500;

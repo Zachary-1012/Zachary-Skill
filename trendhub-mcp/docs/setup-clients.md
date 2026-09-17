@@ -1,4 +1,4 @@
-# 把 TrendHub v1.4.4 接入你的 AI 客户端
+# 把 TrendHub v1.5.0 接入你的 AI 客户端
 
 TrendHub 是本地优先的 MCP Skill。**推荐把仓库链接直接交给具备终端执行能力的 AI / Coding Agent**，让它完成环境检查、Node-free bootstrap、安装、smoke 和 MCP 配置。
 
@@ -29,7 +29,7 @@ node scripts/setup.mjs
 完整安装必须出现：
 
 ```text
-SMOKE OK tools=19
+SMOKE OK tools=21
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
@@ -135,7 +135,7 @@ TrendHub 与模型供应商解耦：
 
 ### 零安装：官方托管 Remote MCP
 
-不想本地安装时，支持 Streamable HTTP 的客户端直接连接公开托管端点（与本地版同为 19 工具 / 38 信源，无需注册或模型 Key）：
+不想本地安装时，支持 Streamable HTTP 的客户端直接连接公开托管端点（与本地版同为 21 工具 / 129 个分层信源，无需注册或模型 Key）：
 
 ```text
 https://trendhub-remote-production.up.railway.app/mcp
@@ -317,7 +317,7 @@ npm run smoke
 必须看到：
 
 ```text
-SMOKE OK tools=19
+SMOKE OK tools=21
 ```
 
 ### 代码 deterministic tests

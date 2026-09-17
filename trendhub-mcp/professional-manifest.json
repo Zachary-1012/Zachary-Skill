@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "professional-intelligence-v2-rc",
+  "releaseStatus": "release-ready",
+  "stableBase": "1.4.4",
+  "targetStableVersion": "1.5.0",
+  "candidateVersion": "1.5.0",
+  "stableToolCount": 19,
+  "professionalTools": [
+    "professional_intelligence",
+    "workspace_manage"
+  ],
+  "expectedToolCount": 21,
+  "promotion": {
+    "command": "npm run release:promote -- <stable-version>",
+    "preflight": "npm run release:preflight",
+    "rule": "Metadata is promoted; merge/tag/release/deploy/Registry publication still require explicit approval.",
+    "versionPolicy": "v1.5.0 is the sole next intended stable version; v1.4.5 is forbidden. Promotion remains metadata-only until explicit release approval.",
+    "prepared": true
+  },
+  "capabilities": {
+    "history": "sqlite-indexed-multi-year-with-json-fallback",
+    "forecast": "damped-holt-holdout-validated",
+    "anomaly": "robust-mad-zscore",
+    "audience": "public-content-creator-proxy-no-sensitive-inference",
+    "media": "source-linked-multimodal-evidence-optional-local-transformers",
+    "sourceUniverse": "priority-tiered-cn-apac-global-social-video-podcast-search-news-web-fashion-business-marketing-commerce",
+    "sourceRouting": "zero-config-first-optional-auth-never-blocks-basic-use",
+    "brandEntityResolution": "seeded-parent-child-alias-aware-user-extensible",
+    "alerts": "deterministic-evidence-bound",
+    "reports": [
+      "json",
+      "markdown",
+      "csv"
+    ],
+    "collaboration": [
+      "rbac",
+      "workspace",
+      "watchlist",
+      "saved-query",
+      "alert-rule",
+      "audit"
+    ],
+    "responsiveWeb": "desktop-tablet-phone-safe-area-touch-aware",
+    "observability": "local-otel-compatible-zero-export"
+  },
+  "sourceAccessModes": [
+    "live-public",
+    "live-aggregated",
+    "byo-api",
+    "local-session",
+    "licensed-connector",
+    "adapter-planned"
+  ],
+  "uxRules": [
+    "prefer-zero-config-live-sources",
+    "optional-local-session-never-blocks-basic-use",
+    "request-api-or-oauth-only-when-user-selects-required-capability",
+    "never-upload-private-cookie-to-public-hosted-service",
+    "planned-adapters-do-not-count-as-live-coverage"
+  ],
+  "externalConstraints": [
+    "licensed-firehose-coverage",
+    "proprietary-demographic-panels",
+    "long-lived-real-user-usage-and-outcome-data"
+  ]
+}

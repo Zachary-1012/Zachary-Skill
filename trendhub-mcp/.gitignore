@@ -11,6 +11,7 @@ data/reliability/
 data/health/
 data/diagnostics/
 data/benchmarks/
+data/*.sqlite*
 .DS_Store
 Thumbs.db
 .idea/

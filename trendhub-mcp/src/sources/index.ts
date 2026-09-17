@@ -56,6 +56,7 @@ export function listPlatforms(): PlatformInfo[] {
 function isInternational(platform: string): boolean {
   return (
     platform === "hackernews" ||
+    platform === "bluesky" ||
     platform === "producthunt" ||
     platform === "github-trending" ||
     platform.startsWith("github-trending-") ||

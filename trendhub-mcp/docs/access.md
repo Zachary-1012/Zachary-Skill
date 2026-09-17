@@ -1,10 +1,10 @@
 # 访问与安装说明
 
-TrendHub v1.4.4 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
+TrendHub v1.5.0 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
 
-**零安装（可选）**：支持 Streamable HTTP 的 MCP 客户端可直接连公开托管 Remote MCP，能力合同与本地版一致（19 工具 / 38 信源）：`https://trendhub-remote-production.up.railway.app/mcp`；浏览器 Web Console：`https://trendhub-remote-production.up.railway.app/`，健康检查 `https://trendhub-remote-production.up.railway.app/health`。下文为本地 clone 安装流程。
+**零安装（可选）**：支持 Streamable HTTP 的 MCP 客户端可直接连公开托管 Remote MCP，能力合同与本地版一致（21 工具 / 129 分层信源）：`https://trendhub-remote-production.up.railway.app/mcp`；浏览器 Web Console：`https://trendhub-remote-production.up.railway.app/`，健康检查 `https://trendhub-remote-production.up.railway.app/health`。下文为本地 clone 安装流程。
 
 原 upstream 仓库的**写权限**与公开读取是两件事：当前只有 `@Zachary-1012` 和 owner 明确邀请的 Collaborators 能修改原仓库；公开用户可以读取、clone 和使用，但不会自动获得 upstream 写权限。`main` 还受 PR + Node 22/24 required checks + up-to-date + 禁止 force-push/deletion + no-bypass 的 ruleset 保护。
 
@@ -18,7 +18,7 @@ TrendHub v1.4.4 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到
 2. clone 公开仓库并进入 `trendhub-mcp`。
 3. 执行对应平台 Node-free bootstrap。已有 Node >=22 时复用；没有/过旧时，从 `nodejs.org/dist/latest-v24.x` 下载 Node 24 LTS 便携运行时，并用官方 `SHASUMS256.txt` 做 SHA-256 校验。
 4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
-5. 必须看到 `SMOKE OK tools=19`。
+5. 必须看到 `SMOKE OK tools=21`。
 6. bootstrap 最后一行输出 `AI_BOOTSTRAP_OK {...}`；AI 必须用 JSON 中 `node` 与 `launcher` 的绝对路径配置 MCP。
 
 macOS / Linux：
@@ -47,7 +47,7 @@ npm run smoke
 成功标志：
 
 ```text
-SMOKE OK tools=19
+SMOKE OK tools=21
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
@@ -77,7 +77,7 @@ node scripts/setup.mjs
 ## 安装后验证与质量边界
 
 ```bash
-npm run smoke              # MCP 合同：必须 SMOKE OK tools=19
+npm run smoke              # MCP 合同：必须 SMOKE OK tools=21
 npm test                   # deterministic offline release tests
 npm run source:health      # 真实第三方数据源状态；不属于 release gate
 npm run quality:diagnostic # 主动、本地、匿名化质量诊断；不自动上传
@@ -98,7 +98,7 @@ TrendHub 积累有界历史与 Source Reliability 观测：
 后续版本增强：
 
 - **v1.4.1**：公开托管 Remote MCP（零安装）、Official MCP Registry / Glama 分发、公开 `/privacy` `/terms` `/health` 发现端点；本地核心仍 loopback + 私有 Token。
-- **v1.4.2**：定时趋势快照调度器，托管端按小时自动采集并持久化有界历史（默认关闭、显式启用；变更类 `/api/snapshot` 不公开），本地可用 cron / Windows 任务计划程序，见 `docs/scheduled-snapshots.md`。19 工具 / 38 信源契约不变。
+- **v1.4.2**：定时趋势快照调度器，托管端按小时自动采集并持久化有界历史（默认关闭、显式启用；变更类 `/api/snapshot` 不公开），本地可用 cron / Windows 任务计划程序，见 `docs/scheduled-snapshots.md`。历史 v1.4.x 的 19 工具 / 38 信源契约保持不变。
 
 ## 更新：只跟随 Stable Release
 
@@ -126,7 +126,7 @@ Stable Release 必须经过：
 - Windows/macOS/Linux Node-free bootstrap E2E；
 - 合并后的 main CI；
 - Stable Release 重新执行 release gate；
-- Public Install E2E 从公开 URL fresh clone，验证 Stable tag、Node-free bootstrap 与 `SMOKE OK tools=19`。
+- Public Install E2E 从公开 URL fresh clone，验证 Stable tag、Node-free bootstrap 与 `SMOKE OK tools=21`。
 
 ## 小红书增强能力（可选）
 

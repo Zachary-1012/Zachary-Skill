@@ -2,11 +2,11 @@
 /**
  * TrendHub MCP 入口
  * - 默认 stdio：供 Claude / Cursor / 豆包 / VS Code 等桌面客户端以子进程方式连接。
- * - --http 或 TRENTHUB_TRANSPORT=http：HTTP MCP（默认 127.0.0.1:8333/mcp）。
+ * - --http 或 TRENHUB_TRANSPORT=http：HTTP MCP（默认 127.0.0.1:8333/mcp）。
  * - --ui：在 --http 基础上启动本地可视化控制台（http://127.0.0.1:8333/）并自动打开浏览器。
  *   控制台只做数据可视化与手动触发，不接任何大模型（分析/成稿算力仍由调用方 AI 承担）。
  *
- * 网络边界：loopback 默认免鉴权；任何非 loopback 监听都必须设置 TRENTHUB_HTTP_TOKEN，
+ * 网络边界：loopback 默认免鉴权；任何非 loopback 监听都必须设置 TRENHUB_HTTP_TOKEN，
  * /mcp 与 /api/* 使用 Authorization: Bearer <token>。插件无模型 Key、无第三方遥测、
  * 不向 TrendHub 中央服务回传使用数据；取数时仅向目标公开数据源发起必要请求。
  */
@@ -17,10 +17,11 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { config } from "./config.js";
 import { createMcpServer, SERVER_NAME, SERVER_VERSION } from "./server.js";
 import { handleApi } from "./web/api.js";
+import { handleProfessionalApi } from "./web/professional-api.js";
 import { serveStatic } from "./web/static.js";
 import { assertHttpNetworkBoundary, isHttpAuthorized } from "./security/http.js";
+import { recordApiObservation } from "./observability/local.js";
 
-// 命令行参数优先级高于环境变量
 if (process.argv.includes("--http") || process.argv.includes("--ui")) config.transport = "http";
 if (process.argv.includes("--stdio")) config.transport = "stdio";
 const OPEN_BROWSER = process.argv.includes("--ui");
@@ -58,7 +59,6 @@ async function runStdio(): Promise<void> {
   const server = createMcpServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  // 客户端断开（stdin 关闭）时干净退出，避免连接池定时器导致进程悬挂
   process.stdin.on("close", () => process.exit(0));
   // eslint-disable-next-line no-console
   console.error(`[${SERVER_NAME}] v${SERVER_VERSION} running over stdio`);
@@ -72,7 +72,6 @@ async function runHttp(): Promise<void> {
       const url = new URL(req.url ?? "/", `${base}/`);
       const pathname = url.pathname;
 
-      // 1) MCP 端点（无状态模式：每个 POST 请求独立 server+transport）
       if (pathname === "/mcp") {
         if (!requireHttpAuth(req, res)) return;
         if (req.method !== "POST") {
@@ -91,17 +90,18 @@ async function runHttp(): Promise<void> {
         return;
       }
 
-      // 2) 本地控制台只读 / 触发 JSON API
       if (pathname.startsWith("/api/")) {
         if (!requireHttpAuth(req, res)) return;
         const body = await readBody(req);
-        const r = await handleApi(pathname, url, req.method ?? "GET", body);
-        res.writeHead(r.status, { "Content-Type": "application/json; charset=utf-8" });
+        const started = Date.now();
+        const professional = await handleProfessionalApi(pathname, url, req.method ?? "GET", body);
+        const r = professional ?? await handleApi(pathname, url, req.method ?? "GET", body);
+        if (!professional) recordApiObservation(pathname, Date.now() - started, r.status);
+        res.writeHead(r.status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
         res.end(JSON.stringify(r.data, null, 2));
         return;
       }
 
-      // 3) 本地控制台静态资源（含 SPA fallback）。静态文件不含密钥或用户数据。
       const sr = serveStatic(pathname);
       const headers: Record<string, string> = {};
       sr.headers.forEach((value, key) => {
