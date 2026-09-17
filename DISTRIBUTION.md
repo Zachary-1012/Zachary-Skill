@@ -54,6 +54,22 @@ Canonical portable configuration:
 
 Users or coding agents can clone the public repository and run the Node-free bootstrap documented in `README.md` and `trendhub-mcp/manifest.json`. This path does not depend on any marketplace being available.
 
+## AI client compatibility boundary
+
+A public repository is **not** the same thing as universal AI-client access. A consumer chat window may be unable to browse GitHub, read repository files, run a terminal, install packages, or add a custom MCP server even when the repository itself is public.
+
+TrendHub therefore supports three distinct access modes:
+
+| Client / user capability | TrendHub path |
+| --- | --- |
+| Custom Remote MCP / Streamable HTTP support | Connect directly to the production `/mcp` endpoint; no local Git clone is required |
+| Terminal / coding-agent / local tool execution | Clone the public repository and install the local MCP using the current bootstrap contract |
+| Ordinary chat-only client with no MCP, terminal, or reliable GitHub access | No direct TrendHub tool execution; the client must not claim the Skill is installed or connected |
+
+A failed repository read inside an ordinary AI chat product does **not by itself** prove that GitHub or TrendHub is unavailable. It may only show that the current client session does not expose the required web, connector, MCP, or execution capability.
+
+The canonical compatibility policy and a copy-paste universal AI instruction are maintained in [`AI_CLIENT_COMPATIBILITY.md`](./AI_CLIENT_COMPATIBILITY.md).
+
 ## Distribution targets and review gates
 
 The maintained distribution targets are:
