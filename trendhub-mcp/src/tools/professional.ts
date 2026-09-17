@@ -2,6 +2,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getMany } from "../sources/index.js";
+import { defaultLivePlatformIds } from "../sources/access-plan.js";
+import type { SourceVertical } from "../sources/professional-catalog.js";
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
 import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } from "../reports/executive.js";
@@ -18,15 +20,21 @@ import {
 } from "../collaboration/workspace.js";
 import { recordToolObservation } from "../observability/local.js";
 
-const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 const WEB_STATE = { readOnlyHint: false, openWorldHint: true, destructiveHint: false };
 const LOCAL_STATE = { readOnlyHint: false, openWorldHint: false, destructiveHint: false };
+const VERTICALS = new Set<SourceVertical>([
+  "general", "fashion-luxury", "beauty", "business-corporate", "technology", "automotive",
+  "finance-markets", "marketing-advertising", "retail-commerce", "culture-entertainment",
+]);
 
 function json(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
 function splitList(s?: string) {
   return s ? s.split(/[,，、\s]+/).map((x) => x.trim()).filter(Boolean) : [];
+}
+function splitVerticals(s?: string): SourceVertical[] {
+  return splitList(s).filter((x): x is SourceVertical => VERTICALS.has(x as SourceVertical));
 }
 
 async function observed<T>(name: string, fn: () => T | Promise<T>): Promise<T> {
@@ -44,17 +52,18 @@ async function observed<T>(name: string, fn: () => T | Promise<T>): Promise<T> {
 export function registerProfessionalTools(server: McpServer): void {
   server.tool(
     "professional_intelligence",
-    "Professional Intelligence v2：统一返回生命周期、速度/持续性/扩散、Source Reliability、鲁棒异常、6/24/48/72h可验证趋势预测、公开证据受众/创作者、媒体证据、专业告警与可选高管报告。所有预测都带 holdout validation 与不确定区间；历史不足时不预测。",
+    "Professional Intelligence v2：统一返回生命周期、速度/持续性/扩散、Source Reliability、鲁棒异常、6/24/48/72h可验证趋势预测、品牌/公司实体解析、公开证据受众/创作者、媒体证据、专业告警与可选高管报告。默认优先零配置且可用的高优先级信源；用户明确选择需要授权的平台时才提示 API/OAuth/本地会话。历史不足时不预测。",
     {
-      keyword: z.string().min(1).describe("要研究的话题/关键词"),
-      platforms: z.string().optional().describe("平台调用名，逗号分隔；默认核心平台"),
+      keyword: z.string().min(1).describe("要研究的话题、品牌、公司或关键词，例如 LV / 小米 / Tesla"),
+      platforms: z.string().optional().describe("可选平台调用名，逗号分隔；留空时由专业 Source Planner 自动选择零配置核心源"),
+      verticals: z.string().optional().describe("可选行业/场景，逗号分隔：fashion-luxury,beauty,business-corporate,technology,automotive,finance-markets,marketing-advertising,retail-commerce,culture-entertainment"),
       refresh: z.boolean().optional().describe("是否先刷新当前公开数据，默认 true"),
       report: z.enum(["none", "json", "markdown", "csv"]).optional().describe("附带高管报告格式，默认 json"),
     },
     WEB_STATE,
-    async ({ keyword, platforms, refresh, report }) => observed("professional_intelligence", async () => {
+    async ({ keyword, platforms, verticals, refresh, report }) => observed("professional_intelligence", async () => {
       const names = splitList(platforms);
-      const selected = names.length ? names : DEFAULT_PLATFORMS;
+      const selected = names.length ? names : defaultLivePlatformIds({ max: 12, verticals: splitVerticals(verticals) });
       if (refresh !== false) {
         const results = await getMany(selected, 30);
         updateFromResults(results);
