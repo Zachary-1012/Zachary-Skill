@@ -15,6 +15,7 @@ const gateway = read("scripts/remote-gateway.mjs");
 const index = read("web/index.html");
 const app = read("web/app.js");
 const viewsE = read("web/views-e.js");
+const viewsF = read("web/views-f.js");
 const viewsB = read("web/views-b.js");
 const viewsC = read("web/views-c.js");
 const styles = read("web/styles.css");
@@ -34,12 +35,14 @@ if (!allowlistMatch) fail("public API allowlist was not found");
 if (allowlistMatch[1].includes("/api/snapshot")) fail("write route /api/snapshot must remain private");
 if (allowlistMatch[1].includes("/api/workspaces")) fail("workspace mutations must remain private");
 if (allowlistMatch[1].includes("/api/observability")) fail("internal process observability must remain private");
+if (allowlistMatch[1].includes("/api/ops/")) fail("Creator Ops routes must remain private on the public remote");
 if (!gateway.includes('req.method !== "GET"')) fail("public web API must remain GET/query only");
 if (!gateway.includes(`const TOOL_COUNT = ${expectedTools}`)) fail(`remote gateway tool count must be ${expectedTools}`);
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
 if (!index.includes('href="responsive-v2.css"')) fail("responsive v2 stylesheet missing from shell");
 if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js"')) fail("professional/source-universe navigation missing");
+if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js"')) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
 if (!responsive.includes("100dvh") || !responsive.includes("safe-area-inset")) fail("mobile safe-area/dynamic viewport support missing");
@@ -56,5 +59,7 @@ if (!app.includes("TRENHUB_IS_REMOTE") || !app.includes("TRENHUB_RUNTIME_MODE"))
 if (!viewsE.includes("Professional Intelligence v2") || !viewsE.includes("/api/professional")) fail("professional dashboard view missing");
 if (!viewsE.includes("/api/professional/sources") || !viewsE.includes("/api/professional/entities")) fail("source universe UX missing");
 if (!viewsE.includes("TRENHUB_IS_REMOTE")) fail("workspace view must distinguish remote from local mode");
+if (!viewsF.includes("/api/ops/summary") || !viewsF.includes("TRENHUB_IS_REMOTE")) fail("Creator Ops must have local API and public-boundary UX");
+if (!viewsF.includes("不会自动重启") || !viewsF.includes("不暴露")) fail("Creator Ops safety boundary copy missing");
 
-console.log(`REMOTE WEB CONTRACT OK mobile=true touch=true safe-area=true mcp=true tools=${expectedTools} professional=true sourceUniverse=true writeRoutes=private`);
+console.log(`REMOTE WEB CONTRACT OK mobile=true touch=true safe-area=true mcp=true tools=${expectedTools} professional=true sourceUniverse=true creatorOps=local-only writeRoutes=private`);

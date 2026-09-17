@@ -133,6 +133,24 @@ img, svg, video, canvas { max-width: 100%; }
 .topic-explanation { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 9px 10px; background: #f6fbf9; border-radius: 8px; color: var(--muted); font-size: 12px; }
 .topic-explanation strong { color: var(--accent-dark); }
 
+/* Creator Ops: readable summaries first; raw values remain available without forcing a desktop layout. */
+.ops-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ops-hero h2 { margin-bottom: 6px; }
+.ops-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 14px 0; }
+.ops-card { min-width: 0; border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: var(--card); box-shadow: var(--shadow); }
+.ops-card h3 { font-size: 14px; margin: 0 0 8px; }
+.ops-value { font-weight: 750; font-size: clamp(20px, 3vw, 29px); line-height: 1.15; overflow-wrap: anywhere; }
+.ops-detail { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 6px; overflow-wrap: anywhere; }
+.ops-diagnostic { border-left: 4px solid var(--info-fg); padding: 10px 12px; margin-top: 9px; border-radius: 7px; background: #f7fbff; }
+.ops-diagnostic.attention { border-left-color: var(--warn-fg); background: #fffaf0; }
+.ops-diagnostic.warning { border-left-color: var(--danger); background: #fff5f5; }
+.ops-diagnostic strong { display: block; }
+.ops-diagnostic .ops-detail { margin: 4px 0; }
+.ops-report { width: 100%; min-height: 250px; resize: vertical; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.ops-list { display: grid; gap: 8px; margin-top: 10px; }
+.ops-event { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.ops-event-head { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; flex-wrap: wrap; }
+
 /* Tables must scroll instead of crushing columns on phones. */
 .table-wrap {
   overflow-x: auto;
@@ -243,6 +261,7 @@ img, svg, video, canvas { max-width: 100%; }
   .stats-grid .stat { padding: 12px; }
   .source-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .source-grid, .entity-grid { grid-template-columns: 1fr; }
+  .ops-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .platform-cloud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .controls, .form-row { align-items: stretch; gap: 8px; }
   .controls > .input,
@@ -287,7 +306,7 @@ img, svg, video, canvas { max-width: 100%; }
 }
 
 @media (max-width: 360px) {
-  .stats-grid, .source-summary { grid-template-columns: 1fr; }
+  .stats-grid, .source-summary, .ops-grid { grid-template-columns: 1fr; }
   .xhs-grid { grid-template-columns: 1fr; }
   .nav-item { padding-left: 9px; padding-right: 9px; }
 }
