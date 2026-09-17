@@ -27,11 +27,17 @@ https://trendhub-remote-production.up.railway.app/mcp
 }
 ```
 
-公开 Remote MCP 不要求 TrendHub 账号，也不要求模型 API Key；它与本地版共用同一套 19-tool 能力合同。生产协议监控会用官方 MCP SDK 验证 `initialize`、`tools/list=19` 与 `list_platforms=38`。
+公开 Remote MCP **无需注册或登录本服务**，也不要求模型 API Key；它与本地版共用同一套 19-tool 能力合同。生产协议监控会用官方 MCP SDK 验证 `initialize`、`tools/list=19` 与 `list_platforms=38`。
 
-Cursor 可使用官方 MCP deeplink 直接安装：
+Cursor 可直接使用 MCP 安装入口：
 
-[**Add TrendHub MCP to Cursor**](cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
+[**Add TrendHub MCP to Cursor**](https://cursor.com/en/install-mcp?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
+
+Cursor 原生 deeplink：
+
+```text
+cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9
+```
 
 如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
 
@@ -45,7 +51,7 @@ Cursor 可使用官方 MCP deeplink 直接安装：
 | Official MCP Registry | **PUBLISHED · SEARCHABLE** | [`io.github.Zachary-1012/trendhub`](https://registry.modelcontextprotocol.io/?q=trendhub) |
 | Glama MCP Directory | **PUBLISHED · SEARCHABLE** | [TrendHub on Glama](https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub) |
 | Agent Plugins | **READY · DIRECT INSTALL** | 根目录 `plugin.json` + `mcp.json` |
-| Cursor | **NOT LISTED · DIRECT MCP READY** | 上方官方 MCP deeplink 可直接安装；公共 Cursor Marketplace 上架仍需仓库提交与人工审核 |
+| Cursor | **NOT LISTED · DIRECT MCP READY** | 上方 MCP 安装入口可直接安装；公共 Cursor Marketplace 上架仍需仓库提交与人工审核 |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者登录及 namespace |
 | ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；当前目录搜索不到 TrendHub，正式公开发现仍需提交、审核与发布 |
 
