@@ -1,0 +1,91 @@
+name: Production Remote Protocol Smoke
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/production-remote-protocol-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protocol-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: trendhub-mcp
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify production MCP contract
+        run: npm run smoke:remote -- https://trendhub-remote-production.up.railway.app/mcp
+
+      - name: Verify representative live sources
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'EOF'
+          import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+          import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
+          const endpoint = 'https://trendhub-remote-production.up.railway.app/mcp';
+          const client = new Client({ name: 'trendhub-production-protocol-check', version: '1.0.0' });
+          const transport = new StreamableHTTPClientTransport(new URL(endpoint));
+
+          function parse(result, name) {
+            const text = result?.content?.find((x) => x?.type === 'text')?.text;
+            if (typeof text !== 'string') throw new Error(`${name} returned no text payload`);
+            return JSON.parse(text);
+          }
+
+          try {
+            await client.connect(transport);
+            const listed = await client.listTools();
+            const platformsPayload = parse(await client.callTool({ name: 'list_platforms', arguments: {} }), 'list_platforms');
+            const platforms = Array.isArray(platformsPayload?.platforms) ? platformsPayload.platforms : [];
+            const keys = platforms.map((x) => x?.platform).filter(Boolean);
+            console.log(JSON.stringify({
+              tools: listed.tools.length,
+              platforms: platforms.length,
+              uniquePlatforms: new Set(keys).size,
+              last5Platforms: keys.slice(-5),
+              hasWeekly: keys.includes('github-trending-weekly'),
+              hasMonthly: keys.includes('github-trending-monthly')
+            }));
+
+            const trendingPayload = parse(await client.callTool({
+              name: 'get_trending',
+              arguments: { platform: 'weibo,hackernews', limit: 5 }
+            }), 'get_trending');
+            const results = Array.isArray(trendingPayload?.results) ? trendingPayload.results : [];
+            console.log(JSON.stringify({
+              generatedAt: trendingPayload?.generatedAt ?? null,
+              scope: trendingPayload?.scope ?? null,
+              platformCount: trendingPayload?.platformCount ?? null,
+              okCount: trendingPayload?.okCount ?? null,
+              degradedOrMissing: trendingPayload?.degradedOrMissing ?? null,
+              results: results.map((r) => ({
+                platform: r?.platform,
+                dataQuality: r?.dataQuality,
+                itemCount: Array.isArray(r?.items) ? r.items.length : null,
+                capturedAt: r?.capturedAt ?? null,
+                sourceUpdatedAt: r?.sourceUpdatedAt ?? null,
+                firstTwoTitles: Array.isArray(r?.items) ? r.items.slice(0, 2).map((i) => i?.title) : []
+              }))
+            }));
+          } finally {
+            await client.close().catch(() => {});
+          }
+          EOF
