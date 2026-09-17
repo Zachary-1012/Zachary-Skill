@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 /**
- * TrendHub public Remote MCP gateway.
+ * TrendHub public Remote MCP + responsive web gateway.
  *
- * This wrapper deliberately keeps the core server's secure default unchanged:
- * the MCP core still binds to loopback with a private per-process bearer token.
- * Only /mcp and a small set of public metadata/policy endpoints are exposed.
- * /api/* and the local UI are never proxied.
+ * Security model:
+ * - Core runtime remains bound to loopback behind a per-process bearer token.
+ * - /mcp stays the public Streamable HTTP MCP endpoint.
+ * - The existing zero-dependency TrendHub web console is served at /.
+ * - Only an explicit allowlist of read/query /api/* routes is proxied publicly.
+ * - Mutating/local-only routes such as /api/snapshot are never exposed.
  */
 import { createServer, request as httpRequest } from "node:http";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { serveStatic } from "../dist/src/web/static.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -27,14 +30,35 @@ const VERSION = "1.4.1";
 let activeRequests = 0;
 let shuttingDown = false;
 
-const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-17\n\nTrendHub Remote is a public, read-oriented MCP endpoint for trend intelligence. The application does not require an account and does not intentionally collect analytics, advertising identifiers, model prompts, cookies, usernames, account identifiers, or user IP addresses into TrendHub application storage. Tool arguments are processed in memory only as needed to answer a request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a tool retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. The public hosted edition does not use a visitor's private Xiaohongshu cookie.\n\nFor source code, security reporting, and the local zero-central-return edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
+const PUBLIC_API_PATHS = new Set([
+  "/api/health",
+  "/api/platforms",
+  "/api/categories",
+  "/api/trending",
+  "/api/overlap",
+  "/api/clusters",
+  "/api/changes",
+  "/api/curve",
+  "/api/related",
+  "/api/signals",
+  "/api/events",
+  "/api/topic",
+  "/api/templates",
+  "/api/template",
+  "/api/brief",
+  "/api/xhs/status",
+  "/api/xhs/topics",
+]);
 
-const termsText = `TrendHub Remote Terms of Use\n\nLast updated: 2026-09-17\n\nTrendHub provides evidence-oriented access to public trend sources and deterministic trend-analysis helpers. It is not affiliated with or endorsed by the third-party platforms it reads. Source data may be incomplete, delayed, rate-limited, unavailable, or changed by the source platform at any time. TrendHub marks missing/degraded evidence rather than guaranteeing continuous source availability.\n\nTrend lifecycle, confidence, sentiment, and 24h/72h benchmark outputs are analytical indicators, not factual guarantees, investment advice, legal advice, medical advice, or predictions of future outcomes. Users remain responsible for verifying important decisions against primary sources and for complying with applicable law and third-party platform terms.\n\nDo not use the service to access private data, evade access controls, harass people, or perform unlawful activity. The hosted endpoint may apply capacity limits or be changed or withdrawn to protect reliability and security.\n\nThe open-source TrendHub code is distributed under the repository's MIT License. These hosted-service terms govern use of the public endpoint and do not remove rights granted by the open-source license.`;
+const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-17\n\nTrendHub Remote provides a public MCP endpoint and a responsive read/query web console for trend intelligence. The service does not require a TrendHub account and does not intentionally store analytics identifiers, advertising identifiers, model prompts, usernames, or account identifiers. Public web-console queries and MCP tool arguments are processed only as needed to answer the request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a query retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. The public hosted edition does not use a visitor's private Xiaohongshu cookie. Local installation remains available for users who prefer local-only operation.\n\nFor source code, security reporting, and the local edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
+
+const termsText = `TrendHub Remote Terms of Use\n\nLast updated: 2026-09-17\n\nTrendHub provides evidence-oriented access to public trend sources and deterministic trend-analysis helpers through MCP and the public web console. It is not affiliated with or endorsed by the third-party platforms it reads. Source data may be incomplete, delayed, rate-limited, unavailable, or changed by the source platform at any time. TrendHub marks missing/degraded evidence rather than guaranteeing continuous source availability.\n\nTrend lifecycle, confidence, sentiment, and 24h/72h benchmark outputs are analytical indicators, not factual guarantees, investment advice, legal advice, medical advice, or predictions of future outcomes. Users remain responsible for verifying important decisions against primary sources and for complying with applicable law and third-party platform terms.\n\nDo not use the service to access private data, evade access controls, harass people, or perform unlawful activity. The hosted endpoint may apply capacity limits or be changed or withdrawn to protect reliability and security.\n\nThe open-source TrendHub code is distributed under the repository's MIT License. These hosted-service terms govern use of the public endpoint and do not remove rights granted by the open-source license.`;
 
 function json(res, status, data, extraHeaders = {}) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
     ...extraHeaders,
   });
   res.end(JSON.stringify(data, null, 2));
@@ -127,6 +151,94 @@ function proxyMcp(req, res, body) {
   });
 }
 
+function internalJson(path) {
+  return new Promise((resolve, reject) => {
+    const upstream = httpRequest(
+      {
+        host: "127.0.0.1",
+        port: INTERNAL_PORT,
+        path,
+        method: "GET",
+        headers: {
+          host: `127.0.0.1:${INTERNAL_PORT}`,
+          authorization: `Bearer ${INTERNAL_TOKEN}`,
+          accept: "application/json",
+        },
+        timeout: REQUEST_TIMEOUT_MS,
+      },
+      (upstreamRes) => {
+        const chunks = [];
+        upstreamRes.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        upstreamRes.on("end", () => {
+          const raw = Buffer.concat(chunks).toString("utf8");
+          if ((upstreamRes.statusCode || 500) >= 400) return reject(new Error(`internal HTTP ${upstreamRes.statusCode}: ${raw.slice(0, 200)}`));
+          try {
+            resolve(JSON.parse(raw));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      },
+    );
+    upstream.on("timeout", () => upstream.destroy(new Error("upstream timeout")));
+    upstream.on("error", reject);
+    upstream.end();
+  });
+}
+
+function proxyPublicApi(req, res, targetPath) {
+  return new Promise((resolve) => {
+    const upstream = httpRequest(
+      {
+        host: "127.0.0.1",
+        port: INTERNAL_PORT,
+        path: targetPath,
+        method: "GET",
+        headers: {
+          host: `127.0.0.1:${INTERNAL_PORT}`,
+          authorization: `Bearer ${INTERNAL_TOKEN}`,
+          accept: req.headers.accept || "application/json",
+        },
+        timeout: REQUEST_TIMEOUT_MS,
+      },
+      (upstreamRes) => {
+        const outHeaders = { ...upstreamRes.headers };
+        delete outHeaders.connection;
+        delete outHeaders["keep-alive"];
+        delete outHeaders["set-cookie"];
+        outHeaders["cache-control"] = "no-store";
+        outHeaders["x-content-type-options"] = "nosniff";
+        outHeaders["referrer-policy"] = "no-referrer";
+        res.writeHead(upstreamRes.statusCode || 502, outHeaders);
+        upstreamRes.pipe(res);
+        upstreamRes.on("end", resolve);
+      },
+    );
+    upstream.on("timeout", () => upstream.destroy(new Error("upstream timeout")));
+    upstream.on("error", (err) => {
+      if (!res.headersSent) json(res, 502, { error: "upstream_unavailable", detail: err.message });
+      else res.destroy(err);
+      resolve();
+    });
+    upstream.end();
+  });
+}
+
+async function servePublicStatic(pathname, res) {
+  const sr = serveStatic(pathname);
+  const headers = {};
+  sr.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  headers["X-Content-Type-Options"] = "nosniff";
+  headers["Referrer-Policy"] = "no-referrer";
+  headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+  headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
+  if (pathname === "/" || pathname === "/index.html") headers["Cache-Control"] = "no-cache";
+  res.writeHead(sr.status, headers);
+  res.end(Buffer.from(await sr.arrayBuffer()));
+}
+
 function coreProbe() {
   return new Promise((resolve) => {
     const req = httpRequest(
@@ -182,11 +294,28 @@ await waitForCore(core);
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", publicBase(req));
+
     if (url.pathname === "/health") {
-      return json(res, 200, { ok: true, name: "trendhub-mcp", version: VERSION, transport: "streamable-http", tools: 19 });
+      let coreHealth = {};
+      try {
+        coreHealth = await internalJson("/api/health");
+      } catch {
+        coreHealth = {};
+      }
+      return json(res, 200, {
+        ok: true,
+        name: "trendhub-mcp",
+        version: VERSION,
+        transport: "streamable-http",
+        tools: 19,
+        platforms: Number(coreHealth.platformCount || 38),
+        web: true,
+      });
     }
+
     if (url.pathname === "/privacy") return text(res, 200, privacyText);
     if (url.pathname === "/terms") return text(res, 200, termsText);
+
     if (url.pathname === "/.well-known/mcp.json") {
       const base = publicBase(req);
       return json(res, 200, {
@@ -195,11 +324,13 @@ const server = createServer(async (req, res) => {
         version: VERSION,
         description: "Evidence-first trend intelligence across 38 public trend sources with 19 MCP tools.",
         transport: { type: "streamable-http", url: `${base}/mcp` },
+        web: `${base}/`,
         privacy: `${base}/privacy`,
         terms: `${base}/terms`,
         repository: "https://github.com/Zachary-1012/Zachary-Skill",
       });
     }
+
     if (url.pathname === "/mcp") {
       const cors = corsHeaders();
       if (req.method === "OPTIONS") {
@@ -217,26 +348,53 @@ const server = createServer(async (req, res) => {
       }
       return;
     }
-    if (url.pathname.startsWith("/api/")) return json(res, 404, { error: "not_exposed_on_public_remote" });
-    if (url.pathname === "/" || url.pathname === "/index.html") {
-      return text(
-        res,
-        200,
-        `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TrendHub Remote MCP</title><style>body{font:16px system-ui;max-width:760px;margin:64px auto;padding:0 24px;line-height:1.6}code{background:#f4f4f4;padding:2px 6px;border-radius:6px}a{color:inherit}</style><h1>TrendHub Remote MCP</h1><p>Evidence-first professional trend intelligence: 38 public trend sources, 19 MCP tools, Source Reliability, trend lifecycle/velocity/persistence/diffusion/confidence and 24h/72h lead benchmarks.</p><p>MCP endpoint: <code>/mcp</code> · <a href="/health">health</a> · <a href="/privacy">privacy</a> · <a href="/terms">terms</a> · <a href="https://github.com/Zachary-1012/Zachary-Skill">source</a></p><p>No TrendHub account or model API key is required.</p>`,
-        "text/html; charset=utf-8",
-      );
+
+    if (url.pathname.startsWith("/api/")) {
+      if (req.method !== "GET") return json(res, 405, { error: "public_web_api_is_read_query_only", allowed: ["GET"] });
+      if (!PUBLIC_API_PATHS.has(url.pathname)) return json(res, 404, { error: "not_exposed_on_public_remote" });
+      if (activeRequests >= MAX_CONCURRENCY) return json(res, 429, { error: "busy", retryAfterSeconds: 2 }, { "Retry-After": "2" });
+
+      if (url.pathname === "/api/health") {
+        const internal = await internalJson("/api/health");
+        return json(res, 200, {
+          ok: true,
+          service: "trendhub-mcp",
+          version: VERSION,
+          platformCount: internal.platformCount,
+          categoryCount: internal.categoryCount,
+          tools: 19,
+          runtime: "remote",
+          mcpEndpoint: `${publicBase(req)}/mcp`,
+          time: new Date().toISOString(),
+        });
+      }
+
+      activeRequests += 1;
+      try {
+        await proxyPublicApi(req, res, `${url.pathname}${url.search}`);
+      } finally {
+        activeRequests -= 1;
+      }
+      return;
     }
-    return json(res, 404, { error: "not_found" });
+
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      return json(res, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
+    }
+    return servePublicStatic(url.pathname, res);
   } catch (err) {
     const status = Number(err?.statusCode) || 500;
-    return json(res, status, { error: status === 413 ? "request_too_large" : "internal_error" });
+    return json(res, status, {
+      error: status === 413 ? "request_too_large" : "internal_error",
+      detail: process.env.NODE_ENV === "production" ? undefined : String(err?.message || err),
+    });
   }
 });
 
 server.listen(PUBLIC_PORT, PUBLIC_HOST, () => {
   console.error(`[trendhub-remote] v${VERSION} listening on ${PUBLIC_HOST}:${PUBLIC_PORT} -> 127.0.0.1:${INTERNAL_PORT}/mcp`);
-  console.error("[trendhub-remote] public routes: /mcp /health /privacy /terms /.well-known/mcp.json");
-  console.error("[trendhub-remote] local UI and /api/* are not exposed");
+  console.error("[trendhub-remote] public routes: / /mcp /health /privacy /terms /.well-known/mcp.json + safe GET /api/* allowlist");
+  console.error("[trendhub-remote] local-only write routes remain private");
 });
 
 function shutdown(signal) {

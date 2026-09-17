@@ -8,8 +8,8 @@ VIEWS.dashboard = async function (content) {
     <div class="grid cols-4">
       ${statCard(health.platformCount, "接入平台")}
       ${statCard(CATS.platformCategories.length, "平台分类")}
-      ${statCard(16, "MCP 工具")}
-      ${statCard("本地", "运行模式")}
+      ${statCard(health.tools || 19, "MCP 工具")}
+      ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
     </div>
     <div class="section-title">快捷入口</div>
     <div class="grid cols-4">
@@ -23,7 +23,7 @@ VIEWS.dashboard = async function (content) {
     <div class="section-title">数据纪律</div>
     <div class="grid cols-2">
       <div class="card"><h3>不编造、不估算</h3><p class="sub">取不到的字段一律为 null，并用 正常 / 降级 / 缺失 标记；每条数据带采集时刻 capturedAt 与来源链接；平台公布时间与采集时间分离。</p></div>
-      <div class="card"><h3>隐私与算力</h3><p class="sub">插件不内置任何大模型 Key、不采集、不回传、不联网上报；趋势判断与脚本/文案/方案成稿，均由你正在使用的 AI 完成。</p></div>
+      <div class="card"><h3>隐私与算力</h3><p class="sub">TrendHub 不内置任何大模型 Key；趋势判断与脚本/文案/方案成稿仍由你正在使用的 AI 完成。公网模式仅开放安全查询能力，本地模式保留完整本机能力。</p></div>
     </div>`;
   content.querySelectorAll("[data-cat]").forEach((t) =>
     t.addEventListener("click", () => (location.hash = `#/trending?category=${encodeURIComponent(t.dataset.cat)}`))
@@ -116,7 +116,7 @@ function xhsCard(it) {
   const inner =
     (safeUrl(it.imageUrl)
       ? `<img class="xhs-img" src="${esc(it.imageUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">`
-      : `<div class="xhs-img ph"><span>${esc(Array.from(it.title || "").slice(0, 2).join(""))}</span></div>`) +
+      : `<div class="xhs-img ph"><span>${esc(Array.from(it.title || "").slice(0, 2).join("") )}</span></div>`) +
     (it.kind === "video" ? `<span class="xhs-kind">视频</span>` : "") +
     (it.hotText ? `<span class="xhs-like">${esc(it.hotText)}</span>` : "");
   const cover = safeUrl(it.url)
