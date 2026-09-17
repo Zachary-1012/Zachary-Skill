@@ -1,6 +1,6 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.2** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，并新增 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark。
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.4.2** 是 Evidence-first 的专业趋势情报 Skill：覆盖 38 个平台/趋势信源，以小红书为深度主打，提供 **19 个 MCP 工具**，具备 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度与 24h/72h Lead-time Benchmark；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）。
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
@@ -40,6 +40,16 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJo
 ```
 
 如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
+
+### 浏览器 Web Console
+
+不写配置、只想用浏览器查看时，打开托管的响应式 Web Console（只读/查询，模型推理仍由你自己的 AI 完成）：
+
+```text
+https://trendhub-remote-production.up.railway.app/
+```
+
+实时健康状态见 `https://trendhub-remote-production.up.railway.app/health`；变更类接口（如 `/api/snapshot`）不对外暴露。
 
 ## 已上架 / 可搜索渠道
 
@@ -109,6 +119,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 | 实时发现 | 38 个平台/趋势信源；小红书热门推荐流为深度主打 |
 | 小红书增强 | 游客热门推荐；本地 `XHS_COOKIE` 可解锁官方热搜词榜与关键词爆款搜索 |
 | 跨平台 | 共振、自动聚类、新晋/飙升/掉榜、历史快照 |
+| **定时趋势历史（v1.4.2）** | 托管 Remote MCP 默认每小时自动快照并持久化有界历史；本地支持 cron / Windows 任务计划程序，见 [`docs/scheduled-snapshots.md`](./trendhub-mcp/docs/scheduled-snapshots.md) |
 | **Source Reliability** | UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED；24h/7d/30d ok/usable rate；P50/P95 延迟；连续失败；schema drift |
 | **Trend Intelligence Engine** | `emerging → accelerating → mainstream → saturating → declining`；速度、持续性、扩散、可靠度、历史充分度、置信度 |
 | 搜索趋势 | Google Trends 相对热度曲线、相关词 top/rising |

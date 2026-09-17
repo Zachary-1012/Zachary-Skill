@@ -173,6 +173,8 @@ npm run smoke
 | stdio（默认） | `npm start` | 本地 MCP 客户端 |
 | HTTP MCP | `npm run start:http` | 需要 MCP URL 的客户端 |
 | 本地控制台 | `npm run ui` | `http://127.0.0.1:8333/` |
+| 公开托管 Remote MCP（零安装） | 直接连 `https://trendhub-remote-production.up.railway.app/mcp` | 不想本地安装、客户端支持 Streamable HTTP |
+| 托管 Web Console | 浏览器打开 `https://trendhub-remote-production.up.railway.app/` | 人工浏览查看与只读查询 |
 
 通用 stdio：
 
@@ -205,6 +207,10 @@ Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
 ```
 
 不要通过关闭鉴权绕过；即使启用 Token，也优先局域网/Tailscale 等私有网络，不直接暴露 8333 到公网。
+
+### 定时趋势快照（v1.4.2）
+
+趋势生命周期与 24h/72h lead benchmark 依赖持续积累的有界历史。公开托管 Remote MCP 已启用服务端调度器（默认每小时一次、写入持久化卷，状态见 `/health` 的 `snapshotScheduler` 字段）；本地可通过 cron（macOS/Linux）或任务计划程序（Windows）周期运行 `node dist/scripts/snapshot.js`。完整说明见 [`docs/scheduled-snapshots.md`](./docs/scheduled-snapshots.md)。
 
 ---
 

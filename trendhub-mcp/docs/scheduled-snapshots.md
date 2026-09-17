@@ -93,6 +93,6 @@ TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS=30000
 
 - 采集失败只记录到 `snapshotScheduler.lastError` 与日志，**不会让 MCP 主进程退出**。
 - 上一次采集尚未结束时，新一轮会被直接跳过并累加 `skippedBecauseRunning`，不会重叠执行。
-- 公网网关**只暴露只读/查询接口**；变更类的 `/api/snapshot` 路由永远不对外公开（返回 404）。
+- 公网网关**只暴露只读/查询接口**；变更类的 `/api/snapshot` 路由永远不对外公开（`GET` 返回 404、`POST` 返回 405）。
 - 公网网关**不会注入任何访客的私有 `XHS_COOKIE`**。
 - 定时采集只访问公开榜单数据源，不引入模型 Key、不增加遥测、不向中央服务回传使用数据。

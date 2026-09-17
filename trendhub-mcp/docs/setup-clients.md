@@ -1,4 +1,4 @@
-# 把 TrendHub v1.4.0 接入你的 AI 客户端
+# 把 TrendHub v1.4.2 接入你的 AI 客户端
 
 TrendHub 是本地优先的 MCP Skill。**推荐把仓库链接直接交给具备终端执行能力的 AI / Coding Agent**，让它完成环境检查、Node-free bootstrap、安装、smoke 和 MCP 配置。
 
@@ -133,6 +133,16 @@ TrendHub 与模型供应商解耦：
 
 ## 6. HTTP 与远程接入
 
+### 零安装：官方托管 Remote MCP
+
+不想本地安装时，支持 Streamable HTTP 的客户端直接连接公开托管端点（与本地版同为 19 工具 / 38 信源，无需注册或模型 Key）：
+
+```text
+https://trendhub-remote-production.up.railway.app/mcp
+```
+
+浏览器 Web Console（人工查看与只读查询，模型推理仍由你自己的 AI 完成）：`https://trendhub-remote-production.up.railway.app/`；健康检查为 `/health`。
+
 ### 本机 loopback
 
 默认：
@@ -204,7 +214,7 @@ http://127.0.0.1:8333/
 
 Cookie 只配置在使用者本机，禁止提交仓库、诊断文件或聊天公开内容。无登录态时相关能力会显式 `missing/AUTH_REQUIRED`，不得伪造。
 
-## 9. v1.4.0 的 19 个工具
+## 9. v1.4.2 的 19 个工具
 
 ### Discover / Trending
 
@@ -348,3 +358,13 @@ node scripts/upgrade.mjs
 ```
 
 Node-free 用户可使用 `AI_BOOTSTRAP_OK.node` 的绝对路径执行同一个 `scripts/upgrade.mjs`。
+
+## 16. 定时趋势快照（v1.4.2）
+
+趋势生命周期与 24h/72h lead benchmark 依赖持续积累的有界历史。公开托管 Remote MCP 已启用服务端调度器（默认每小时一次、写入持久化卷，状态见 `/health` 的 `snapshotScheduler` 字段）。本地安装可通过 cron（macOS/Linux）或任务计划程序（Windows）周期运行：
+
+```bash
+node dist/scripts/snapshot.js
+```
+
+完整步骤、环境变量与持久化建议见 `docs/scheduled-snapshots.md`。
