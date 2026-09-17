@@ -20,9 +20,9 @@ Users are responsible for complying with applicable law and the terms of the thi
 
 The public endpoint may enforce reasonable request-size and concurrency limits and may be changed, restricted, or withdrawn to protect reliability, security, upstream source integrity, or legal compliance. No uptime guarantee is made for third-party sources.
 
-## Open-source license
+## Software license
 
-The TrendHub source code is distributed under the repository's MIT License. These hosted-service terms govern use of the public hosted endpoint and do not remove rights granted by the open-source license.
+TrendHub v1.4.3 and later TrendHub-authored code is source-available under the **TrendHub Free Use License 1.0**. Personal use and internal company/business use of unmodified copies are permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited unless separately authorized. TrendHub v1.4.2 and earlier retain the license rights granted when those releases were published. Third-party components remain under their own licenses.
 
 Repository and current release:
 

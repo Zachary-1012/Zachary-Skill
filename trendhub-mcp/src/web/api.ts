@@ -8,7 +8,7 @@ import { config } from "../config.js";
 import { SERVER_VERSION } from "../server.js";
 import { PLATFORMS, listPlatforms, categories, getMany, getByCategory } from "../sources/index.js";
 import { crossPlatformOverlap, discoverClusters } from "../analysis/overlap.js";
-import { takeSnapshots, updateFromResults, diffPlatform } from "../store/snapshot.js";
+import { takeSnapshots, updateFromResults, diffPlatform, readSnap } from "../store/snapshot.js";
 import { interestOverTime, relatedQueries } from "../sources/googleTrends.js";
 import { futureSignals, futureCategories } from "../sources/rss.js";
 import { upcomingEvents, eventCategories } from "../sources/events.js";
@@ -51,6 +51,22 @@ function bad(msg: string): ApiResponse {
   return { status: 400, data: { error: msg } };
 }
 
+function snapshotFallback(platform: string, limit: number) {
+  const snap = readSnap(platform);
+  const cached = snap.latest?.items?.length
+    ? snap.latest
+    : snap.previous?.items?.length
+      ? snap.previous
+      : null;
+  if (!cached) return null;
+  return {
+    ...cached,
+    items: cached.items.slice(0, limit),
+    dataQuality: cached.dataQuality === "missing" ? "degraded" : cached.dataQuality,
+    note: [cached.note, `托管端最近成功快照 · ${cached.capturedAt}`].filter(Boolean).join("；"),
+  };
+}
+
 export async function handleApi(pathname: string, url: URL, method: string, body: string): Promise<ApiResponse> {
   const q = (k: string) => url.searchParams.get(k);
 
@@ -91,27 +107,48 @@ export async function handleApi(pathname: string, url: URL, method: string, body
     case "/api/trending": {
       const platform = q("platform");
       const category = q("category");
+      const mode = q("mode") === "snapshot" ? "snapshot" : "live";
       const n = intParam(q("limit"), 20, 5, 50);
       return handled(async () => {
-        let results;
-        let scope;
-        if (category && category !== "all") {
-          results = await getByCategory(category, n);
-          scope = `category:${category}`;
-        } else if (platform) {
-          results = await getMany([platform], n);
-          scope = platform;
+        const names = category && category !== "all"
+          ? PLATFORMS.filter((p) => p.category === category).map((p) => p.platform)
+          : platform
+            ? [platform]
+            : DEFAULT_PLATFORMS;
+        const scope = category && category !== "all"
+          ? `category:${category}`
+          : platform || "default-core";
+        let results: any[] = [];
+
+        if (mode === "snapshot") {
+          results = names.map((name) => snapshotFallback(name, n)).filter(Boolean);
         } else {
-          results = await getMany(DEFAULT_PLATFORMS, n);
-          scope = "default-core";
+          let liveResults: any[] = [];
+          if (category && category !== "all") liveResults = await getByCategory(category, n);
+          else if (platform) liveResults = await getMany([platform], n);
+          else liveResults = await getMany(DEFAULT_PLATFORMS, n);
+
+          updateFromResults(liveResults);
+          const liveByPlatform = new Map(liveResults.map((r) => [r.platform, r]));
+          results = names
+            .map((name) => {
+              const live = liveByPlatform.get(name);
+              if (live && live.dataQuality !== "missing" && live.items?.length) return live;
+              return snapshotFallback(name, n) ?? live ?? null;
+            })
+            .filter(Boolean);
         }
-        updateFromResults(results);
+
         return {
           generatedAt: new Date().toISOString(),
+          sourceMode: mode === "snapshot" ? "snapshot" : "live-with-snapshot-fallback",
           scope,
           platformCount: results.length,
           okCount: results.filter((r) => r.dataQuality === "ok").length,
-          degradedOrMissing: results.filter((r) => r.dataQuality !== "ok").map((r) => ({ platform: r.platform, dataQuality: r.dataQuality, note: r.note })),
+          fallbackCount: results.filter((r) => String(r.note ?? "").includes("最近成功快照")).length,
+          degradedOrMissing: results
+            .filter((r) => r.dataQuality !== "ok")
+            .map((r) => ({ platform: r.platform, dataQuality: r.dataQuality, note: r.note })),
           results,
         };
       });
@@ -251,14 +288,35 @@ export async function handleApi(pathname: string, url: URL, method: string, body
     case "/api/xhs/topics": {
       const n = intParam(q("limit"), 30, 5, 40);
       const tn = intParam(q("topic_limit"), 20, 5, 50);
+      const sourceMode = q("mode") === "snapshot" ? "snapshot" : "live";
       return handled(async () => {
-        const feed = await fetchXiaohongshu(n);
-        const derivedTopics = extractXhsTopics(feed.items.map((i) => i.title), tn);
+        let feed: any = sourceMode === "snapshot" ? snapshotFallback("xiaohongshu", n) : null;
+        let feedFromSnapshot = sourceMode === "snapshot" && Boolean(feed);
+        if (!feed) {
+          const liveFeed = await fetchXiaohongshu(n);
+          const cached = liveFeed.dataQuality === "missing" || !liveFeed.items.length
+            ? snapshotFallback("xiaohongshu", n)
+            : null;
+          feed = cached ?? liveFeed;
+          feedFromSnapshot = Boolean(cached);
+        }
+        const derivedTopics = extractXhsTopics(feed.items.map((i: any) => i.title), tn);
         const loggedIn = xhsClient.hasLoginCookie();
-        const officialHotlist = loggedIn ? await fetchXiaohongshuHotlist(20) : null;
-        updateFromResults([feed, ...(officialHotlist ? [officialHotlist] : [])]);
+        const officialHotlist = sourceMode === "snapshot"
+          ? snapshotFallback("xiaohongshu-hotlist", 20)
+          : loggedIn
+            ? await fetchXiaohongshuHotlist(20)
+            : null;
+        if (sourceMode === "live") {
+          const toStore = [
+            ...(feedFromSnapshot ? [] : [feed]),
+            ...(officialHotlist ? [officialHotlist] : []),
+          ];
+          if (toStore.length) updateFromResults(toStore);
+        }
         return {
           generatedAt: new Date().toISOString(),
+          sourceMode: sourceMode === "snapshot" ? "snapshot" : "live-with-snapshot-fallback",
           mode: loggedIn ? "cookie" : "guest",
           loggedIn,
           feed,

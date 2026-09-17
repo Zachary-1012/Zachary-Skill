@@ -1,21 +1,54 @@
-MIT License
+TrendHub Free Use License 1.0
 
-Copyright (c) 2026 Zachary
+Copyright (c) 2026 Zachary. All rights reserved except as expressly granted below.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This is a source-available license. It is not an open-source license.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Scope
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This License applies to the portions of TrendHub authored and owned by the Licensor (the "Software"). Third-party software, vendored code, dependencies, data, trademarks, and other materials identified in NOTICE or in their own notices remain governed by their respective licenses and rights; this License does not restrict rights granted by those third parties.
+
+2. Free Use Grant
+
+Subject to compliance with this License, the Licensor grants you a non-exclusive, worldwide, royalty-free, non-transferable, non-sublicensable right to download, install, execute, and use unmodified copies of the Software for:
+
+(a) personal use; and
+(b) internal business use, including commercial internal operations.
+
+You may make reasonable copies solely for installation, backup, disaster recovery, and internal deployment within the same legal entity and for its employees acting on that entity's behalf.
+
+3. Outputs
+
+Reports, analyses, briefs, content, and other outputs created through lawful use of the Software may be used, copied, shared, or commercialized by you, subject to any rights or terms applicable to third-party source data or content. "Outputs" do not include the Software itself or substantial portions of its source code.
+
+4. Restrictions
+
+Except where applicable law expressly requires otherwise, you may not:
+
+(a) modify, patch, adapt, translate, alter, or create derivative works of the Software;
+(b) distribute, publish, republish, mirror, sublicense, sell, rent, lease, transfer, or otherwise make the Software or copies of it available to any third party;
+(c) bundle, embed, or include the Software in another product, software distribution, appliance, extension, plugin, or downloadable package for third parties;
+(d) host, expose, or provide the Software itself as a service, API, MCP server, managed service, or other remotely accessible product for third parties; or
+(e) remove or alter copyright, license, attribution, or proprietary notices.
+
+Using documented environment variables, MCP client configuration, runtime settings, or deployment settings without changing the Software's source or packaged files is permitted and is not considered a modification under this License.
+
+5. No Transfer or Trademark Grant
+
+No rights are granted except those expressly stated in this License. No trademark, trade name, logo, or branding rights are granted except the limited right to make truthful nominative reference to TrendHub when describing lawful use of the Software.
+
+6. Prior Versions and Prior Grants
+
+TrendHub v1.4.2 and earlier were released under the license terms that applied to those releases. This License does not revoke or retroactively restrict rights that a recipient validly received under an earlier license for an earlier copy or version. TrendHub distributions released as v1.4.3 and later are offered under this License unless a later release expressly states otherwise. Code or materials that remain available under a third-party or earlier license continue to carry the rights granted by that license for the applicable copy or material.
+
+7. Termination
+
+Your rights under this License terminate automatically if you violate its terms. Upon termination, you must stop using and delete copies of the Software covered by this License, except copies that you are legally required to retain. Rights under independently applicable third-party licenses are unaffected.
+
+8. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR IS NOT LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
+
+9. Entire License
+
+This License states the complete permission granted by the Licensor for the Software covered by it. Any broader right, including modification, redistribution, republication, sublicensing, resale, or third-party hosted access, requires separate written permission from the Licensor.

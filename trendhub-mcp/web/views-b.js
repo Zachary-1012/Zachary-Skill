@@ -6,34 +6,38 @@ VIEWS.trending = function (content, params) {
     .concat(PLATFORMS.map((p) => `<option value="${esc(p.platform)}" ${params.platform === p.platform ? "selected" : ""}>${esc(p.label)} · ${esc(p.category)}</option>`))
     .join("");
   content.innerHTML = `
-    <p class="lead">选择分类或具体平台拉取当下热榜；每次查询会在本地积累快照，供“新晋/掉榜”对比。</p>
+    <p class="lead">打开即显示托管端最近成功快照；点击“实时刷新”重新拉取当前热榜。实时源临时失败时自动回退到最近成功快照，不再显示空白。</p>
     <div class="controls">
       <label class="field">分类<select id="f-cat">${catOpts}</select></label>
       <label class="field">平台<select id="f-plat">${platOpts}</select></label>
       <label class="field">每平台条数<input class="input" id="f-limit" type="number" min="5" max="50" value="${esc(params.limit || 20)}" style="width:90px"></label>
-      <button class="btn primary" id="btn-go">拉取热榜</button>
+      <button class="btn primary" id="btn-go">实时刷新</button>
     </div>
     <div id="out">${loading()}</div>`;
-  const run = async () => {
+  const run = async (sourceMode = "live") => {
     const cat = $("#f-cat").value, plat = $("#f-plat").value, limit = $("#f-limit").value || 20;
     $("#out").innerHTML = loading();
     try {
-      const qs = new URLSearchParams({ limit: String(limit) });
+      const qs = new URLSearchParams({ limit: String(limit), mode: sourceMode });
       if (plat) qs.set("platform", plat);
       else if (cat) qs.set("category", cat);
       const d = await api(`/api/trending?${qs}`);
       const bad = (d.degradedOrMissing || []).filter((x) => x.dataQuality !== "ok");
+      const modeNote = d.sourceMode === "snapshot"
+        ? note("info", `当前显示托管端最近成功快照 · ${d.platformCount || 0} 个平台。`)
+        : (d.fallbackCount ? note("warn", `本次有 ${d.fallbackCount} 个平台实时源不可用，已自动回退到最近成功快照。`) : "");
       $("#out").innerHTML =
+        modeNote +
         (bad.length ? note("warn", `以下平台本次降级/缺失：${bad.map((b) => `${b.platform}（${b.note || b.dataQuality}）`).join("；")}`) : "") +
-        (d.results || []).map(platformCard).join("");
+        ((d.results || []).length ? (d.results || []).map(platformCard).join("") : empty("暂无成功快照；点击“实时刷新”获取当前数据"));
     } catch (e) {
       $("#out").innerHTML = note("err", esc(e.message));
     }
   };
-  $("#btn-go").addEventListener("click", run);
-  if (params.category || params.platform) run();
-  else $("#out").innerHTML = empty("选择分类或平台后点击“拉取热榜”");
+  $("#btn-go").addEventListener("click", () => run("live"));
+  run("snapshot");
 };
+
 function platformCard(r) {
   const head = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <h3 style="margin:0">${esc(r.label)}</h3>${qbadge(r.dataQuality)}

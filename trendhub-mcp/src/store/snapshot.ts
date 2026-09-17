@@ -43,12 +43,13 @@ export async function takeSnapshots(platforms?: string[]): Promise<{ platform: s
   const results = await getMany(names, 50);
   const report: { platform: string; ok: boolean; items: number }[] = [];
   for (const r of results) {
+    report.push({ platform: r.platform, ok: r.dataQuality === "ok", items: r.items.length });
+    if (r.dataQuality === "missing" || !r.items.length) continue;
     const snap = readSnap(r.platform);
     snap.previous = snap.latest;
     snap.latest = r;
     writeSnap(r.platform, snap);
     appendHistory(r);
-    report.push({ platform: r.platform, ok: r.dataQuality === "ok", items: r.items.length });
   }
   return report;
 }

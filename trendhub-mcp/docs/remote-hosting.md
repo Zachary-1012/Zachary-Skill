@@ -6,8 +6,8 @@ TrendHub's public hosted distribution uses `scripts/remote-gateway.mjs` as an is
 
 - The existing MCP core remains bound to `127.0.0.1`.
 - A fresh 256-bit internal bearer token is generated for every gateway process and is never exposed to clients.
-- Only `/mcp`, `/health`, `/privacy`, `/terms`, `/.well-known/mcp.json`, and the minimal landing page are public.
-- The local visual console and `/api/*` are **not** exposed by the gateway.
+- `/mcp`, `/health`, `/privacy`, `/terms`, `/.well-known/mcp.json`, the responsive Web Console at `/`, and an explicit read/query `/api/*` allowlist are public.
+- Mutating/local-only routes such as `/api/snapshot` remain blocked by the gateway; the public Web Console cannot trigger writes.
 - Request bodies are bounded (2 MiB by default) and concurrent MCP requests are capped (24 by default).
 - The public gateway does not inject `XHS_COOKIE` or any user credential.
 - Hosted deployments set `TRENTHUB_AUTOUPDATE=0`; the deployed Git commit is the deployment authority and the process does not self-mutate.
@@ -32,7 +32,8 @@ The hosting platform must provide `PORT` (or `TRENTHUB_REMOTE_PORT`). The gatewa
 - `GET /.well-known/mcp.json` — discoverable endpoint metadata
 - `GET /privacy` — privacy notice
 - `GET /terms` — hosted-service terms
-- `GET /` — minimal landing page
+- `GET /` — responsive read/query Web Console
+- `GET /api/*` — explicit safe GET allowlist used by the Web Console
 
 Local-only mutating routes such as `/api/snapshot` are not published: `GET` returns 404 and `POST` returns 405 on the public gateway.
 

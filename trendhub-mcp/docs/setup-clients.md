@@ -1,4 +1,4 @@
-# 把 TrendHub v1.4.2 接入你的 AI 客户端
+# 把 TrendHub v1.4.4 接入你的 AI 客户端
 
 TrendHub 是本地优先的 MCP Skill。**推荐把仓库链接直接交给具备终端执行能力的 AI / Coding Agent**，让它完成环境检查、Node-free bootstrap、安装、smoke 和 MCP 配置。
 

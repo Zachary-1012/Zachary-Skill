@@ -6,7 +6,7 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.4.3, 19 MCP tools, 38 public trend sources**
+- Stable tool contract: **TrendHub v1.4.4, 19 MCP tools, 38 public trend sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
@@ -32,6 +32,10 @@ Last evidence check: **2026-09-17**.
 Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub Free Use License 1.0** (`LicenseRef-TrendHub-Free-Use-1.0`): free personal use and free internal company/business use of unmodified copies are permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited. Third-party components remain under their own licenses. v1.4.2 and earlier retain the license rights granted when those releases were published.
 
 Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
+
+## v1.4.4 hosted Web behavior
+
+The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The 19-tool MCP contract and 38-source catalog are unchanged.
 
 ## Direct-use paths
 

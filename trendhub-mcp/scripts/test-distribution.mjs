@@ -7,6 +7,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = join(ROOT, "..");
 const REMOTE = "https://trendhub-remote-production.up.railway.app/mcp";
 const gateway = readFileSync(join(ROOT, "scripts", "remote-gateway.mjs"), "utf8");
+const webApi = readFileSync(join(ROOT, "src", "web", "api.ts"), "utf8");
+const packageLicense = readFileSync(join(ROOT, "LICENSE"), "utf8");
 const privacy = readFileSync(join(ROOT, "docs", "privacy.md"), "utf8");
 const terms = readFileSync(join(ROOT, "docs", "terms.md"), "utf8");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
@@ -43,9 +45,11 @@ must(privacy.includes("No TrendHub account is required"), "privacy notice must s
 must(privacy.includes("third-party cloud infrastructure"), "privacy notice must disclose hosting infrastructure processing");
 must(terms.includes("not affiliated with or endorsed"), "terms must disclose third-party platform independence");
 must(terms.includes("not factual guarantees"), "terms must bound analytical indicators");
+must(terms.includes("TrendHub Free Use License 1.0") && !terms.includes("distributed under the repository's MIT License"), "hosted terms must match the v1.4.3+ license boundary");
+must(webApi.includes("live-with-snapshot-fallback") && webApi.includes("snapshotFallback"), "hosted Web snapshot fallback contract missing");
 
 const version = pkg.version;
-must(version === "1.4.3", `expected distribution patch 1.4.3, got ${version}`);
+must(version === "1.4.4", `expected distribution patch 1.4.4, got ${version}`);
 must(
   gateway.includes("TRENTHUB_REMOTE_SNAPSHOT_ENABLED"),
   "remote snapshot scheduler feature flag missing",
@@ -67,6 +71,7 @@ must(lock.packages?.[""]?.license === pkg.license, "package-lock root license mu
 must(manifest.license === "LicenseRef-TrendHub-Free-Use-1.0", "manifest license boundary mismatch");
 must(plugin.license === "LicenseRef-TrendHub-Free-Use-1.0", "plugin license boundary mismatch");
 must(productLicense.includes("TrendHub Free Use License 1.0"), "root product license title missing");
+must(packageLicense === productLicense, "packaged LICENSE must match repository product LICENSE");
 must(productLicense.includes("you may not") && productLicense.includes("modify") && productLicense.includes("distribute"), "root product license restrictions missing");
 must(gateway.includes(`const VERSION = "${version}"`), "remote gateway version must match package.json");
 must(registry.name === "io.github.Zachary-1012/trendhub", "Official MCP Registry namespace mismatch");
