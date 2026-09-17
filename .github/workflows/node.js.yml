@@ -46,9 +46,12 @@ jobs:
         run: npm test
 
       - name: MCP smoke handshake
+        shell: bash
         run: |
+          set -euo pipefail
+          EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19))")"
           npm run smoke | tee /tmp/trendhub-smoke.txt
-          grep -F "SMOKE OK tools=19" /tmp/trendhub-smoke.txt
+          grep -F "SMOKE OK tools=${EXPECTED}" /tmp/trendhub-smoke.txt
 
       - name: Remote MCP and public web security smoke
         shell: bash
@@ -57,6 +60,7 @@ jobs:
           PORT: "18444"
         run: |
           set -euo pipefail
+          EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19))")"
           npm run start:remote >/tmp/trendhub-remote.log 2>&1 &
           PID=$!
           trap 'kill "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true' EXIT
@@ -66,15 +70,17 @@ jobs:
             fi
             sleep 0.25
           done
-          node -e "const h=require('/tmp/trendhub-health.json'); if(!h.ok || h.tools!==19 || h.version!=='1.4.4' || !h.web) process.exit(1)"
+          node -e "const h=require('/tmp/trendhub-health.json'); const fs=require('fs'); const p='professional-manifest.json'; const expected=fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19; if(!h.ok || h.tools!==expected || h.version!=='1.4.4' || !h.web) process.exit(1)"
           npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
-          grep -F "REMOTE SMOKE OK tools=19 platforms=38" /tmp/trendhub-remote-smoke.txt
+          grep -F "REMOTE SMOKE OK tools=${EXPECTED} platforms=38" /tmp/trendhub-remote-smoke.txt
           curl -fsS http://127.0.0.1:18444/ >/tmp/trendhub-web.html
           grep -F 'name="viewport"' /tmp/trendhub-web.html
           grep -F 'TrendHub' /tmp/trendhub-web.html
           curl -fsS http://127.0.0.1:18444/api/platforms >/tmp/trendhub-platforms.json
           node -e "const p=require('/tmp/trendhub-platforms.json'); if(!Array.isArray(p.platforms) || p.platforms.length!==38) process.exit(1)"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/snapshot)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/workspaces)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/observability)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:18444/api/snapshot)" = "405"
 
   bootstrap-e2e:
@@ -97,9 +103,10 @@ jobs:
           TRENHUB_INSTALL_CHANNEL: dev
         run: |
           set -euo pipefail
+          EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19))" 2>/dev/null || echo 21)"
           bash scripts/bootstrap.sh --global | tee "$RUNNER_TEMP/trendhub-bootstrap.txt"
           grep -F "AI_BOOTSTRAP_OK " "$RUNNER_TEMP/trendhub-bootstrap.txt"
-          grep -F "SMOKE OK tools=19" "$RUNNER_TEMP/trendhub-bootstrap.txt"
+          grep -F "SMOKE OK tools=${EXPECTED}" "$RUNNER_TEMP/trendhub-bootstrap.txt"
 
       - name: Force verified portable Node 24 bootstrap (Windows)
         if: runner.os == 'Windows'
@@ -109,9 +116,11 @@ jobs:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
           TRENHUB_INSTALL_CHANNEL: dev
         run: |
+          $manifest = Get-Content .\professional-manifest.json -Raw | ConvertFrom-Json
+          $expected = [string]$manifest.expectedToolCount
           $output = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1 2>&1
           $status = $LASTEXITCODE
           $output | Tee-Object -FilePath "$env:RUNNER_TEMP\trendhub-bootstrap.txt"
           if ($status -ne 0) { exit $status }
           if (-not ($output | Select-String -SimpleMatch "AI_BOOTSTRAP_OK ")) { throw "missing AI_BOOTSTRAP_OK marker" }
-          if (-not ($output | Select-String -SimpleMatch "SMOKE OK tools=19")) { throw "missing 19-tool smoke marker" }
+          if (-not ($output | Select-String -SimpleMatch "SMOKE OK tools=$expected")) { throw "missing $expected-tool smoke marker" }
