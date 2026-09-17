@@ -164,7 +164,7 @@ export async function handleApi(pathname: string, url: URL, method: string, body
     case "/api/clusters": {
       const minPlatforms = intParam(q("min_platforms"), 2, 2, 6);
       const limit = intParam(q("limit"), 20, 5, 40);
-      return handled(() => discoverClusters(splitList(q("platforms")), minPlatforms, limit));
+      return handled(() => discoverClusters(splitList(q("platforms")), minPlatforms, limit, q("topic") ?? undefined));
     }
 
     case "/api/changes": {
