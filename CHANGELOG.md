@@ -5,6 +5,9 @@
 - Add isolated public Streamable HTTP MCP gateway for marketplace distribution.
 - Add public privacy/terms/health/discovery endpoints while keeping the core loopback-only behind a private bearer token.
 - Add Official MCP Registry, Cursor, Smithery/Glama-ready distribution metadata and remote smoke validation.
+- Verify the live Official MCP Registry entry as `active` / latest and the live Glama connector as searchable.
+- Add zero-install Remote MCP configuration and a one-click Cursor MCP install path to the public README.
+- Split marketplace wording into **published/searchable** versus **compatible/submission-ready**, so review-gated stores are never represented as already listed.
 - No change to the 19-tool TrendHub capability contract.
 
 All notable TrendHub changes are recorded here. Versions follow Semantic Versioning and only Stable Releases are considered distributable product versions.

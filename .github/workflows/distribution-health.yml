@@ -1,0 +1,47 @@
+name: Distribution Health
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "README.md"
+      - "DISTRIBUTION.md"
+      - ".github/workflows/distribution-health.yml"
+      - ".github/scripts/distribution-health.mjs"
+  push:
+    branches: ["main"]
+    paths:
+      - "README.md"
+      - "DISTRIBUTION.md"
+      - ".github/workflows/distribution-health.yml"
+      - ".github/scripts/distribution-health.mjs"
+  workflow_dispatch:
+  schedule:
+    - cron: "53 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trendhub-distribution-health-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-discovery:
+    name: Public marketplace discovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+      - name: Verify searchable public distribution
+        run: node .github/scripts/distribution-health.mjs
+      - name: Explain scope
+        if: always()
+        run: |
+          echo "This monitor checks public discovery, not third-party trend-source availability."
+          echo "It requires the Official MCP Registry entry to be active/latest and publicly searchable, and the Glama connector page to remain discoverable."
+          echo "Cursor Marketplace, Smithery and the ChatGPT/Codex Plugins Directory remain review/account-gated until those marketplaces publish the listing."
