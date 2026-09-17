@@ -6,7 +6,7 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.4.4, 19 MCP tools, 38 public trend sources**
+- Stable tool contract: **TrendHub v1.5.0, 21 MCP tools, 129 layered sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
@@ -19,7 +19,7 @@ Last evidence check: **2026-09-17**.
 | --- | --- | --- | --- |
 | GitHub source | **LIVE** | `https://github.com/Zachary-1012/Zachary-Skill` | Public clone; Node-free bootstrap; local stdio install contract |
 | Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | the latest published release is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint |
-| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed, `Healthy`, Streamable HTTP remote detected, 19 tools detected |
+| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed, `Healthy`, Streamable HTTP remote detected, 21 tools detected |
 | Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | `mcp.json` / Cursor MCP install link in README | Cursor supports direct MCP install now. Public Cursor Marketplace publication requires repository submission and Cursor manual review; current public Marketplace search must not be represented as listed until approved. |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | production `/mcp` URL | The public Streamable HTTP endpoint satisfies Smithery URL-publishing requirements. Publishing requires an authenticated Smithery publisher namespace/API key or web publishing session. |
@@ -33,9 +33,9 @@ Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub
 
 Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
 
-## v1.4.4 hosted Web behavior
+## v1.5.0 hosted Web behavior
 
-The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The 19-tool MCP contract and 38-source catalog are unchanged.
+The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The stable hosted contract is now 21 MCP tools with the layered source universe; the immutable v1.4.4 release remains the rollback target.
 
 ## Direct-use paths
 

@@ -1,8 +1,8 @@
 # TrendHub Professional Intelligence v2 — Release Candidate
 
-Status: **APPROVED FOR RELEASE; publication remains workflow-gated**.
+Status: **RELEASED AS v1.5.0; production and Registry verified**.
 
-The approved candidate is isolated on `dev/professional-intelligence-v2` until the protected `main` merge. Stable production remains v1.4.4 until the matching v1.5.0 deployment passes health and MCP checks.
+The approved candidate was merged through the protected `main` path. Stable production is now v1.5.0; immutable v1.4.4 remains the rollback release.
 
 ## What “ready to release” means
 
@@ -11,7 +11,7 @@ The approved candidate is isolated on `dev/professional-intelligence-v2` until t
 - public Remote MCP/Web security smoke must be green;
 - release, Registry and public-install workflows use a dynamic MCP tool count instead of assuming 19 tools;
 - v1.5.0 is the sole next intended stable version; v1.4.5 is explicitly forbidden;
-- publication is still blocked unless main CI, production health and the Registry preflight all pass in order.
+- main CI, production health, Public Install E2E and Registry preflight all passed in order.
 
 ## Promotion
 
@@ -33,7 +33,7 @@ After those checks pass, the normal protected `main` path may be used. The exist
 
 ## Rollback boundary
 
-The current v1.4.4 tag/release remains immutable. If a later approved deployment fails health/MCP checks, do not publish the new Registry metadata. Restore Railway to the last successful v1.4.4 deployment (or the most recent approved stable deployment), then re-run production health verification. No candidate workflow rewrites old tags or releases.
+The v1.4.4 tag/release remains immutable. If a later v1.5.0 deployment fails health/MCP checks, stop further publication and restore Railway to the last successful approved deployment, with v1.4.4 available as the immutable rollback target. No release workflow rewrites old tags or releases.
 
 ## External constraints that are not faked
 
