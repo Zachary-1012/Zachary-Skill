@@ -1,8 +1,16 @@
 VIEWS.dashboard = async function (content) {
   content.innerHTML = loading();
-  const [health] = await Promise.all([api("/api/health"), ensureMeta()]);
+  const [health, latest] = await Promise.all([
+    api("/api/health"),
+    api("/api/trending?mode=snapshot&limit=5"),
+    ensureMeta(),
+  ]);
   const catTiles = CATS.platformCategories
     .map((c) => `<div class="tile" data-cat="${esc(c)}">${esc(c)} <span class="cat">分类</span></div>`)
+    .join("");
+  const latestCards = (latest.results || [])
+    .slice(0, 4)
+    .map((r) => `<div class="card" style="margin-bottom:12px"><h3>${esc(r.label || r.platform)}</h3><div class="captured">最近成功快照 ${fmtTime(r.capturedAt)}</div><div style="margin-top:8px">${itemsTable((r.items || []).slice(0, 5))}</div></div>`)
     .join("");
   content.innerHTML = `
     <div class="grid cols-4">
@@ -11,10 +19,12 @@ VIEWS.dashboard = async function (content) {
       ${statCard(health.tools || 19, "MCP 工具")}
       ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
     </div>
+    <div class="section-title">最新趋势快照</div>
+    ${latestCards || note("warn", "托管端暂时没有可展示的成功快照；进入“当下热榜”可立即实时刷新。")}
     <div class="section-title">快捷入口</div>
     <div class="grid cols-4">
-      ${quickCard("xhs", "小红书热点 · 主打", "热门笔记 + 派生话题词 + 官方热搜")}
-      ${quickCard("trending", "当下热榜", "全平台实时榜单（小红书打头）")}
+      ${quickCard("xhs", "小红书热点 · 主打", "最近成功快照 + 实时刷新；失败自动回退")}
+      ${quickCard("trending", "当下热榜", "全平台快照优先，实时刷新失败自动回退")}
       ${quickCard("clusters", "共振话题发现", "无需关键词，自动聚类全网热点")}
       ${quickCard("brief", "创作简报", "证据卡 + 模板 + 可交给 AI 的 Prompt")}
     </div>
@@ -32,6 +42,7 @@ VIEWS.dashboard = async function (content) {
     t.addEventListener("click", () => (location.hash = `#/${t.dataset.quick}`))
   );
 };
+
 function statCard(num, lbl) {
   return `<div class="card stat"><span class="num">${esc(num)}</span><span class="lbl">${esc(lbl)}</span></div>`;
 }
@@ -45,7 +56,7 @@ VIEWS.xhs = function (content) {
     <p class="lead">小红书主打专区：官方首页『热门推荐流』真实笔记（封面 / 作者 / 点赞 / 原文）+ 由热门标题词频派生的高频话题词。游客零配置可用热门流；官方热搜词榜与关键词搜索需配置 <span class="mono">XHS_COOKIE</span>。</p>
     <div class="controls">
       <label class="field">笔记条数<select id="f-limit">${[20, 30, 40].map((n) => `<option value="${n}" ${n === 30 ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-      <button class="btn primary" id="btn-go">刷新小红书热点</button>
+      <button class="btn primary" id="btn-go">实时刷新小红书热点</button>
       <button class="btn" id="btn-copy">复制选题素材给 AI</button>
       <span id="mode"></span>
     </div>
@@ -87,21 +98,21 @@ VIEWS.xhs = function (content) {
         </div>
       </div>`;
   };
-  const run = async () => {
+  const run = async (sourceMode = "live") => {
     $("#out").innerHTML = loading();
     try {
-      const d = await api(`/api/xhs/topics?limit=${$("#f-limit").value}&topic_limit=24`);
+      const d = await api(`/api/xhs/topics?limit=${$("#f-limit").value}&topic_limit=24&mode=${encodeURIComponent(sourceMode)}`);
       renderXhs(d);
     } catch (e) {
       $("#out").innerHTML = note("err", esc(e.message));
     }
   };
-  $("#btn-go").addEventListener("click", run);
+  $("#btn-go").addEventListener("click", () => run("live"));
   $("#btn-copy").addEventListener("click", () => {
     if (!last) return toast("请先刷新小红书热点");
     copyText(xhsBriefText(last), "已复制小红书选题素材，粘贴给你的 AI 即可");
   });
-  run();
+  run("snapshot");
 };
 function xhsTopicBadge(t) {
   if (t.source === "cross") return '<span class="badge accent">热 ' + t.df + "</span>";

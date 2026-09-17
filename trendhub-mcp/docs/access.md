@@ -1,6 +1,6 @@
 # 访问与安装说明
 
-TrendHub v1.4.2 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
+TrendHub v1.4.4 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
 
@@ -8,7 +8,7 @@ TrendHub v1.4.2 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到
 
 原 upstream 仓库的**写权限**与公开读取是两件事：当前只有 `@Zachary-1012` 和 owner 明确邀请的 Collaborators 能修改原仓库；公开用户可以读取、clone 和使用，但不会自动获得 upstream 写权限。`main` 还受 PR + Node 22/24 required checks + up-to-date + 禁止 force-push/deletion + no-bypass 的 ruleset 保护。
 
-> 法律许可另看 LICENSE：当前是 MIT，因此公开用户仍可对自己的副本 fork/修改/再分发。仓库写保护不能把 MIT 变成“法律上只能使用”。
+> 法律许可另看 LICENSE：TrendHub v1.4.3+ 的 TrendHub 自有代码采用 **TrendHub Free Use License 1.0**。个人和公司可免费使用未修改版本；禁止修改、派生、再发布、再分发、转售、转授权或向第三方托管提供软件本身。v1.4.2 及更早版本保留其发布时已经授予的 MIT 权利。
 
 ## 给 AI 的安装流程
 

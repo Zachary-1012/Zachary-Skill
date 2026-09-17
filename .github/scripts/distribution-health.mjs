@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-const VERSION = "1.4.2";
 const NAME = "io.github.Zachary-1012/trendhub";
 const REMOTE = "https://trendhub-remote-production.up.railway.app/mcp";
 const OFFICIAL_API = `https://registry.modelcontextprotocol.io/v0.1/servers?search=${encodeURIComponent(NAME)}&version=latest`;
@@ -31,15 +30,17 @@ async function fetchChecked(url, label) {
   throw new Error(`DISTRIBUTION HEALTH FAILED: ${label}: ${lastError?.message || "request failed"}`);
 }
 
-// The Official Registry API is the authoritative searchable registry contract.
-// Do not test the JS UI HTML: the browser app can render results client-side and
-// therefore its initial HTML is not a stable machine-readable search surface.
+// Public discovery health deliberately verifies the Registry's current latest
+// published version rather than hard-coding a release number. Release/version
+// consistency is enforced by the release + publisher workflows; this monitor
+// only proves that the public listing remains active, latest and reachable.
 const officialResponse = await fetchChecked(OFFICIAL_API, "Official MCP Registry API");
 const official = await officialResponse.json();
 const rows = Array.isArray(official?.servers) ? official.servers : [];
 const row = rows.find((item) => item?.server?.name === NAME);
 must(row, `Official MCP Registry does not return ${NAME}`);
-must(row.server.version === VERSION, `Official MCP Registry version=${row.server.version}, expected ${VERSION}`);
+const registryVersion = row.server.version;
+must(/^\d+\.\d+\.\d+$/.test(registryVersion || ""), `Official MCP Registry returned invalid version=${registryVersion}`);
 must(row.server.remotes?.some((remote) => remote?.type === "streamable-http" && remote?.url === REMOTE), "Official MCP Registry remote URL mismatch");
 const officialMeta = row?._meta?.["io.modelcontextprotocol.registry/official"];
 must(officialMeta?.status === "active", `Official MCP Registry status=${officialMeta?.status}`);
@@ -49,4 +50,4 @@ const glamaText = await (await fetchChecked(GLAMA, "Glama connector page")).text
 must(/TrendHub/i.test(glamaText), "Glama connector page does not identify TrendHub");
 must(/19\s+tools/i.test(glamaText) || /Available Tools/i.test(glamaText), "Glama connector page does not expose the tool catalog");
 
-console.log(`DISTRIBUTION HEALTH OK version=${VERSION} official=active+searchable glama=searchable remote=${REMOTE}`);
+console.log(`DISTRIBUTION HEALTH OK registryVersion=${registryVersion} official=active+searchable glama=searchable remote=${REMOTE}`);

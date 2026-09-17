@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Evidence-first professional trend intelligence across 38 public trend sources with 19 MCP tools, Source Reliability, trend lifecycle/velocity/persistence/diffusion/confidence, Google Trends, future signals and 24h/72h lead benchmarks.",
   "author": {
     "name": "Zachary",

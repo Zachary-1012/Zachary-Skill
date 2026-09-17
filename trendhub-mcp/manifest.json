@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "专业级全网趋势情报 MCP Skill，以小红书为深度主打：覆盖 38 个平台/趋势信源、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h lead benchmark 与内容生产，共 19 个 MCP 工具。BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",

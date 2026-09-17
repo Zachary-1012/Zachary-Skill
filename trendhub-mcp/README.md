@@ -1,8 +1,10 @@
-# TrendHub · 全网热点趋势专家 v1.4.2
+# TrendHub · 全网热点趋势专家 v1.4.4
 
 > **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个平台/趋势信源**，以小红书为深度主打，并提供 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、话题深度分析和内容生产，共 **19 个 MCP 工具**。
 >
 > TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
+>
+> **v1.4.4 公网 Web 修复**：托管 Web Console 默认读取最近成功快照；用户主动实时刷新时，若第三方源临时不可用，则自动回退到持久化快照，避免页面空白。
 
 ---
 
