@@ -1,22 +1,20 @@
 /**
  * 快速接入验证（smoke）：不联网、不抓任何平台，只验证 MCP 服务能启动、
  * 能完成 JSON-RPC 握手并返回完整工具清单。通常数秒内结束。
- *
- * 用法：
- *   node scripts/smoke.mjs                      # 验证 dist/src/index.js（stdio）
- *   node scripts/smoke.mjs scripts/launcher.mjs # 验证启动包装器（同时检查其 stdout 纯净性）
- *
- * 退出码：0 通过；1 失败（stderr 末尾会给出排查线索）。
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROOT, INDEX_JS } from "./lib-trendhub.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 void HERE;
-const EXPECTED_TOOLS = 19;
+const professionalManifest = resolve(ROOT, "professional-manifest.json");
+const EXPECTED_TOOLS = existsSync(professionalManifest)
+  ? Number(JSON.parse(readFileSync(professionalManifest, "utf8")).expectedToolCount || 19)
+  : 19;
+const REQUIRED_PROFESSIONAL_TOOLS = EXPECTED_TOOLS > 19 ? ["professional_intelligence", "workspace_manage"] : [];
 const HANDSHAKE_TIMEOUT_MS = 20_000;
 
 const arg = process.argv[2];
@@ -65,7 +63,14 @@ child.stdout.on("data", (b) => {
         fail(`工具数量不符：期望 ${EXPECTED_TOOLS}，实际 ${tools.length}（${names}）`);
         return;
       }
-      succeed(tools.map((x) => x.name));
+      const names = tools.map((x) => x.name);
+      for (const required of REQUIRED_PROFESSIONAL_TOOLS) {
+        if (!names.includes(required)) {
+          fail(`缺少 Professional v2 工具：${required}`);
+          return;
+        }
+      }
+      succeed(names);
     }
   }
 });
@@ -103,11 +108,7 @@ function succeed(names) {
   if (settled) return;
   settled = true;
   clearTimeout(timer);
-  try {
-    child.kill();
-  } catch {
-    /* 忽略 */
-  }
+  try { child.kill(); } catch { /* ignore */ }
   const ms = Date.now() - started;
   console.log(`SMOKE OK tools=${EXPECTED_TOOLS} entry=${entryRel} in ${ms}ms`);
   console.log(`tools: ${names.join(", ")}`);
@@ -118,11 +119,7 @@ function fail(reason) {
   if (settled) return;
   settled = true;
   clearTimeout(timer);
-  try {
-    child.kill();
-  } catch {
-    /* 忽略 */
-  }
+  try { child.kill(); } catch { /* ignore */ }
   console.error(`SMOKE FAIL ${reason}`);
   if (stderrBuf.trim()) {
     console.error("--- stderr 末尾 ---");
