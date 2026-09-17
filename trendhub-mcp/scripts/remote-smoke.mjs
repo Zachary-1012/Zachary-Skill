@@ -1,10 +1,18 @@
 #!/usr/bin/env node
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
-const url = process.argv[2] || process.env.TRENTHUB_REMOTE_URL || "https://trendhub-remote-production.up.railway.app/mcp";
-const expectedTools = 19;
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, "..");
+const professionalManifest = resolve(ROOT, "professional-manifest.json");
+const expectedTools = existsSync(professionalManifest)
+  ? Number(JSON.parse(readFileSync(professionalManifest, "utf8")).expectedToolCount || 19)
+  : 19;
 const expectedPlatforms = 38;
+const url = process.argv[2] || process.env.TRENHUB_REMOTE_URL || "https://trendhub-remote-production.up.railway.app/mcp";
 const client = new Client({ name: "trendhub-remote-smoke", version: "1.0.0" });
 const transport = new StreamableHTTPClientTransport(new URL(url));
 
@@ -28,6 +36,11 @@ try {
   }
   for (const required of ["get_trending", "source_reliability", "trend_intelligence", "benchmark_trend_lead", "get_content_brief", "list_platforms"]) {
     if (!names.includes(required)) throw new Error(`missing required tool ${required}`);
+  }
+  if (expectedTools > 19) {
+    for (const required of ["professional_intelligence", "workspace_manage"]) {
+      if (!names.includes(required)) throw new Error(`missing professional tool ${required}`);
+    }
   }
 
   const platformResult = await client.callTool({ name: "list_platforms", arguments: {} });
