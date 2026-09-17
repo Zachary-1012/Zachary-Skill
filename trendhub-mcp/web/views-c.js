@@ -1,6 +1,6 @@
 VIEWS.curve = function (content, params) {
   content.innerHTML = `
-    <p class="lead">Google Trends 相对热度（0–100，所选时间窗峰值=100），支持 1–5 个关键词对比；不是绝对搜索量。</p>
+    <p class="lead">动态趋势曲线：查看品牌、Campaign、产品、行业议题或平台标签在搜索中的相对热度变化。曲线会按时间窗实时重绘；0–100 是所选窗口内的相对热度，不是绝对搜索量。</p>
     <div class="controls">
       <input class="input" id="f-kw" placeholder="关键词，逗号分隔，如 AI眼镜,VR头显" value="${esc(params.keywords || "")}">
       <input class="input" id="f-geo" placeholder="地区代码 US/CN，留空全球" style="flex:0 1 150px" value="${esc(params.geo || "")}">
@@ -58,7 +58,7 @@ VIEWS.signals = function (content, params) {
   const catOpts = ['<option value="all">全部</option>']
     .concat(CATS.futureSignalCategories.map((c) => `<option ${params.category === c ? "selected" : ""}>${esc(c)}</option>`)).join("");
   content.innerHTML = `
-    <p class="lead">聚合高质量科技 / AI / 商业 / 营销信源的最新文章，作为“未来趋势”信号素材；趋势判断交给 AI。</p>
+    <p class="lead">未来信号不是一条文章列表，而是把全球与国内的科技、AI、商业、财经、营销、品牌、消费、汽车、文化、政策与产业变化按话题聚合，支持输入任意主题/标签，再回看来源、时间和证据。</p>
     <div class="controls">
       <select id="f-cat" class="input" style="flex:0 1 180px">${catOpts}</select>
       <input class="input" id="f-kw" placeholder="按关键词过滤标题/摘要（可选）" value="${esc(params.keyword || "")}">
