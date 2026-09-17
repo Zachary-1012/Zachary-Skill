@@ -3,7 +3,7 @@ import { registerTools } from "./tools/definitions.js";
 import { registerProfessionalTools } from "./tools/professional.js";
 
 export const SERVER_NAME = "trendhub-mcp";
-export const SERVER_VERSION = "1.4.4-dev-professional-v2";
+export const SERVER_VERSION = "1.4.4";
 
 /** 创建一个 MCP server 实例并注册全部工具（stateless HTTP 模式下每请求新建） */
 export function createMcpServer(): McpServer {
