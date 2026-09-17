@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "professional-intelligence-v2-dev",
+  "releaseStatus": "development-only",
+  "stableBase": "1.4.4",
+  "stableToolCount": 19,
+  "professionalTools": [
+    "professional_intelligence",
+    "workspace_manage"
+  ],
+  "expectedToolCount": 21,
+  "capabilities": {
+    "history": "sqlite-indexed-multi-year-with-json-fallback",
+    "forecast": "damped-holt-holdout-validated",
+    "anomaly": "robust-mad-zscore",
+    "audience": "public-content-creator-proxy-no-sensitive-inference",
+    "media": "source-linked-multimodal-evidence-optional-local-transformers",
+    "alerts": "deterministic-evidence-bound",
+    "reports": ["json", "markdown", "csv"],
+    "collaboration": ["rbac", "workspace", "watchlist", "saved-query", "alert-rule", "audit"],
+    "observability": "local-otel-compatible-zero-export"
+  },
+  "externalConstraints": [
+    "licensed-firehose-coverage",
+    "proprietary-demographic-panels",
+    "long-lived-real-user-usage-and-outcome-data"
+  ]
+}
