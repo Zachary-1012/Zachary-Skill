@@ -3,16 +3,16 @@ name: trendhub
 description: 专业级全网趋势情报 Skill，以小红书为深度主打。用于实时热榜、Source Reliability、跨平台共振、新晋/飙升/掉榜、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h 提前发现 Benchmark、话题深度分析，以及基于真实证据产出脚本/文案/方案创作简报。
 ---
 
-# TrendHub · 全网热点趋势专家 v1.4.4
+# TrendHub · 全网热点趋势专家 v1.5.0
 
-本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 **19 个工具**。模型负责理解需求、调用工具、解释证据与成文；**数据、稳定性指标和确定性趋势分析由工具提供**。插件不内置模型 Key、不做第三方遥测、不把使用数据回传到 TrendHub 中央服务。
+本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 **21 个工具**，覆盖实时趋势、话题雷达、品牌市场与专业信源宇宙。模型负责理解需求、调用工具、解释证据与成文；**数据、稳定性指标和确定性趋势分析由工具提供**。插件不内置模型 Key、不做第三方遥测、不把使用数据回传到 TrendHub 中央服务。
 
 ## 何时使用
 
 - 小红书热门笔记/话题词/选题 → `xhs_hot_topics`
 - 多平台当前热榜 → `get_trending` / `list_platforms`
 - 某话题是否跨平台共振 → `cross_platform_overlap`
-- 自动发现多平台共振话题 → `discover_trending_topics`
+- 自动发现多平台共振话题、词组与平台标签 → `discover_trending_topics`（可传 `topic` 筛选）
 - 新晋/飙升/掉榜 → `trend_change_alerts`（必要时先 `take_snapshot`）
 - **数据源是否稳定、最近可用率/延迟/限流/schema drift** → `source_reliability`
 - 搜索走势和相关飙升词 → `keyword_trend_curve` / `related_queries`
@@ -22,6 +22,15 @@ description: 专业级全网趋势情报 Skill，以小红书为深度主打。�
 - **趋势处于 emerging / accelerating / mainstream / saturating / declining 哪一阶段** → `trend_intelligence`
 - **验证 TrendHub 是否比一个外部事实节点提前 24h/72h 发现趋势** → `benchmark_trend_lead`
 - 基于真实热点写小红书/短视频/营销方案 → `list_templates` → `get_content_brief`
+
+## 话题优先工作流
+
+话题是品牌市场、广告传播、内容营销和行业研究的统一入口，不只等于一个关键词。输入可以是品牌、Campaign、产品、受众议题、行业主题或平台原生标签（如 `#标签`）。
+
+- 先用 `get_trending` / `xhs_hot_topics` 获取各平台当前证据与原生标签；平台没有公开标签字段时，只标记为标题/描述派生词，不冒充官方标签。
+- 用 `discover_trending_topics` 自动发现跨平台主题簇；需要聚焦品牌、Campaign 或行业话题时传 `topic`。
+- 用 `cross_platform_overlap` 验证话题传播面，再用 `keyword_trend_curve` 看搜索时间序列，用 `related_queries` 扩展语义簇。
+- 用 `future_signals`、`upcoming_events` 和 `analyze_topic` 将当前话题连接到行业、商业、文化、政策和传播动作；每个主题都要保留来源、时间、命中平台、证据和不确定性。
 
 ## Source Reliability 口径
 
@@ -88,7 +97,7 @@ description: 专业级全网趋势情报 Skill，以小红书为深度主打。�
 3. 进入 `Zachary-Skill/trendhub-mcp`；
 4. macOS/Linux 执行 `bash scripts/bootstrap.sh`；Windows 执行 `powershell -ExecutionPolicy Bypass -File .\\scripts\\bootstrap.ps1`；
 5. bootstrap 会复用 Node >=22，否则自动下载并 SHA-256 校验 Node 24 LTS 便携运行时；
-6. 成功必须出现 **`SMOKE OK tools=19`** 和 `AI_BOOTSTRAP_OK {...}`；
+6. 成功必须出现 **`SMOKE OK tools=21`** 和 `AI_BOOTSTRAP_OK {...}`；
 7. MCP 配置优先使用 `AI_BOOTSTRAP_OK` 返回的绝对 `node` 与 `launcher` 路径。
 
 无需注册/登录、无需模型 API Key、无需 TrendHub 中央服务。

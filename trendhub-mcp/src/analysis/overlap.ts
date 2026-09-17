@@ -64,7 +64,7 @@ export interface Cluster {
 }
 
 /** 自动发现跨平台共振话题（标题相似度聚类） */
-export async function discoverClusters(platforms?: string[], minPlatforms = 2, limit = 20): Promise<{ clusters: Cluster[]; note: string }> {
+export async function discoverClusters(platforms?: string[], minPlatforms = 2, limit = 20, topic?: string): Promise<{ clusters: Cluster[]; note: string }> {
   const anchorPlatforms = ["xiaohongshu", "weibo", "zhihu", "baidu", "toutiao", "thepaper", "qq-news", "bilibili", "douyin", "36kr", "ithome"];
   const results: HotResult[] = await getMany(platforms?.length ? platforms : anchorPlatforms, limit);
   const ok = results.filter((r) => r.dataQuality === "ok");
@@ -74,6 +74,8 @@ export async function discoverClusters(platforms?: string[], minPlatforms = 2, l
   const used = new Set<string>();
   for (const r of ok) {
     for (const it of r.items.slice(0, limit)) {
+      const topicNeedle = topic?.trim().toLowerCase();
+      if (topicNeedle && !keywordHit(`${it.title} ${it.desc ?? ""}`, topicNeedle)) continue;
       const key = `${r.platform}::${normalize(it.title)}`;
       if (used.has(key)) continue;
       const members: Cluster["members"] = [{ platform: r.platform, label: r.label, title: it.title, rank: it.rank, url: it.url }];
@@ -106,6 +108,8 @@ export async function discoverClusters(platforms?: string[], minPlatforms = 2, l
   clusters.sort((a, b) => b.resonanceScore - a.resonanceScore);
   return {
     clusters: clusters.slice(0, 30),
-    note: "基于标题相似度的规则聚类，可能合并/遗漏近义话题，主题归纳请由调用方大模型复核",
+    note: topic?.trim()
+      ? `已按话题/关键词「${topic.trim()}」筛选；基于标题相似度的规则聚类，可能合并/遗漏近义话题，主题归纳请由调用方大模型复核`
+      : "基于标题相似度的规则聚类，可能合并/遗漏近义话题，主题归纳请由调用方大模型复核",
   };
 }

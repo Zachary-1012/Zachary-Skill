@@ -1,6 +1,6 @@
-# TrendHub · 全网热点趋势专家 v1.4.4
+# TrendHub · 全网热点趋势专家 v1.5.0
 
-> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个平台/趋势信源**，以小红书为深度主打，并提供 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、话题深度分析和内容生产，共 **19 个 MCP 工具**。
+> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个实时平台/趋势信源**，并维护 **129 个专业分层信源**，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
 >
 > TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
 >
@@ -24,7 +24,7 @@
 | **Lead-time Benchmark** | 与外部 ground truth 对比，验证是否提前 24h/72h 发现 | `benchmark_trend_lead` |
 | 内容生产 | 10 套专家模板 + 基于真实证据/爆款样本的 Brief | `list_templates`、`get_template`、`get_content_brief` |
 
-### 19 个 MCP 工具
+### 21 个 MCP 工具
 
 `list_platforms` · `list_categories` · `get_trending` · **`xhs_hot_topics`** · `cross_platform_overlap` · `discover_trending_topics` · `trend_change_alerts` · `take_snapshot` · **`source_reliability`** · `keyword_trend_curve` · `related_queries` · `future_signals` · `upcoming_events` · `analyze_topic` · **`trend_intelligence`** · **`benchmark_trend_lead`** · `list_templates` · `get_template` · `get_content_brief`
 
@@ -149,7 +149,7 @@ bootstrap：
 完整成功标志：
 
 ```text
-SMOKE OK tools=19
+SMOKE OK tools=21
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
@@ -220,7 +220,7 @@ Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
 
 ```bash
 npm test                   # deterministic offline tests；release gate
-npm run smoke              # MCP 握手；必须 SMOKE OK tools=19
+npm run smoke              # MCP 握手；必须 SMOKE OK tools=21
 npm run source:health      # 真实第三方信源状态；不阻塞 release gate
 npm run quality:diagnostic # 用户主动、本地匿名化诊断；零自动上传
 ```
@@ -258,7 +258,7 @@ GitHub 定时 Source Health 会保存 30 天机器可读 JSON artifact。
 正式 Release 必须通过：
 
 - PR 到受保护的 `main`；
-- Node 22.x / 24.x：locked install + build + deterministic tests + `SMOKE OK tools=19`；
+- Node 22.x / 24.x：locked install + build + deterministic tests + `SMOKE OK tools=21`；
 - Windows / macOS / Linux Node-free bootstrap E2E；
 - merge 后 main CI；
 - Stable Release 重新跑 release gate；

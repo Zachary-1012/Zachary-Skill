@@ -61,7 +61,7 @@ launcher 只跟随 **GitHub Stable Release**，不追 `main` HEAD。
 }
 ```
 
-保存后完全退出并重启客户端。看到 **19 个 TrendHub 工具**即加载成功。
+保存后完全退出并重启客户端。看到 **21 个 TrendHub 工具**即加载成功。
 
 ## 2. Cursor
 
@@ -214,7 +214,7 @@ http://127.0.0.1:8333/
 
 Cookie 只配置在使用者本机，禁止提交仓库、诊断文件或聊天公开内容。无登录态时相关能力会显式 `missing/AUTH_REQUIRED`，不得伪造。
 
-## 9. v1.4.2 的 19 个工具
+## 9. v1.5.0 的 21 个工具
 
 ### Discover / Trending
 
@@ -243,6 +243,11 @@ Cookie 只配置在使用者本机，禁止提交仓库、诊断文件或聊天�
 - `list_templates`
 - `get_template`
 - `get_content_brief`
+
+### Professional Intelligence
+
+- `professional_intelligence`
+- `workspace_manage`
 
 ## 10. 推荐 AI 使用顺序
 

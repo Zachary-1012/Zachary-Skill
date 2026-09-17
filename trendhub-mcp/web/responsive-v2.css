@@ -15,7 +15,13 @@ img, svg, video, canvas { max-width: 100%; }
   max-width: var(--content-max-v2);
   padding-left: clamp(16px, 2.4vw, 36px);
   padding-right: clamp(16px, 2.4vw, 36px);
+  overflow-wrap: anywhere;
 }
+
+/* Prevent intrinsic desktop-sized children from widening the page. */
+.main, .content, #content, .card, .chart-card, .grid, .grid > *,
+.xhs-layout, .xhs-main, .xhs-side, .form-row, .controls { min-width: 0; max-width: 100%; }
+.card h1, .card h2, .card h3, .section-title, .lead, .sub { overflow-wrap: anywhere; }
 
 /* Professional layouts */
 .stats-grid {
@@ -108,6 +114,25 @@ img, svg, video, canvas { max-width: 100%; }
 }
 .entity-card .aliases { color: var(--muted); font-size: 11.5px; margin-top: 5px; overflow-wrap: anywhere; }
 
+.platform-overview { overflow: hidden; }
+.coverage-line { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.platform-cloud { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-top: 14px; }
+.platform-chip { min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.platform-chip strong, .platform-chip small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.platform-chip strong { font-size: 12px; }
+.platform-chip small { color: var(--muted); font-size: 10.5px; }
+.coverage-note { margin: 14px 0 0; }
+.chart-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: chart-draw 1.2s ease-out forwards; }
+@keyframes chart-draw { to { stroke-dashoffset: 0; } }
+.topic-radar { margin: 14px 0; }
+.topic-radar-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.topic-radar-head h2 { margin: 0; font-size: 18px; }
+.topic-cloud { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 14px; min-height: 180px; padding: 20px 10px; background: radial-gradient(circle at center, #f0faf7, #fff 68%); border: 1px solid #e1f0eb; border-radius: 10px; margin-top: 12px; }
+.topic-word { color: var(--accent-dark); font-size: calc(12px * var(--topic-weight, 1)); font-weight: 680; line-height: 1.2; text-align: center; overflow-wrap: anywhere; animation: topic-float 2.8s ease-in-out infinite alternate; }
+@keyframes topic-float { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+.topic-explanation { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 9px 10px; background: #f6fbf9; border-radius: 8px; color: var(--muted); font-size: 12px; }
+.topic-explanation strong { color: var(--accent-dark); }
+
 /* Tables must scroll instead of crushing columns on phones. */
 .table-wrap {
   overflow-x: auto;
@@ -132,7 +157,7 @@ img, svg, video, canvas { max-width: 100%; }
   .source-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 }
 
-/* Phone / small tablet: navigation becomes a stable horizontal rail. */
+/* Phone / small tablet: navigation is a wrapping grid, never a clipped desktop rail. */
 @media (max-width: 720px) {
   body { background: var(--card); }
   .app { min-height: 100dvh; }
@@ -150,27 +175,32 @@ img, svg, video, canvas { max-width: 100%; }
   .brand-logo { width: 28px; height: 28px; flex-basis: 28px; }
   .nav {
     width: 100%;
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    scroll-snap-type: x proximity;
-    overscroll-behavior-x: contain;
+    overflow: visible;
     padding-bottom: 2px;
   }
-  .nav::-webkit-scrollbar { display: none; }
-  .nav-group { display: none; }
+  .nav-group {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 7px 7px 2px;
+    font-size: 10px;
+  }
   .nav-item {
-    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
     min-height: var(--touch-min);
-    padding: 9px 11px;
+    padding: 9px 10px;
     border-left: 0;
     border-bottom: 2px solid transparent;
-    scroll-snap-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
   }
   .nav-item.active { border-left-color: transparent; border-bottom-color: var(--accent); }
   .nav-item svg { width: 16px; height: 16px; }
+  .nav-tag { margin-left: 3px; flex: 0 0 auto; }
   .sidebar-foot { display: none; }
   .topbar {
     position: static;
@@ -182,11 +212,16 @@ img, svg, video, canvas { max-width: 100%; }
     padding: 14px 14px max(32px, env(safe-area-inset-bottom));
     max-width: none;
   }
+  .card { padding: 14px; }
+  .card h2 { font-size: clamp(18px, 5.2vw, 24px); line-height: 1.25; }
+  .section-title { font-size: clamp(16px, 4.6vw, 21px); }
+  .lead, .sub { font-size: clamp(13px, 3.5vw, 15px); line-height: 1.55; }
   .card, .chart-card, .cluster, .article, .event, .signal-card { border-radius: 9px; }
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .stats-grid .stat { padding: 12px; }
   .source-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .source-grid, .entity-grid { grid-template-columns: 1fr; }
+  .platform-cloud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .controls, .form-row { align-items: stretch; gap: 8px; }
   .controls > .input,
   .controls > select,
@@ -221,6 +256,8 @@ img, svg, video, canvas { max-width: 100%; }
   .event .days { width: 100%; flex-basis: auto; }
   .topbar { padding-left: 12px; padding-right: 12px; }
   .content { padding-left: 12px; padding-right: 12px; }
+  .nav-item { font-size: 12px; }
+  .platform-cloud { grid-template-columns: 1fr 1fr; gap: 6px; }
 }
 
 @media (max-width: 360px) {

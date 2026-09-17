@@ -125,7 +125,7 @@ function lineChart(series) {
       d += `${pen ? "M" : " L"}${x.toFixed(1)} ${y.toFixed(1)}`;
       pen = false;
     });
-    paths += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    paths += `<path class="chart-line" pathLength="1" d="${d}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   });
   const ref = series[0].points;
   const step = Math.max(1, Math.round(n / 7));

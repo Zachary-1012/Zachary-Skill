@@ -50,7 +50,7 @@ function platformCard(r) {
 /* 跨平台共振 */
 VIEWS.overlap = function (content, params) {
   content.innerHTML = `
-    <p class="lead">输入关键词/话题，看它当前在多少个平台同时上榜（跨平台共振）。命中平台 ≥3 通常具备全网话题潜力。</p>
+    <p class="lead">输入品牌、Campaign、行业议题、受众话题或平台标签，查看它在社媒、视频、新闻、科技与社区信号中的跨平台共振。不同平台指标不直接相加，结果同时保留命中证据。</p>
     <div class="controls">
       <input class="input" id="f-kw" placeholder="关键词，如 AI眼镜 / 英伟达" value="${esc(params.keyword || "")}">
       <input class="input" id="f-plats" placeholder="可选，限定平台，逗号分隔" style="flex:0 1 280px" value="${esc(params.platforms || "")}">
@@ -87,8 +87,9 @@ VIEWS.overlap = function (content, params) {
 /* 共振话题发现 */
 VIEWS.clusters = function (content) {
   content.innerHTML = `
-    <p class="lead">无需关键词，基于标题相似度自动聚类当前在多个平台共振的话题。规则聚类可能合并/遗漏近义话题，主题归纳请交给 AI 复核。</p>
+    <p class="lead">话题雷达：自动从当前多平台内容中发现跨平台共振议题，并把同义标题、平台标签和证据聚合为可用于营销判断的主题簇。支持不输入关键词的全网发现，也支持品牌、Campaign、行业或标签筛选。</p>
     <div class="controls">
+      <input class="input" id="f-topic" placeholder="可选：品牌 / Campaign / 行业话题 / #标签" />
       <label class="field">至少在 N 个平台出现<select id="f-min">
         ${[2, 3, 4, 5].map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label>
       <button class="btn primary" id="btn-go">发现共振话题</button>
@@ -96,11 +97,17 @@ VIEWS.clusters = function (content) {
   $("#btn-go").addEventListener("click", async () => {
     $("#out").innerHTML = loading();
     try {
-      const d = await api(`/api/clusters?min_platforms=${$("#f-min").value}&limit=20`);
+      const topic = $("#f-topic").value.trim();
+      const qs = new URLSearchParams({ min_platforms: $("#f-min").value, limit: "30" });
+      if (topic) qs.set("topic", topic);
+      const d = await api(`/api/clusters?${qs}`);
+      const clusters = d.clusters || [];
+      const cloudTerms = clusters.slice(0, 24).map((c) => ({ text: c.topic, weight: Math.max(1, c.platformCount + Math.round(c.resonanceScore / 40)), platforms: c.platformCount }));
       $("#out").innerHTML =
         note("info", esc(d.note || "")) +
-        ((d.clusters || []).length
-          ? d.clusters.map(
+        (clusters.length ? `<div class="topic-radar card"><div class="topic-radar-head"><h2>实时话题词组图</h2><span class="badge ok">${topic ? "筛选结果" : "实时快照"}</span></div><div class="topic-cloud">${cloudTerms.map((x) => `<span class="topic-word" style="--topic-weight:${Math.min(2.1, 0.85 + x.weight / 5)}" title="${esc(x.platforms)} 个平台共振">${esc(x.text)}</span>`).join("")}</div><p class="sub">词组大小按跨平台出现与共振分展示，不代表绝对热度；下方每个主题都附平台证据与营销解释。</p></div>` : "") +
+        (clusters.length
+          ? clusters.map(
               (c) => `<div class="cluster" style="margin-bottom:12px">
                 <div class="topic">${esc(c.topic)}</div>
                 <div class="tagrow" style="margin:6px 0">
@@ -108,6 +115,7 @@ VIEWS.clusters = function (content) {
                   <span class="badge neutral">共振分 ${c.resonanceScore}</span>
                   ${(c.platforms || []).map((p) => `<span class="tag">${esc(p)}</span>`).join("")}
                 </div>
+                <div class="topic-explanation"><strong>营销解释</strong><span>跨 ${c.platformCount} 个平台出现，建议结合品牌关联、受众语境、内容形式和传播阶段继续复核。</span></div>
                 ${(c.members || []).map((m) => `<div class="member">${esc(m.label)}：${linkOrText(m.title, m.url)} <span class="meta">#${m.rank ?? "—"}</span></div>`).join("")}
               </div>`
             ).join("")
