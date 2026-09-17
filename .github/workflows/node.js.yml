@@ -101,7 +101,7 @@ jobs:
         working-directory: trendhub-mcp
         env:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
-          TRENHUB_INSTALL_CHANNEL: dev
+          TRENTHUB_INSTALL_CHANNEL: dev
         run: |
           set -euo pipefail
           EXPECTED="$(node -e "const fs=require('fs');const p='professional-manifest.json';process.stdout.write(String(fs.existsSync(p)?JSON.parse(fs.readFileSync(p,'utf8')).expectedToolCount:19))" 2>/dev/null || echo 21)"
@@ -115,7 +115,7 @@ jobs:
         working-directory: trendhub-mcp
         env:
           TRENHUB_BOOTSTRAP_FORCE_PORTABLE: "1"
-          TRENHUB_INSTALL_CHANNEL: dev
+          TRENTHUB_INSTALL_CHANNEL: dev
         run: |
           $manifest = Get-Content .\professional-manifest.json -Raw | ConvertFrom-Json
           $expected = [string]$manifest.expectedToolCount
