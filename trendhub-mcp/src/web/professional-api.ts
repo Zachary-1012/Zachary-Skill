@@ -1,5 +1,8 @@
 /** Professional Intelligence v2 local/read-only HTTP API extensions. */
 import { getMany } from "../sources/index.js";
+import { buildSourceAccessPlan, defaultLivePlatformIds } from "../sources/access-plan.js";
+import { professionalSourceCatalog, sourceUserSetup, type SourceVertical } from "../sources/professional-catalog.js";
+import { brandEntityCatalog, resolveBrandEntity } from "../entities/brand-catalog.js";
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
 import { analyzeAudienceSignals } from "../analysis/audience.js";
@@ -23,13 +26,18 @@ export interface ProfessionalApiResponse {
   data: unknown;
 }
 
-const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
+const VERTICALS = new Set<SourceVertical>([
+  "general", "fashion-luxury", "beauty", "business-corporate", "technology", "automotive",
+  "finance-markets", "marketing-advertising", "retail-commerce", "culture-entertainment",
+]);
 
 export const PROFESSIONAL_PUBLIC_READ_PATHS = new Set([
   "/api/professional",
   "/api/professional/report",
   "/api/professional/audience",
   "/api/professional/media",
+  "/api/professional/sources",
+  "/api/professional/entities",
   "/api/observability",
 ]);
 
@@ -40,6 +48,10 @@ export const PROFESSIONAL_LOCAL_PATHS = new Set([
 
 function splitList(s: string | null): string[] {
   return s ? s.split(/[,，、\s]+/).map((x) => x.trim()).filter(Boolean) : [];
+}
+
+function splitVerticals(s: string | null): SourceVertical[] {
+  return splitList(s).filter((x): x is SourceVertical => VERTICALS.has(x as SourceVertical));
 }
 
 function bad(message: string, status = 400): ProfessionalApiResponse {
@@ -72,13 +84,63 @@ async function measured(pathname: string, fn: () => Promise<ProfessionalApiRespo
 export async function handleProfessionalApi(pathname: string, url: URL, method: string, body: string): Promise<ProfessionalApiResponse | null> {
   if (!PROFESSIONAL_LOCAL_PATHS.has(pathname)) return null;
   return measured(pathname, async () => {
-    const keyword = url.searchParams.get("keyword")?.trim() ?? "";
-    const selected = splitList(url.searchParams.get("platforms"));
-    const platforms = selected.length ? selected : DEFAULT_PLATFORMS;
-
     if (pathname === "/api/observability") {
       if (method !== "GET") return bad("method not allowed", 405);
       return { status: 200, data: localObservabilitySnapshot() };
+    }
+
+    if (pathname === "/api/professional/sources") {
+      if (method !== "GET") return bad("method not allowed", 405);
+      const verticals = splitVerticals(url.searchParams.get("verticals"));
+      const priorityRaw = url.searchParams.get("priority");
+      const priority = priorityRaw === "P2" || priorityRaw === "P1" ? priorityRaw : "P0";
+      const plan = buildSourceAccessPlan({ verticals, includePriority: priority, maxDefaultLive: 12 });
+      const catalog = professionalSourceCatalog()
+        .filter((source) => priority === "P2" || source.priority !== "P2")
+        .filter((source) => priority !== "P0" || source.priority === "P0")
+        .filter((source) => !verticals.length || (source.verticals ?? ["general"]).some((v) => v === "general" || verticals.includes(v)))
+        .map((source) => ({ ...source, onboarding: sourceUserSetup(source) }));
+      return {
+        status: 200,
+        data: {
+          generatedAt: new Date().toISOString(),
+          verticals,
+          priority,
+          counts: {
+            total: catalog.length,
+            zeroConfig: plan.zeroConfig.length,
+            optionalEnhancements: plan.optionalEnhancements.length,
+            credentialed: plan.credentialed.length,
+            licensed: plan.licensed.length,
+            planned: plan.planned.length,
+          },
+          defaultLivePlatforms: plan.defaultLivePlatforms,
+          rules: plan.rules,
+          sources: catalog,
+        },
+      };
+    }
+
+    if (pathname === "/api/professional/entities") {
+      if (method !== "GET") return bad("method not allowed", 405);
+      const query = url.searchParams.get("q")?.trim() ?? "";
+      const priorityRaw = url.searchParams.get("priority");
+      const priority = priorityRaw === "P2" || priorityRaw === "P0" ? priorityRaw : "P1";
+      const entities = brandEntityCatalog(priority)
+        .filter((entity) => {
+          const sector = url.searchParams.get("sector")?.trim();
+          return !sector || entity.sector === sector;
+        });
+      return {
+        status: 200,
+        data: {
+          generatedAt: new Date().toISOString(),
+          query: query || null,
+          resolved: query ? resolveBrandEntity(query) : null,
+          entities,
+          extensibility: "Seed catalog only. Workspaces may add arbitrary brands/companies/products/aliases; the product must not treat this list as a closed whitelist.",
+        },
+      };
     }
 
     if (pathname === "/api/workspaces") {
@@ -123,7 +185,12 @@ export async function handleProfessionalApi(pathname: string, url: URL, method: 
     }
 
     if (method !== "GET") return bad("method not allowed", 405);
+    const keyword = url.searchParams.get("keyword")?.trim() ?? "";
     if (!keyword) return bad("keyword is required");
+
+    const selected = splitList(url.searchParams.get("platforms"));
+    const verticals = splitVerticals(url.searchParams.get("verticals"));
+    const platforms = selected.length ? selected : defaultLivePlatformIds({ max: 12, verticals });
 
     if (url.searchParams.get("refresh") !== "0" && pathname !== "/api/professional/audience" && pathname !== "/api/professional/media") {
       const results = await getMany(platforms, 30);
