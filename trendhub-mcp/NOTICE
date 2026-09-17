@@ -1,7 +1,7 @@
 TrendHub MCP — Third-Party Notices & Attribution
 ==================================================
 
-TrendHub MCP is distributed under the MIT License (see LICENSE).
+TrendHub-authored portions of TrendHub MCP v1.4.3+ are distributed under the TrendHub Free Use License 1.0 (see repository root LICENSE). Third-party components listed below remain under their own licenses, including the MIT-licensed vendored code identified in this NOTICE.
 
 It bundles / depends on the following open-source software (all MIT-licensed
 unless noted). We are grateful to their authors.
@@ -78,7 +78,7 @@ RESEARCH-ONLY REFERENCES (no code copied/integrated)
 - NewsNow (ourongxing/newsnow, MIT): studied during research for platform
   coverage; not bundled.
 - TrendRadar (GPL-3.0): architecture/ideas only. Because GPL-3.0 is copyleft,
-  NO TrendRadar code is copied or integrated into this MIT project.
+  NO TrendRadar code is copied or integrated into TrendHub-authored code.
 - ikenxuan/amagi (GPL-3.0) and ylw1997/touchFish (proprietary, all rights
   reserved): consulted ONLY to understand the public guest-session protocol
   (device-cookie shape and activation sequence). Because of their licenses, NO
