@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.0 — Professional Intelligence and topic radar
+
+- Promote Professional Intelligence v2 to the stable 21-tool contract with a 129-source professional universe and explicit zero-config/API/OAuth/local-session/licensed/planned boundaries.
+- Add topic-first discovery: brand, campaign, product, audience issue, industry theme and platform tag inputs can flow through cross-platform overlap, topic clustering and evidence-bound marketing interpretation.
+- Add real-time topic phrase cloud, platform evidence explanations and animated Google Trends curve rendering.
+- Fix the phone/tablet Web Console layout: navigation wraps instead of clipping, controls and cards adapt to viewport width, tables remain intentionally scrollable, and typography/touch targets respect safe areas.
+- Keep v1.4.4 immutable as rollback; v1.4.5 is skipped.
+
 ## v1.4.2 — Scheduled trend history
 
 - Add an opt-in snapshot scheduler (`src/runtime/snapshot-scheduler.ts`) that periodically runs the existing `takeSnapshots()` pipeline to accumulate the bounded trend history used by lifecycle intelligence and 24h/72h lead benchmarks.
