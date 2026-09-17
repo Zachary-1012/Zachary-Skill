@@ -1,6 +1,6 @@
 # TrendHub Professional Source Universe v2
 
-Development-only architecture for `dev/professional-intelligence-v2`. This document is **not** a release claim. Stable production remains v1.4.4.
+Stable v1.5.0 source-universe architecture. v1.4.4 remains the immutable rollback release; planned adapters are still not live coverage.
 
 ## Principle
 
