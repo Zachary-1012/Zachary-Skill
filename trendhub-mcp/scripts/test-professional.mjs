@@ -18,6 +18,9 @@ const reports = await import("../dist/src/reports/executive.js");
 const workspace = await import("../dist/src/collaboration/workspace.js");
 const observability = await import("../dist/src/observability/local.js");
 const professionalApi = await import("../dist/src/web/professional-api.js");
+const sourceCatalog = await import("../dist/src/sources/professional-catalog.js");
+const accessPlan = await import("../dist/src/sources/access-plan.js");
+const brands = await import("../dist/src/entities/brand-catalog.js");
 
 try {
   // Robust statistics and holdout validation.
@@ -27,6 +30,44 @@ try {
   const holt = statistics.autoDampedHolt([10, 12, 13, 15, 17, 18, 20, 22, 24, 25, 27, 29, 31, 33, 35, 37], 6);
   assert.equal(holt.forecast.length, 6);
   assert.ok(["strong", "usable", "weak"].includes(holt.validation.grade));
+
+  // Source universe: priority coverage and user-onboarding boundaries.
+  const allSources = sourceCatalog.professionalSourceCatalog();
+  for (const required of [
+    "xiaohongshu", "douyin", "weibo", "bilibili", "zhihu", "xiaoyuzhou", "baidu-index",
+    "vogue-china", "caixin", "yicai", "socialbeta", "youtube", "tiktok", "instagram", "x",
+    "apple-podcasts", "spotify-podcasts", "google-trends", "reuters", "vogue-business",
+    "business-of-fashion", "wwd", "adage", "brand-owned-domain",
+  ]) {
+    assert.ok(allSources.some((s) => s.id === required), `professional source universe missing ${required}`);
+  }
+  const xhs = sourceCatalog.sourceSpec("xiaohongshu");
+  assert.equal(sourceCatalog.sourceUserSetup(xhs).mode, "optional-local-session");
+  assert.equal(sourceCatalog.sourceUserSetup(xhs).blocksBasicUse, false);
+  const baiduIndex = sourceCatalog.sourceSpec("baidu-index");
+  assert.equal(sourceCatalog.sourceUserSetup(baiduIndex).mode, "required-local-session");
+  const instagram = sourceCatalog.sourceSpec("instagram");
+  assert.equal(sourceCatalog.sourceUserSetup(instagram).mode, "user-oauth");
+
+  const fashionPlan = accessPlan.buildSourceAccessPlan({ verticals: ["fashion-luxury"], includePriority: "P1", maxDefaultLive: 12 });
+  assert.ok(fashionPlan.zeroConfig.length > 0);
+  assert.ok(fashionPlan.optionalEnhancements.some((s) => s.id === "xiaohongshu"));
+  assert.ok(fashionPlan.credentialed.some((s) => s.id === "instagram"));
+  assert.ok(fashionPlan.planned.some((s) => s.id === "vogue-china"));
+  assert.ok(fashionPlan.defaultLivePlatforms.length >= 4 && fashionPlan.defaultLivePlatforms.length <= 12);
+  for (const platform of fashionPlan.defaultLivePlatforms) {
+    const spec = sourceCatalog.sourceSpec(platform);
+    assert.ok(spec, `default live platform ${platform} must resolve to a source spec`);
+    assert.equal(sourceCatalog.sourceUserSetup(spec).blocksBasicUse, false, `default live platform ${platform} must not require setup`);
+  }
+
+  // Brand/company entity seeds and alias resolution.
+  assert.equal(brands.resolveBrandEntity("LV")?.id, "louis-vuitton");
+  assert.equal(brands.resolveBrandEntity("路易威登")?.id, "louis-vuitton");
+  assert.equal(brands.resolveBrandEntity("小米")?.id, "xiaomi");
+  assert.equal(brands.resolveBrandEntity("Tesla")?.id, "tesla");
+  assert.ok(brands.entityQueryTerms("YSL").includes("Saint Laurent"));
+  assert.ok(brands.brandEntityCatalog("P1").some((x) => x.id === "xiaomi-auto"));
 
   // Seed 48 hours of evidence across two platforms. Rank improves over time.
   const now = new Date();
@@ -81,6 +122,12 @@ try {
   assert.equal(intel.methodologyVersion, "professional-intelligence-v2");
   assert.ok(Array.isArray(intel.alerts.triggered));
   assert.ok(intel.evidenceSummary.totalHistorySamples >= 96);
+  assert.equal(intel.entityContext.matched, false);
+
+  const brandIntel = professional.buildProfessionalIntelligence("LV", fashionPlan.defaultLivePlatforms.slice(0, 4), now);
+  assert.equal(brandIntel.entityContext.entity?.id, "louis-vuitton");
+  assert.ok(brandIntel.entityContext.queryTerms.includes("Louis Vuitton"));
+  assert.ok(brandIntel.sourceArchitecture.selected.every((x) => x.onboardingMode !== null));
 
   const report = reports.buildExecutiveReport(intel);
   assert.ok(report.keySignals.some((row) => row.signal === "forecastValidation"));
@@ -110,10 +157,23 @@ try {
   assert.equal(apiResult?.status, 200);
   assert.equal(apiResult?.data?.methodologyVersion, "professional-intelligence-v2");
 
+  const sourcesUrl = new URL("http://127.0.0.1/api/professional/sources?priority=P1&verticals=fashion-luxury");
+  const sourcesResult = await professionalApi.handleProfessionalApi("/api/professional/sources", sourcesUrl, "GET", "");
+  assert.equal(sourcesResult?.status, 200);
+  assert.ok(sourcesResult?.data?.counts?.total > 0);
+  assert.ok(sourcesResult?.data?.sources?.some((s) => s.id === "vogue-china"));
+
+  const entitiesUrl = new URL("http://127.0.0.1/api/professional/entities?q=LV&priority=P1");
+  const entitiesResult = await professionalApi.handleProfessionalApi("/api/professional/entities", entitiesUrl, "GET", "");
+  assert.equal(entitiesResult?.status, 200);
+  assert.equal(entitiesResult?.data?.resolved?.id, "louis-vuitton");
+
   const remoteWorkspaceAttempt = professionalApi.PROFESSIONAL_PUBLIC_READ_PATHS.has("/api/workspaces");
   assert.equal(remoteWorkspaceAttempt, false, "workspace mutations must never be public-read allowlisted");
+  assert.equal(professionalApi.PROFESSIONAL_PUBLIC_READ_PATHS.has("/api/professional/sources"), true);
+  assert.equal(professionalApi.PROFESSIONAL_PUBLIC_READ_PATHS.has("/api/professional/entities"), true);
 
-  console.log(`PROFESSIONAL V2 TEST OK backend=${history.historyStoreInfo().backend} history=${depth.samples} forecast=${f.status}/${f.validation.grade} media=${med.evidenceCount} creators=${aud.evidence.creatorsObserved}`);
+  console.log(`PROFESSIONAL V2 TEST OK backend=${history.historyStoreInfo().backend} history=${depth.samples} forecast=${f.status}/${f.validation.grade} media=${med.evidenceCount} creators=${aud.evidence.creatorsObserved} sources=${allSources.length} entities=${brands.brandEntityCatalog("P1").length}`);
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
