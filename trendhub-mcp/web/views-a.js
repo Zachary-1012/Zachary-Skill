@@ -1,8 +1,9 @@
 VIEWS.dashboard = async function (content) {
   content.innerHTML = loading();
-  const [health, latest] = await Promise.all([
+  const [health, latest, universe] = await Promise.all([
     api("/api/health"),
     api("/api/trending?mode=snapshot&limit=5"),
+    api("/api/professional/sources?priority=P1"),
     ensureMeta(),
   ]);
   const catTiles = CATS.platformCategories
@@ -12,11 +13,16 @@ VIEWS.dashboard = async function (content) {
     .slice(0, 4)
     .map((r) => `<div class="card" style="margin-bottom:12px"><h3>${esc(r.label || r.platform)}</h3><div class="captured">最近成功快照 ${fmtTime(r.capturedAt)}</div><div style="margin-top:8px">${itemsTable((r.items || []).slice(0, 5))}</div></div>`)
     .join("");
+  const livePlatforms = PLATFORMS
+    .filter((p) => p.platform !== "xiaohongshu-hotlist")
+    .map((p) => `<span class="platform-chip"><strong>${esc(p.label)}</strong><small>${esc(p.category)} · ${esc(p.source)}</small></span>`)
+    .join("");
+  const universeCounts = universe.counts || {};
   content.innerHTML = `
     <div class="grid cols-4">
-      ${statCard(health.platformCount, "接入平台")}
-      ${statCard(CATS.platformCategories.length, "平台分类")}
-      ${statCard(health.tools || 19, "MCP 工具")}
+      ${statCard(health.platformCount, "实时接入平台")}
+      ${statCard(universeCounts.total ?? 0, "专业信源宇宙")}
+      ${statCard(health.tools || 21, "MCP 工具")}
       ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
     </div>
     <div class="section-title">最新趋势快照</div>
@@ -30,6 +36,12 @@ VIEWS.dashboard = async function (content) {
     </div>
     <div class="section-title">按分类浏览热榜</div>
     <div class="card"><div class="platform-tiles">${catTiles}</div></div>
+    <div class="section-title">平台与专业信源覆盖</div>
+    <div class="card platform-overview">
+      <div class="coverage-line"><strong>${esc(universeCounts.total ?? 0)} 个分层专业信源</strong><span class="sub">实时源 ${esc(health.platformCount)} · 零配置 ${esc(universeCounts.zeroConfig ?? 0)} · API/OAuth ${esc(universeCounts.credentialed ?? 0)} · 授权连接器 ${esc(universeCounts.licensed ?? 0)} · 规划中 ${esc(universeCounts.planned ?? 0)}</span></div>
+      <div class="platform-cloud">${livePlatforms}</div>
+      <p class="sub coverage-note">完整的国内、全球社媒/视频/播客/搜索/新闻/Web/时尚奢侈品/商业财经/科技汽车/营销媒体矩阵，请进入“信源与品牌宇宙”按行业和接入方式筛选。</p>
+    </div>
     <div class="section-title">数据纪律</div>
     <div class="grid cols-2">
       <div class="card"><h3>不编造、不估算</h3><p class="sub">取不到的字段一律为 null，并用 正常 / 降级 / 缺失 标记；每条数据带采集时刻 capturedAt 与来源链接；平台公布时间与采集时间分离。</p></div>
