@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const VERSION = "1.4.1";
+const VERSION = "1.4.2";
 const NAME = "io.github.Zachary-1012/trendhub";
 const REMOTE = "https://trendhub-remote-production.up.railway.app/mcp";
 const OFFICIAL_API = `https://registry.modelcontextprotocol.io/v0.1/servers?search=${encodeURIComponent(NAME)}&version=latest`;
