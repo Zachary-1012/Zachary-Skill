@@ -15,6 +15,7 @@ import { randomBytes } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "../dist/src/web/static.js";
+import { createSnapshotScheduler } from "../dist/src/runtime/snapshot-scheduler.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -26,7 +27,37 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.4.1";
+const VERSION = "1.4.2";
+
+function envBool(name, fallback = false) {
+  const raw = String(process.env[name] ?? "").trim().toLowerCase();
+  if (!raw) return fallback;
+  return ["1", "true", "yes", "on"].includes(raw);
+}
+
+function envNumber(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+const SNAPSHOT_ENABLED = envBool("TRENTHUB_REMOTE_SNAPSHOT_ENABLED", false);
+
+const SNAPSHOT_INTERVAL_MIN = Math.max(
+  15,
+  envNumber("TRENTHUB_SNAPSHOT_INTERVAL_MIN", 60),
+);
+
+const SNAPSHOT_INITIAL_DELAY_MS = Math.max(
+  1_000,
+  envNumber("TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS", 30_000),
+);
+
+const snapshotScheduler = createSnapshotScheduler({
+  enabled: SNAPSHOT_ENABLED,
+  intervalMs: SNAPSHOT_INTERVAL_MIN * 60_000,
+  initialDelayMs: SNAPSHOT_INITIAL_DELAY_MS,
+});
+
 let activeRequests = 0;
 let shuttingDown = false;
 
@@ -290,6 +321,7 @@ core.on("exit", (code, signal) => {
 });
 
 await waitForCore(core);
+snapshotScheduler.start();
 
 const server = createServer(async (req, res) => {
   try {
@@ -310,6 +342,7 @@ const server = createServer(async (req, res) => {
         tools: 19,
         platforms: Number(coreHealth.platformCount || 38),
         web: true,
+        snapshotScheduler: snapshotScheduler.getState(),
       });
     }
 
@@ -401,6 +434,7 @@ function shutdown(signal) {
   if (shuttingDown) return;
   shuttingDown = true;
   console.error(`[trendhub-remote] shutting down (${signal})`);
+  snapshotScheduler.stop();
   server.close(() => process.exit(0));
   core.kill("SIGTERM");
   setTimeout(() => process.exit(0), 5_000).unref();

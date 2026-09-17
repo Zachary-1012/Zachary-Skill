@@ -1,6 +1,6 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "TrendHub MCP — 专业级全网趋势情报 Skill：19 个 MCP 工具覆盖实时热榜、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、24h/72h lead benchmark 与内容生产；BYO-AI、零模型 Key、本地优先。",
   "type": "module",
   "bin": {
@@ -22,7 +22,7 @@
     "upgrade": "node scripts/upgrade.mjs",
     "smoke": "node scripts/smoke.mjs",
     "build": "tsc -p tsconfig.json",
-    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs && node scripts/test-distribution.mjs && node scripts/test-remote-web.mjs",
+    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs && node scripts/test-distribution.mjs && node scripts/test-snapshot-scheduler.mjs && node scripts/test-remote-web.mjs",
     "release:gate": "npm run build && npm test && npm run smoke",
     "start": "node scripts/launcher.mjs",
     "start:http": "node scripts/launcher.mjs --http",

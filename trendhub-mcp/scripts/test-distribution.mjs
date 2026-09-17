@@ -44,7 +44,19 @@ must(terms.includes("not affiliated with or endorsed"), "terms must disclose thi
 must(terms.includes("not factual guarantees"), "terms must bound analytical indicators");
 
 const version = pkg.version;
-must(version === "1.4.1", `expected distribution patch 1.4.1, got ${version}`);
+must(version === "1.4.2", `expected distribution patch 1.4.2, got ${version}`);
+must(
+  gateway.includes("TRENTHUB_REMOTE_SNAPSHOT_ENABLED"),
+  "remote snapshot scheduler feature flag missing",
+);
+must(
+  gateway.includes("TRENTHUB_SNAPSHOT_INTERVAL_MIN"),
+  "remote snapshot interval config missing",
+);
+must(
+  gateway.includes("snapshotScheduler"),
+  "remote snapshot scheduler health state missing",
+);
 must(lock.version === version && lock.packages?.[""]?.version === version, "package-lock version metadata must match package.json");
 must(manifest.version === version, "manifest version must match package.json");
 must(registry.version === version, "Official MCP Registry version must match package.json");
