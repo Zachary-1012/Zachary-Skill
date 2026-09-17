@@ -1,0 +1,45 @@
+name: TrendHub v1.4.4 finalize once
+
+on:
+  push:
+    branches:
+      - release/v1.4.4-web-data-fallback
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.4.4-web-data-fallback
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+      - name: Apply patch
+        run: python3 .github/scripts/v144_finalize.py
+      - name: Regenerate lockfile
+        working-directory: trendhub-mcp
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Locked install
+        working-directory: trendhub-mcp
+        run: npm ci --no-audit --no-fund
+      - name: Full release gate
+        working-directory: trendhub-mcp
+        run: npm run release:gate
+      - name: Diff check
+        run: git diff --check
+      - name: Commit clean release branch
+        run: |
+          rm .github/workflows/v144-finalize.yml .github/scripts/v144_finalize.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "release: TrendHub v1.4.4 hosted Web snapshot fallback"
+          git push origin HEAD:release/v1.4.4-web-data-fallback
