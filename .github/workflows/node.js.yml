@@ -66,7 +66,7 @@ jobs:
             fi
             sleep 0.25
           done
-          node -e "const h=require('/tmp/trendhub-health.json'); if(!h.ok || h.tools!==19 || h.version!=='1.4.2' || !h.web) process.exit(1)"
+          node -e "const h=require('/tmp/trendhub-health.json'); if(!h.ok || h.tools!==19 || h.version!=='1.4.3' || !h.web) process.exit(1)"
           npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
           grep -F "REMOTE SMOKE OK tools=19 platforms=38" /tmp/trendhub-remote-smoke.txt
           curl -fsS http://127.0.0.1:18444/ >/tmp/trendhub-web.html
