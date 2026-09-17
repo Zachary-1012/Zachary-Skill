@@ -42,8 +42,8 @@ function envNumber(name, fallback) {
 }
 
 const SNAPSHOT_ENABLED = envBool("TRENTHUB_REMOTE_SNAPSHOT_ENABLED", false);
-const SNAPSHOT_INTERVAL_MIN = Math.max(15, envNumber("TRENTHUB_SNAPSHOT_INTERVAL_MIN", 60));
-const SNAPSHOT_INITIAL_DELAY_MS = Math.max(1_000, envNumber("TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS", 30_000));
+const SNAPSHOT_INTERVAL_MIN = Math.max(15, envNumber("TRENHUB_SNAPSHOT_INTERVAL_MIN", 60));
+const SNAPSHOT_INITIAL_DELAY_MS = Math.max(1_000, envNumber("TRENHUB_SNAPSHOT_INITIAL_DELAY_MS", 30_000));
 
 const snapshotScheduler = createSnapshotScheduler({
   enabled: SNAPSHOT_ENABLED,
@@ -76,6 +76,8 @@ const PUBLIC_API_PATHS = new Set([
   "/api/professional/report",
   "/api/professional/audience",
   "/api/professional/media",
+  "/api/professional/sources",
+  "/api/professional/entities",
 ]);
 
 const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-17\n\nTrendHub Remote provides a public MCP endpoint and a responsive read/query web console for trend intelligence. The service does not require a TrendHub account and does not intentionally store analytics identifiers, advertising identifiers, model prompts, usernames, or account identifiers. Public web-console queries and MCP tool arguments are processed only as needed to answer the request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a query retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. The public hosted edition does not use a visitor's private Xiaohongshu cookie. Local installation remains available for users who prefer local-only operation.\n\nFor source code, security reporting, and the local edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
