@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v2-rc",
-  "releaseStatus": "release-ready",
-  "stableBase": "1.4.4",
-  "targetStableVersion": "1.5.0",
-  "candidateVersion": "1.5.0",
+  "releaseStatus": "release-candidate-ready",
+  "stableBase": "1.5.0",
+  "targetStableVersion": "1.5.1",
+  "candidateVersion": "1.5.1",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.5.0 has been approved, published, deployed and Registry-verified; future changes require a controlled release update.",
-    "versionPolicy": "v1.5.0 is the stable contract; v1.4.5 is forbidden. v1.4.4 remains the immutable rollback release.",
+    "rule": "v1.5.1 is an unpublished RC; v1.5.0 remains the immutable production and Registry contract.",
+    "versionPolicy": "v1.5.1 is the next candidate; v1.4.5 remains forbidden. Do not rewrite v1.5.0 assets.",
     "prepared": true
   },
   "capabilities": {

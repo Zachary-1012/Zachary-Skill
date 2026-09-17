@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具，覆盖实时热点、Source Reliability、Professional Intelligence v2、多年度历史、异常/预测/回测、品牌与信源宇宙、报告和工作区；BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
