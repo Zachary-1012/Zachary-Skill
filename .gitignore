@@ -1,0 +1,25 @@
+node_modules/
+dist/
+logs/
+*.log
+npm-debug.log*
+.env
+.env.*
+data/snapshots/
+data/history/
+data/reliability/
+data/health/
+data/diagnostics/
+data/ops/
+data/benchmarks/
+data/*.sqlite*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.tsbuildinfo
+
+# 临时探针与本地调试脚本（不入库）
+_probe/
+_enc/
+_*.mjs
