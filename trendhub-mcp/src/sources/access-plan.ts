@@ -11,6 +11,7 @@ import {
   type SignalFamily,
   type SourceVertical,
 } from "./professional-catalog.js";
+import { PRIORITY_SOURCE_EXTENSIONS } from "./priority-extensions.js";
 
 export interface SourceAccessPlan {
   zeroConfig: ProfessionalSourceSpec[];
@@ -20,6 +21,21 @@ export interface SourceAccessPlan {
   planned: ProfessionalSourceSpec[];
   defaultLivePlatforms: string[];
   rules: string[];
+}
+
+export function completeProfessionalSourceCatalog(): ProfessionalSourceSpec[] {
+  const seen = new Set<string>();
+  return [...PROFESSIONAL_SOURCE_CATALOG, ...PRIORITY_SOURCE_EXTENSIONS]
+    .filter((source) => {
+      if (seen.has(source.id)) return false;
+      seen.add(source.id);
+      return true;
+    })
+    .map((source) => ({
+      ...source,
+      families: [...source.families],
+      verticals: [...(source.verticals ?? ["general"])],
+    }));
 }
 
 function priorityValue(p: ProfessionalSourceSpec["priority"]): number {
@@ -40,7 +56,7 @@ export function defaultLivePlatformIds(options: {
   const max = Math.max(4, Math.min(24, options.max ?? 12));
   const verticals = options.verticals ?? [];
   const regions = options.preferRegions ?? ["CN", "GLOBAL", "APAC"];
-  const candidates = PROFESSIONAL_SOURCE_CATALOG
+  const candidates = completeProfessionalSourceCatalog()
     .filter((source) => source.livePlatformId)
     .filter((source) => source.priority !== "P2")
     .filter((source) => sourceUserSetup(source).blocksBasicUse === false)
@@ -80,7 +96,7 @@ export function buildSourceAccessPlan(options: {
   const ceiling = options.includePriority === "P2" ? 2 : options.includePriority === "P1" ? 1 : 0;
   const rank = { P0: 0, P1: 1, P2: 2 } as const;
   const verticals = options.verticals ?? [];
-  const sources = PROFESSIONAL_SOURCE_CATALOG
+  const sources = completeProfessionalSourceCatalog()
     .filter((source) => rank[source.priority] <= ceiling)
     .filter((source) => !verticals.length || (source.verticals ?? ["general"]).some((v) => verticals.includes(v) || v === "general"));
 
