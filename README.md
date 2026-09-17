@@ -6,6 +6,49 @@
 
 > 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。
 
+## 最快使用：直接连接公开 Remote MCP
+
+不想安装本地运行环境时，支持 Streamable HTTP 的 MCP 客户端可直接连接：
+
+```text
+https://trendhub-remote-production.up.railway.app/mcp
+```
+
+通用 MCP 配置：
+
+```json
+{
+  "mcpServers": {
+    "trendhub": {
+      "type": "streamable-http",
+      "url": "https://trendhub-remote-production.up.railway.app/mcp"
+    }
+  }
+}
+```
+
+公开 Remote MCP 不要求 TrendHub 账号，也不要求模型 API Key；它与本地版共用同一套 19-tool 能力合同。生产协议监控会用官方 MCP SDK 验证 `initialize`、`tools/list=19` 与 `list_platforms=38`。
+
+Cursor 可直接使用官方 MCP 安装链接：
+
+[**Add TrendHub MCP to Cursor**](https://cursor.com/en/install-mcp?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
+
+## 已上架 / 可搜索渠道
+
+以下状态按 **2026-09-17 的实际外部检索结果**记录；“兼容 / 可提交”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
+
+| 渠道 | 当前状态 | 入口 |
+| --- | --- | --- |
+| GitHub | **LIVE · 直接可用** | [`Zachary-1012/Zachary-Skill`](https://github.com/Zachary-1012/Zachary-Skill) |
+| Official MCP Registry | **PUBLISHED · SEARCHABLE** | [`io.github.Zachary-1012/trendhub`](https://registry.modelcontextprotocol.io/?q=trendhub) |
+| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | [TrendHub on Glama](https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub) |
+| Agent Plugins | **READY · DIRECT INSTALL** | 根目录 `plugin.json` + `mcp.json` |
+| Cursor | **DIRECT MCP INSTALL READY** | 上方一键安装；公共 Marketplace 上架仍需 Cursor 人工审核 |
+| Smithery | **SUBMISSION READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者账号/namespace |
+| ChatGPT / OpenAI Plugins Directory | **APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；公共目录需开发者提交、审核与发布 |
+
+**对外口径：目前可以明确写“已上架并可搜索”的商店是 Official MCP Registry 与 Glama。** Cursor、Smithery、ChatGPT/OpenAI 只有在各自审核/发布完成后才升级为“PUBLISHED · SEARCHABLE”。
+
 ## 给 AI 的安装合同
 
 把本仓库链接交给可以执行终端命令的 AI / Coding Agent，它应按固定流程安装，不需要用户自己准备 Node.js：
@@ -138,4 +181,4 @@ TrendHub 不跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 *
 - upstream 原仓库只允许 owner 与 owner 邀请的 Collaborators 修改；公开用户只有读取/clone/使用 upstream 的权限。
 - 软件当前仍按 **MIT License** 分发；MIT 在法律层面允许使用者对自己的副本进行 fork/修改/再分发，这与“不能修改原 upstream 仓库”是两个不同概念。若未来要改成“法律上仅允许使用、禁止修改/再分发”，需要单独做许可证变更。
 
-详细规则：[`GOVERNANCE.md`](./GOVERNANCE.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`CHANGELOG.md`](./CHANGELOG.md)
+详细规则：[`GOVERNANCE.md`](./GOVERNANCE.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`CHANGELOG.md`](./CHANGELOG.md) · [`DISTRIBUTION.md`](./DISTRIBUTION.md)
