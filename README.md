@@ -1,97 +1,137 @@
-# Zachary-Skill · 公司 AI 技能库
+# TrendHub · 全网热点趋势专家 v1.5.0
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.5.0** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v2、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
+> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个实时平台/趋势信源**，并维护 **129 个专业分层信源**，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
+>
+> TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
+>
+> **v1.5.0 Creator Ops**：本地控制台新增“运行与交付”，把进程/数据卷/信源健康、版本来源、手工成本、脱敏反馈和可复制交付简报组织为可读视图；不上传遥测、不读取密钥、不自动重启或发布。公网 Remote 不暴露 `/api/ops/*`。安装使用仍**无需审批、注册、登录或中央服务器**。
 
-每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
+---
 
-> 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。
+## 1. 能力地图
 
-> **许可边界（v1.4.3+）**：个人和公司/组织可免费使用未修改的 TrendHub，包括内部商业运营；允许安装、备份和内部部署所需的合理副本。**禁止修改、派生、再发布、再分发、转售、转授权或向第三方托管提供 TrendHub 软件本身。** 使用 TrendHub 产生的报告/分析/内容不受该软件分发限制，但仍须遵守第三方数据或内容权利。完整条款见 [`LICENSE`](./LICENSE)。v1.4.2 及更早版本保留其发布时已经授予的 MIT 权利，不能追溯收回。
-
-## 最快使用：直接连接公开 Remote MCP
-
-不想安装本地运行环境时，支持 Streamable HTTP 的 MCP 客户端可直接连接：
-
-```text
-https://trendhub-remote-production.up.railway.app/mcp
-```
-
-通用 MCP 配置：
-
-```json
-{
-  "mcpServers": {
-    "trendhub": {
-      "type": "streamable-http",
-      "url": "https://trendhub-remote-production.up.railway.app/mcp"
-    }
-  }
-}
-```
-
-公开 Remote MCP **无需注册或登录本服务**，也不要求模型 API Key；它与本地版共用同一套 21-tool 能力合同。生产协议监控会用官方 MCP SDK 验证 `initialize`、`tools/list=21` 与动态 Source Universe 契约。
-
-Cursor 可直接使用 MCP 安装入口：
-
-[**Add TrendHub MCP to Cursor**](https://cursor.com/en/install-mcp?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9)
-
-Cursor 原生 deeplink：
-
-```text
-cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJodHRwczovL3RyZW5kaHViLXJlbW90ZS1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwL21jcCJ9
-```
-
-如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
-
-### 浏览器 Web Console
-
-不写配置、只想用浏览器查看时，打开托管的响应式 Web Console（只读/查询，模型推理仍由你自己的 AI 完成）：
-
-```text
-https://trendhub-remote-production.up.railway.app/
-```
-
-实时健康状态见 `https://trendhub-remote-production.up.railway.app/health`；变更类接口（如 `/api/snapshot`）不对外暴露。
-
-## 已上架 / 可搜索渠道
-
-以下状态按 **2026-09-17 的实际外部检索结果**记录；“兼容 / 可提交 / 可直连”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
-
-| 渠道 | 当前状态 | 入口 |
+| 能力层 | 能力 | 主要工具 |
 | --- | --- | --- |
-| GitHub | **LIVE · 直接可用** | [`Zachary-1012/Zachary-Skill`](https://github.com/Zachary-1012/Zachary-Skill) |
-| Official MCP Registry | **PUBLISHED · SEARCHABLE** | [`io.github.Zachary-1012/trendhub`](https://registry.modelcontextprotocol.io/?q=trendhub) |
-| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | [TrendHub on Glama](https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub) |
-| Agent Plugins | **READY · DIRECT INSTALL** | 根目录 `plugin.json` + `mcp.json` |
-| Cursor | **NOT LISTED · DIRECT MCP READY** | 上方 MCP 安装入口可直接安装；公共 Cursor Marketplace 上架仍需仓库提交与人工审核 |
-| Smithery | **NOT LISTED · URL PUBLISH READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者登录及 namespace |
-| ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；当前目录搜索不到 TrendHub，正式公开发现仍需提交、审核与发布 |
+| 小红书主打 | 游客热门推荐笔记流 + 标题话题词；登录态解锁官方热搜词榜/关键词爆款搜索 | `xhs_hot_topics`、`get_trending` |
+| 当下热点 | 38 个平台/趋势信源，按平台/分类查询 | `get_trending`、`list_platforms`、`list_categories` |
+| 共振与变化 | 跨平台共振、自动聚类、新晋/飙升/掉榜、历史快照 | `cross_platform_overlap`、`discover_trending_topics`、`trend_change_alerts`、`take_snapshot` |
+| **Source Reliability** | UP/DEGRADED/DOWN/AUTH_REQUIRED/RATE_LIMITED；24h/7d/30d 可用率；P50/P95；连续失败；schema drift | `source_reliability` |
+| 搜索走势 | Google Trends 0–100 相对热度、top/rising 相关词 | `keyword_trend_curve`、`related_queries` |
+| 未来趋势 | 科技/AI/商业/营销信源 | `future_signals` |
+| 节点趋势 | 展会/财报/大促/政策/节假日 | `upcoming_events` |
+| 深度情报 | 小红书证据 + 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 | `analyze_topic` |
+| **Trend Intelligence Engine** | 生命周期、rank velocity、persistence、diffusion、source reliability、history sufficiency、confidence | `trend_intelligence` |
+| **Lead-time Benchmark** | 与外部 ground truth 对比，验证是否提前 24h/72h 发现 | `benchmark_trend_lead` |
+| 内容生产 | 10 套专家模板 + 基于真实证据/爆款样本的 Brief | `list_templates`、`get_template`、`get_content_brief` |
+| **Creator Ops** | 本地运行状态、信源健康、版本来源、手工成本、脱敏反馈、交付简报 | 本地控制台“运行与交付” |
 
-**对外口径：目前可以明确写“已上架并可搜索”的目录是 Official MCP Registry 与 Glama。** Cursor、Smithery、ChatGPT/Codex Plugins Directory 只有在各自发布或审核完成并能真实搜索到之后，才升级为 `PUBLISHED · SEARCHABLE`。
+### 21 个 MCP 工具
 
-## 给 AI 的安装合同
+`list_platforms` · `list_categories` · `get_trending` · **`xhs_hot_topics`** · `cross_platform_overlap` · `discover_trending_topics` · `trend_change_alerts` · `take_snapshot` · **`source_reliability`** · `keyword_trend_curve` · `related_queries` · `future_signals` · `upcoming_events` · `analyze_topic` · **`trend_intelligence`** · **`benchmark_trend_lead`** · `list_templates` · `get_template` · `get_content_brief`
 
-把本仓库链接交给可以执行终端命令的 AI / Coding Agent，它应按固定流程安装，不需要用户自己准备 Node.js：
+### 平台覆盖（38，小红书置顶）
 
-1. 检查 `git`。如机器未安装 Git，AI 先通过操作系统可信软件源或 Git 官方方式补齐。
-2. clone 并进入 `trendhub-mcp`。
-3. 执行对应平台的 **Node-free bootstrap**：已有 Node >=22 时复用；没有 Node 或版本过低时，从 `nodejs.org` 获取 Node 24 LTS 便携版，使用官方 `SHASUMS256.txt` 校验 SHA-256 后放入用户缓存目录，不要求管理员权限，也不替换系统 Node。
-4. bootstrap 自动继续 `setup.mjs -> npm ci -> build -> smoke`。
-5. 成功后输出 `AI_BOOTSTRAP_OK { ... }`。AI 必须读取其中的 `node` 与 `launcher` **绝对路径**写入 MCP 配置。
+- **主打 · 小红书**：`xiaohongshu`（热门推荐笔记，游客可用）、`xiaohongshu-hotlist`（官方热搜词榜，需登录 Cookie）
+- **国内社交/视频/新闻**：微博、知乎、百度、贴吧、虎扑、B站、抖音、快手、今日头条、澎湃、腾讯新闻、网易新闻、新浪新闻
+- **科技/开发者**：36氪、IT之家、虎嗅、少数派、爱范儿、掘金、CSDN、51CTO、V2EX、HelloGitHub、酷安、微信读书、历史上的今天
+- **国际**：Hacker News、GitHub Trending（日/周/月）、Product Hunt、Reddit（technology / programming / MachineLearning / worldnews / marketing）
+
+> “38个平台/趋势信源”代表覆盖范围，不代表 38 个源都拥有同等抓取深度。小红书是当前深度主打；其他平台依各自公开数据能力返回，并通过 Source Reliability 量化真实稳定性。
+
+---
+
+## 2. 专业级趋势情报方法
+
+### Source Reliability
+
+每次最终平台请求只记录本地操作性元数据：
+
+- timestamp；
+- `ok / degraded / missing`；
+- latency；
+- item count；
+- coarse failure class：`auth_required / rate_limited / schema_drift / network / upstream / other`。
+
+**不记录**查询词、Cookie、内容正文、hostname、username、IP、账号标识或模型 prompt。
+
+24h / 7d / 30d 窗口输出：
+
+- `okRate`；
+- `usableRate`；
+- average quality；
+- P50 / P95 latency。
+
+7d reliability score：
+
+```text
+100 × (0.55 × okRate + 0.25 × usableRate + 0.20 × averageQuality)
+```
+
+当前状态：`UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED / UNKNOWN`。
+
+### Trend Intelligence Engine v1
+
+本地有界历史保留 **30 天 / 每平台最多 1500 次快照**。引擎基于真实历史计算：
+
+- **Lifecycle**：`insufficient_history → emerging → accelerating → mainstream → saturating → declining`
+- **Velocity**：rank improvement / hour + spread velocity
+- **Persistence**：话题在历史快照中的持续出现比例
+- **Diffusion**：当前跨平台覆盖比例
+- **Source Reliability**：相关数据源历史稳定度
+- **History Sufficiency**：历史证据充分度
+- **Confidence**：基于证据覆盖、持续性、扩散、可靠度和历史深度的确定性评分
+
+`confidence` **不是预测概率**；历史不足必须返回 `insufficient_history`。
+
+### 24h / 72h Lead-time Benchmark
+
+`benchmark_trend_lead` 需要用户提供外部、可验证的 `reference_time`，例如：
+
+- 官方公告时间；
+- 主流媒体/平台明确爆发时点；
+- 团队在实验开始前约定的 benchmark 时间。
+
+TrendHub 只比较自己的最早历史证据：
+
+```text
+leadHours = reference_time - earliest_TrendHub_detection
+```
+
+正值 = TrendHub 更早；`>=24` = 至少提前24小时；`>=72` = 至少提前72小时。**禁止看到结果后再倒推一个有利 reference_time。**
+
+完整公式：[docs/intelligence-methodology.md](./docs/intelligence-methodology.md)
+
+---
+
+## 3. 小红书能力矩阵
+
+| 能力 | 游客模式 | 登录模式（本地 `XHS_COOKIE`） |
+| --- | --- | --- |
+| 首页热门推荐笔记流（封面/标题/作者/点赞/链接） | ✅ | ✅ |
+| 标题话题词派生 | ✅ | ✅ |
+| 官方热搜词榜 | ❌ 显式 `missing/AUTH_REQUIRED` | ✅ |
+| 关键词爆款笔记搜索 | ❌ | ✅ |
+| 分品类推荐流 | 游客能力有限 | 随账号权限 |
+
+游客热门流是平台首页推荐流，**不是官方热搜词榜**。`hotText` 保留平台展示近似值（如 `4.1万`），解析值只用于同平台内排序。
+
+Cookie 只应放在使用者本机环境变量，禁止提交仓库、诊断文件或公开聊天。
+
+---
+
+## 4. 快速开始：AI 自动安装
+
+用户不需要预装 Node.js。把仓库链接交给能执行终端命令的 AI / Coding Agent即可。
+
+### macOS / Linux
 
 ```bash
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
 cd Zachary-Skill/trendhub-mcp
-
-# macOS / Linux
 bash scripts/bootstrap.sh
-
-# 已有 Node >=22 也可直接运行
-node scripts/setup.mjs
-npm run smoke                  # 成功标志：SMOKE OK tools=21
 ```
 
-Windows PowerShell：
+### Windows PowerShell
 
 ```powershell
 git clone https://github.com/Zachary-1012/Zachary-Skill.git
@@ -99,107 +139,227 @@ cd Zachary-Skill\trendhub-mcp
 powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap.ps1
 ```
 
-机器可读安装结果：
+bootstrap：
+
+1. 复用现有 Node >=22；
+2. 否则从 `nodejs.org` 下载 Node 24 LTS 便携版；
+3. 用官方 `SHASUMS256.txt` 做 SHA-256 校验；
+4. `npm ci -> build -> smoke`；
+5. 输出持久化 MCP 路径。
+
+完整成功标志：
 
 ```text
+SMOKE OK tools=21
 AI_BOOTSTRAP_OK {"node":"/absolute/path/to/node","launcher":"/absolute/path/to/trendhub-mcp/scripts/launcher.mjs"}
 ```
 
-只有在确认系统 Node 已全局可用时，才可以简写：
+MCP 配置优先使用 `AI_BOOTSTRAP_OK` 返回的绝对路径。
+
+已有 Node >=22 也可以：
+
+```bash
+node scripts/setup.mjs
+npm run smoke
+```
+
+网络源：`--cn` 使用 npmmirror，`--global` 使用 npm 官方 registry。
+
+详细安装：[docs/access.md](./docs/access.md) · 客户端接入：[docs/setup-clients.md](./docs/setup-clients.md)
+
+---
+
+## 5. 三种运行方式
+
+| 方式 | 启动 | 场景 |
+| --- | --- | --- |
+| stdio（默认） | `npm start` | 本地 MCP 客户端 |
+| HTTP MCP | `npm run start:http` | 需要 MCP URL 的客户端 |
+| 本地控制台 | `npm run ui` | `http://127.0.0.1:8333/` |
+| 公开托管 Remote MCP（零安装） | 直接连 `https://trendhub-remote-production.up.railway.app/mcp` | 不想本地安装、客户端支持 Streamable HTTP |
+| 托管 Web Console | 浏览器打开 `https://trendhub-remote-production.up.railway.app/` | 人工浏览查看与只读查询 |
+
+通用 stdio：
+
+```json
+{
+  "mcpServers": {
+    "trendhub": {
+      "command": "<AI_BOOTSTRAP_OK.node>",
+      "args": ["<AI_BOOTSTRAP_OK.launcher>"]
+    }
+  }
+}
+```
+
+HTTP 默认：`http://127.0.0.1:8333/mcp`。
+
+### HTTP 安全边界
+
+默认 loopback 无需 Token。任何非 loopback 监听必须配置：
 
 ```text
-command: node
-args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
+TRENTHUB_HOST=<非loopback地址或0.0.0.0>
+TRENTHUB_HTTP_TOKEN=<足够长的随机Token>
 ```
 
-机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
+远程 `/mcp` 与 `/api/*` 必须带：
 
-## TrendHub v1.5.0 能力
+```http
+Authorization: Bearer <TRENTHUB_HTTP_TOKEN>
+```
 
-| 能力层 | 当前能力 |
-| --- | --- |
-| 实时发现 | 38 个平台/趋势信源；小红书热门推荐流为深度主打 |
-| 小红书增强 | 游客热门推荐；本地 `XHS_COOKIE` 可解锁官方热搜词榜与关键词爆款搜索 |
-| 跨平台 | 共振、自动聚类、新晋/飙升/掉榜、历史快照 |
-| **定时趋势历史（v1.4.2）** | 托管 Remote MCP 默认每小时自动快照并持久化有界历史；本地支持 cron / Windows 任务计划程序，见 [`docs/scheduled-snapshots.md`](./trendhub-mcp/docs/scheduled-snapshots.md) |
-| **Source Reliability** | UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED；24h/7d/30d ok/usable rate；P50/P95 延迟；连续失败；schema drift |
-| **Trend Intelligence Engine** | `emerging → accelerating → mainstream → saturating → declining`；速度、持续性、扩散、可靠度、历史充分度、置信度 |
-| 搜索趋势 | Google Trends 相对热度曲线、相关词 top/rising |
-| 未来信号 | 科技/AI/商业/营销 RSS 信源 + 趋势节点日历 |
-| **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势；支持批量 benchmark cases |
-| 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
-| 内容生产 | 脚本/文案/方案模板 + Evidence-first 创作 Brief |
-| 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |
+不要通过关闭鉴权绕过；即使启用 Token，也优先局域网/Tailscale 等私有网络，不直接暴露 8333 到公网。
 
-完整的 21-tool 契约见 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json)。指标公式和生命周期规则见 [`trendhub-mcp/docs/intelligence-methodology.md`](./trendhub-mcp/docs/intelligence-methodology.md)。
+### 定时趋势快照（v1.4.2）
 
-## Source Reliability 与真实世界状态
+趋势生命周期与 24h/72h lead benchmark 依赖持续积累的有界历史。公开托管 Remote MCP 已启用服务端调度器（默认每小时一次、写入持久化卷，状态见 `/health` 的 `snapshotScheduler` 字段）；本地可通过 cron（macOS/Linux）或任务计划程序（Windows）周期运行 `node dist/scripts/snapshot.js`。完整说明见 [`docs/scheduled-snapshots.md`](./docs/scheduled-snapshots.md)。
 
-TrendHub 明确区分：
+---
 
-- **CI / Release Gate**：证明代码、安装、MCP 工具合同可复现；
-- **Source Health**：证明第三方信源在某次真实联网观测中的当前可用状态。
-
-因此：**CI PASS ≠ 38 个第三方平台此刻全部在线。** 平台登录要求、限流、风控、网络异常或页面结构变化会被如实标记，而不是伪造成成功。
+## 6. 验证、Source Health 与质量评估
 
 ```bash
-npm run source:health
+npm test                   # deterministic offline tests；release gate
+npm run smoke              # MCP 握手；必须 SMOKE OK tools=21
+npm run source:health      # 真实第三方信源状态；不阻塞 release gate
+npm run quality:diagnostic # 用户主动、本地匿名化诊断；零自动上传
 ```
 
-GitHub Source Health **每 6 小时**运行一次，并恢复上一轮非敏感 `reliability/history/snapshots` 状态，使 24h/7d/30d 稳定性和 24h/72h 趋势历史能够连续积累。每轮会产生机器可读 JSON artifact，保留 30 天；它仍然与 Stable Release gate 分离。
+### 为什么 Source Health 不阻塞 Release
 
-## Trend Intelligence 与 Benchmark
+代码正确与第三方平台可用性是两个不同事实：
 
-`trend_intelligence` 基于本地真实历史证据计算：
+- **Release Gate** 证明安装、编译、数据合同、MCP 工具和安全边界；
+- **Source Health** 证明外部平台在某次真实联网观测时的状态。
 
-- 生命周期；
-- rank velocity；
-- persistence；
-- cross-platform diffusion；
-- source reliability；
-- history sufficiency；
-- deterministic confidence。
+因此 **CI PASS ≠ 38 个平台此刻全部在线**。登录要求、限流、风控、网络或 schema drift 会被 Source Reliability 如实记录，而不是伪造成成功。
 
-这些是**可解释的规则指标，不是预测概率**。历史不足时返回 `insufficient_history`。
+GitHub 定时 Source Health 会保存 30 天机器可读 JSON artifact。
 
-`benchmark_trend_lead` 必须由使用者提供一个外部可验证的 `reference_time`，例如官方公告时间、主流爆发时间或团队事先约定的基准时间。TrendHub 只计算自己的最早证据比该时间早/晚多少小时，不会自己编造 ground truth。
+### Usage Quality Evaluation
 
-公司内部可批量运行真实案例：
+`npm run quality:diagnostic` 只在用户主动执行时生成本地 JSON；不自动上传。明确排除：
+
+`hostname / username / absolute paths / cookies / query text / content bodies / IP / account identifiers`
+
+---
+
+## 7. 发布、更新与供应链
+
+`launcher.mjs` 只跟随 **GitHub Stable Release**：
+
+1. 当前已验证版本立即启动；
+2. 后台发现更高正式 `vX.Y.Z` 才更新；
+3. 不追 `main` HEAD；
+4. tracked 本地修改时跳过；
+5. 安装/构建失败时尽力回滚；
+6. `TRENTHUB_AUTOUPDATE=0` 可关闭。
+
+正式 Release 必须通过：
+
+- PR 到受保护的 `main`；
+- Node 22.x / 24.x：locked install + build + deterministic tests + `SMOKE OK tools=21`；
+- Windows / macOS / Linux Node-free bootstrap E2E；
+- merge 后 main CI；
+- Stable Release 重新跑 release gate；
+- Public Install E2E 从公开 URL fresh clone → Stable tag → Node-free bootstrap → 19-tool smoke。
+
+Release 产出 `.tgz` + `SHA256SUMS.txt`。
+
+手动升级：
 
 ```bash
-npm run benchmark:lead -- --file /path/to/benchmark-cases.json
+node scripts/upgrade.mjs
 ```
 
-批量结果包含 evidence coverage、before-reference rate、24h-ahead rate、72h-ahead rate、平均 lead hours 与逐案例证据；报告仅保存在本地 `data/benchmarks/`，不自动上传。
+---
 
-## 零遥测质量评估
+## 8. 数据口径与红线
 
-正常使用不发送 TrendHub telemetry。需要排障或内部评估时，可主动执行：
+- `missing/degraded` 必须原样传达，**禁止填 0、估算或编造**。
+- Google Trends 是 **0–100 相对热度**，不是绝对搜索量。
+- 各平台 `hot` 口径不同，只允许同平台内比较，不能直接跨平台相加。
+- Source Reliability 是操作性质量，不是未来可用性保证。
+- Lifecycle / confidence / sentiment / clustering 都是可解释的规则信号，不是事实本身，也不是预测概率。
+- Benchmark reference time 必须来自外部 ground truth。
+- 节点日历若为预计信息，需用 `sourceUrl` 对应官方信息复核。
+- 仅处理公开可访问数据与用户主动配置的本地会话信息；遵守目标平台条款、频率边界和适用法律。
 
-```bash
-npm run quality:diagnostic
+---
+
+## 9. 已知限制
+
+- 小红书官方热搜/关键词搜索需要有效登录 Cookie；失效时显式 `AUTH_REQUIRED/missing`。
+- Web/API/反爬策略可能变化；Source Reliability 会记录实际退化，但无法保证第三方永久稳定。
+- 网络、地区、IP、登录态和访问频率会影响取数。
+- `trend_change_alerts` 至少需要两次快照；`trend_intelligence` 需要更多历史才能摆脱 `insufficient_history`。
+- 30 天有界历史意味着长期年度趋势应结合 Google Trends 等外部时间序列，而不是把本地快照当无限历史数据库。
+- 当前 Google Trends 主要承担搜索趋势验证，不把 Google Trending Now 当作“实时全网热榜”主源。
+
+---
+
+## 10. 示例用法
+
+- 「用 TrendHub 拉小红书当前热门推荐，并解释哪些词是派生词、哪些是官方热搜。」
+- 「先查 Source Reliability，再看微博/B站/抖音/小红书现在的热点。」
+- 「AI眼镜现在处于 emerging、accelerating 还是 mainstream？给我 evidence、velocity、persistence、diffusion、confidence。」
+- 「用 Google Trends 和跨平台 evidence 验证这个趋势判断。」
+- 「我把官方发布时点给你，用 benchmark_trend_lead 算 TrendHub 是否提前24/72小时发现。」
+- 「未来90天有哪些科技展会/大促节点，结合 future signals 做选题。」
+- 「基于真实小红书爆款样本和趋势证据，生成一份小红书创作 Brief。」
+
+---
+
+## 11. 维护配置
+
+- 未来信源：`data/future-sources.json` 或 `TRENTHUB_RSS_SOURCES`
+- 节点：`data/events.json`
+- 数据目录：`TRENTHUB_DATA_DIR`
+- HTTP：`TRENTHUB_TRANSPORT / TRENTHUB_PORT / TRENTHUB_HOST / TRENTHUB_HTTP_TOKEN`
+- 运行：`TRENTHUB_CACHE_TTL / TRENTHUB_TIMEOUT_MS / TRENTHUB_RETRIES`
+- 小红书增强：`XHS_COOKIE`
+- 自动更新：`TRENTHUB_AUTOUPDATE=0`
+
+运行期本地目录 `data/snapshots / history / reliability / health / diagnostics` 均被 `.gitignore` 排除。
+
+## 12. 目录结构
+
+```text
+trendhub-mcp/
+├─ src/
+│  ├─ sources/            # 国内外数据源、小红书、Google Trends/RSS
+│  ├─ store/              # snapshot + bounded history + source reliability
+│  ├─ analysis/           # 共振、情感、话题、Trend Intelligence、内容 Brief
+│  ├─ security/           # HTTP 网络边界与 Bearer auth
+│  ├─ web/                # HTTP API / 静态托管
+│  ├─ tools/              # 19 MCP tools
+│  ├─ server.ts
+│  └─ index.ts
+├─ web/                   # 本地控制台前端
+├─ data/                  # events / future-sources / templates（运行期目录忽略）
+├─ docs/
+│  ├─ access.md
+│  ├─ setup-clients.md
+│  └─ intelligence-methodology.md
+├─ scripts/
+│  ├─ bootstrap.sh / bootstrap.ps1
+│  ├─ setup.mjs / launcher.mjs / upgrade.mjs
+│  ├─ smoke.mjs / test.mjs / test-intelligence.mjs
+│  ├─ selftest.ts
+│  └─ quality-diagnostic.mjs
+├─ package-lock.json
+├─ manifest.json
+├─ NOTICE / LICENSE
+└─ package.json
 ```
 
-报告只保留版本、Node 主版本、OS family、Source Reliability 汇总、历史深度等操作性信息；不包含 hostname、username、绝对路径、Cookie、查询词、内容正文、IP 或账号标识；**不会自动上传，只有使用者主动选择时才分享。**
+## 13. 开源、治理与 upstream 权限
 
-## 更新与发布
+TrendHub 当前按 **MIT License** 分发。依赖与第三方代码归因见 [NOTICE](./NOTICE)。
 
-TrendHub 不跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 **GitHub Stable Release**：
+原 upstream `Zachary-1012/Zachary-Skill` 的写权限由 GitHub 控制：仅 owner 与明确邀请的 Collaborators 可以改原仓库；`main` 必须 PR + Node22/24 required checks，禁止 force push/deletion，无 bypass。
 
-1. 当前已验证版本先启动；
-2. 后台发现更高正式 `vX.Y.Z` Release 才更新；
-3. 本地 tracked 文件有修改时跳过；
-4. 安装/构建失败时尽力回滚；
-5. `TRENTHUB_AUTOUPDATE=0` 可关闭自动检查。
+MIT 同时允许别人对**自己的副本**进行使用、修改、fork 和再分发。若未来产品策略要求“法律上只允许使用、禁止修改/再分发”，需要单独变更许可证，不能只靠 GitHub 分支保护实现。
 
-正式 Release 必须通过 Node 22/24 的 locked install + build + deterministic tests + MCP smoke；随后再跑 Public Install E2E。Release 同时产出 npm `.tgz` 与 `SHA256SUMS.txt`。
-
-## 安全与治理
-
-- HTTP 默认绑定 `127.0.0.1`；任何非 loopback 监听都必须配置 `TRENTHUB_HTTP_TOKEN`，并用 Bearer Token 访问 `/mcp` 与 `/api/*`。
-- 仓库不应包含任何模型 Key、Cookie、Token 或内部资料；`XHS_COOKIE` 只保存在使用者本机环境变量。
-- `main` 受保护：必须 PR、Node 22/24 required checks、up-to-date、禁止 force push、禁止删除、无 bypass。
-- upstream 原仓库只允许 owner 与 owner 邀请的 Collaborators 修改；公开用户只有读取/clone/使用 upstream 的权限。
-- 软件从 **TrendHub v1.4.3** 起按 **TrendHub Free Use License 1.0** 分发：个人与公司可免费使用未修改版本，但不得修改、制作派生版本、再发布或再分发软件本身；第三方依赖/代码仍按各自许可证执行。v1.4.2 及以前已经授予的 MIT 权利不追溯撤销。
-
-详细规则：[`GOVERNANCE.md`](./GOVERNANCE.md) · [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`CHANGELOG.md`](./CHANGELOG.md) · [`DISTRIBUTION.md`](./DISTRIBUTION.md)
+仓库级治理：[`../GOVERNANCE.md`](../GOVERNANCE.md) · [`../CONTRIBUTING.md`](../CONTRIBUTING.md) · [`../SECURITY.md`](../SECURITY.md) · [`../CHANGELOG.md`](../CHANGELOG.md)
