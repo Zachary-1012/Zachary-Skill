@@ -31,4 +31,6 @@ TrendHub distinguishes code correctness from third-party source availability:
 
 ## License vs upstream permissions
 
-Repository permissions and software licensing are different concepts. The upstream repository remains owner-controlled, while the software is currently distributed under the MIT License. MIT permits recipients to use, copy, modify, fork and redistribute copies subject to the license terms. Changing those legal rights would require an explicit license decision; repository write protection alone does not revoke MIT rights in copies or forks.
+Repository permissions and software licensing are different concepts. Starting with TrendHub v1.4.3, TrendHub-authored portions are distributed under the **TrendHub Free Use License 1.0** (`LicenseRef-TrendHub-Free-Use-1.0`). It permits free personal use and free internal company/business use of unmodified copies, while prohibiting modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself. Reasonable internal copies for installation, backup, disaster recovery, and internal deployment are permitted. Third-party components remain under their own licenses.
+
+TrendHub v1.4.2 and earlier remain governed by the license terms that applied when those versions were released. The v1.4.3 license boundary does not revoke prior MIT grants for earlier copies or code already received under MIT.

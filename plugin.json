@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Evidence-first professional trend intelligence across 38 public trend sources with 19 MCP tools, Source Reliability, trend lifecycle/velocity/persistence/diffusion/confidence, Google Trends, future signals and 24h/72h lead benchmarks.",
   "author": {
     "name": "Zachary",
@@ -9,7 +9,7 @@
   },
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
   "repository": "https://github.com/Zachary-1012/Zachary-Skill",
-  "license": "MIT",
+  "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "keywords": [
     "mcp",
     "trend-intelligence",

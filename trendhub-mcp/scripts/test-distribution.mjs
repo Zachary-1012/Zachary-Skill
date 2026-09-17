@@ -17,6 +17,7 @@ const plugin = JSON.parse(readFileSync(join(REPO, "plugin.json"), "utf8"));
 const mcp = JSON.parse(readFileSync(join(REPO, "mcp.json"), "utf8"));
 const glama = JSON.parse(readFileSync(join(REPO, "glama.json"), "utf8"));
 const skill = readFileSync(join(REPO, "skills", "trendhub", "SKILL.md"), "utf8");
+const productLicense = readFileSync(join(REPO, "LICENSE"), "utf8");
 
 const must = (condition, message) => {
   if (!condition) throw new Error(`DISTRIBUTION TEST FAILED: ${message}`);
@@ -44,7 +45,7 @@ must(terms.includes("not affiliated with or endorsed"), "terms must disclose thi
 must(terms.includes("not factual guarantees"), "terms must bound analytical indicators");
 
 const version = pkg.version;
-must(version === "1.4.2", `expected distribution patch 1.4.2, got ${version}`);
+must(version === "1.4.3", `expected distribution patch 1.4.3, got ${version}`);
 must(
   gateway.includes("TRENTHUB_REMOTE_SNAPSHOT_ENABLED"),
   "remote snapshot scheduler feature flag missing",
@@ -61,6 +62,12 @@ must(lock.version === version && lock.packages?.[""]?.version === version, "pack
 must(manifest.version === version, "manifest version must match package.json");
 must(registry.version === version, "Official MCP Registry version must match package.json");
 must(plugin.version === version, "portable plugin version must match package.json");
+must(pkg.license === "SEE LICENSE IN LICENSE", "package.json must point to the repository LICENSE");
+must(lock.packages?.[""]?.license === pkg.license, "package-lock root license must match package.json");
+must(manifest.license === "LicenseRef-TrendHub-Free-Use-1.0", "manifest license boundary mismatch");
+must(plugin.license === "LicenseRef-TrendHub-Free-Use-1.0", "plugin license boundary mismatch");
+must(productLicense.includes("TrendHub Free Use License 1.0"), "root product license title missing");
+must(productLicense.includes("you may not") && productLicense.includes("modify") && productLicense.includes("distribute"), "root product license restrictions missing");
 must(gateway.includes(`const VERSION = "${version}"`), "remote gateway version must match package.json");
 must(registry.name === "io.github.Zachary-1012/trendhub", "Official MCP Registry namespace mismatch");
 must(registry.$schema === "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "Official MCP Registry schema mismatch");

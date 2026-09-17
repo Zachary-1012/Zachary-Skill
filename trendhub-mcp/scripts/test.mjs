@@ -97,12 +97,12 @@ assert.match(setupClientsDoc, /<NODE_COMMAND>/);
 assert.match(setupClientsDoc, /<LAUNCHER>/);
 assert.match(methodologyDoc, /Source Reliability/);
 assert.match(methodologyDoc, /24h \/ 72h Lead-time Benchmark/);
-assert.match(rootLicense, /MIT License/);
+assert.match(rootLicense, /TrendHub Free Use License 1\.0/);
 assert.match(changelog, /\[1\.4\.0\]/);
 assert.match(contributing, /SMOKE OK tools=19/);
 assert.match(security, /TRENTHUB_HTTP_TOKEN/);
 assert.match(governance, /main-protection/);
-assert.match(governance, /MIT permits recipients/);
+assert.match(governance, /TrendHub Free Use License 1\.0/);
 assert.match(codeowners, /@Zachary-1012/);
 
 for (const [name, text] of [

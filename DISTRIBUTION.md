@@ -6,7 +6,7 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.4.2, 19 MCP tools, 38 public trend sources**
+- Stable tool contract: **TrendHub v1.4.3, 19 MCP tools, 38 public trend sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
@@ -18,14 +18,20 @@ Last evidence check: **2026-09-17**.
 | Channel | State | Public identifier / link | What is verified |
 | --- | --- | --- | --- |
 | GitHub source | **LIVE** | `https://github.com/Zachary-1012/Zachary-Skill` | Public clone; Node-free bootstrap; local stdio install contract |
-| Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | v1.4.2 is `active`, `isLatest=true`, remote URL points to the production Streamable HTTP endpoint |
+| Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | the latest published release is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint |
 | Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed, `Healthy`, Streamable HTTP remote detected, 19 tools detected |
-| Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to v1.4.2 |
+| Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | `mcp.json` / Cursor MCP install link in README | Cursor supports direct MCP install now. Public Cursor Marketplace publication requires repository submission and Cursor manual review; current public Marketplace search must not be represented as listed until approved. |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | production `/mcp` URL | The public Streamable HTTP endpoint satisfies Smithery URL-publishing requirements. Publishing requires an authenticated Smithery publisher namespace/API key or web publishing session. |
 | ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | production `/mcp` + `/privacy` + `/terms` | OpenAI now uses the Plugins Directory as the primary discovery surface for ChatGPT/Codex workflow capabilities. TrendHub is not currently returned by Plugins Directory search; public distribution requires app/plugin submission, review and publication. |
 
 **Rule:** only channels in `PUBLISHED · SEARCHABLE` state may be described publicly as “上架 / listed / searchable”. Compatibility, direct-install support or submission readiness is not the same as marketplace publication.
+
+## License boundary
+
+Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub Free Use License 1.0** (`LicenseRef-TrendHub-Free-Use-1.0`): free personal use and free internal company/business use of unmodified copies are permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited. Third-party components remain under their own licenses. v1.4.2 and earlier retain the license rights granted when those releases were published.
+
+Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
 
 ## Direct-use paths
 

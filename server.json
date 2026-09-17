@@ -3,7 +3,7 @@
   "name": "io.github.Zachary-1012/trendhub",
   "title": "TrendHub",
   "description": "Evidence-first trend intelligence across 38 public sources with 19 MCP tools and lead benchmarks.",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "remotes": [
     {
       "type": "streamable-http",
