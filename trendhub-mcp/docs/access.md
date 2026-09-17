@@ -1,8 +1,10 @@
 # 访问与安装说明
 
-TrendHub v1.4.0 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
+TrendHub v1.4.2 通过 GitHub **公开仓库** `Zachary-Skill` 分发。**拿到仓库链接的人即可 clone 安装使用**，无需审批、注册、登录或中央服务器。
 
 仓库地址：`https://github.com/Zachary-1012/Zachary-Skill`
+
+**零安装（可选）**：支持 Streamable HTTP 的 MCP 客户端可直接连公开托管 Remote MCP，能力合同与本地版一致（19 工具 / 38 信源）：`https://trendhub-remote-production.up.railway.app/mcp`；浏览器 Web Console：`https://trendhub-remote-production.up.railway.app/`，健康检查 `https://trendhub-remote-production.up.railway.app/health`。下文为本地 clone 安装流程。
 
 原 upstream 仓库的**写权限**与公开读取是两件事：当前只有 `@Zachary-1012` 和 owner 明确邀请的 Collaborators 能修改原仓库；公开用户可以读取、clone 和使用，但不会自动获得 upstream 写权限。`main` 还受 PR + Node 22/24 required checks + up-to-date + 禁止 force-push/deletion + no-bypass 的 ruleset 保护。
 
@@ -83,15 +85,20 @@ npm run quality:diagnostic # 主动、本地、匿名化质量诊断；不自动
 
 `Source Health` 与 CI 故意分离：第三方平台的登录要求、限流、风控、网络或 schema drift 会被标记为 `AUTH_REQUIRED / RATE_LIMITED / DOWN / DEGRADED`，但不会把外部平台暂时故障伪装成 TrendHub 代码失败。
 
-## v1.4.0 新的专业能力
+## 专业能力（持续增强）
 
-TrendHub 在本地积累有界历史与 Source Reliability 观测：
+TrendHub 积累有界历史与 Source Reliability 观测：
 
 - `source_reliability`：24h/7d/30d ok/usable rate、P50/P95、连续失败、schema drift、UP/DEGRADED/DOWN/AUTH_REQUIRED/RATE_LIMITED；
 - `trend_intelligence`：生命周期、rank velocity、persistence、cross-platform diffusion、source reliability、history sufficiency、deterministic confidence；
 - `benchmark_trend_lead`：使用外部 ground-truth `reference_time` 计算是否提前 24h/72h 发现趋势。
 
 指标是确定性规则，不是预测概率。历史不足返回 `insufficient_history`。完整方法见 `docs/intelligence-methodology.md`。
+
+后续版本增强：
+
+- **v1.4.1**：公开托管 Remote MCP（零安装）、Official MCP Registry / Glama 分发、公开 `/privacy` `/terms` `/health` 发现端点；本地核心仍 loopback + 私有 Token。
+- **v1.4.2**：定时趋势快照调度器，托管端按小时自动采集并持久化有界历史（默认关闭、显式启用；变更类 `/api/snapshot` 不公开），本地可用 cron / Windows 任务计划程序，见 `docs/scheduled-snapshots.md`。19 工具 / 38 信源契约不变。
 
 ## 更新：只跟随 Stable Release
 

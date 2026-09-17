@@ -28,13 +28,13 @@ The hosting platform must provide `PORT` (or `TRENTHUB_REMOTE_PORT`). The gatewa
 ## Public endpoints
 
 - `POST /mcp` — stateless Streamable HTTP MCP
-- `GET /health` — version/readiness metadata
+- `GET /health` — version/readiness metadata, including a `snapshotScheduler` object when the optional server-side scheduler is enabled
 - `GET /.well-known/mcp.json` — discoverable endpoint metadata
 - `GET /privacy` — privacy notice
 - `GET /terms` — hosted-service terms
 - `GET /` — minimal landing page
 
-`/api/*` intentionally returns 404 on the public gateway.
+Local-only mutating routes such as `/api/snapshot` are not published: `GET` returns 404 and `POST` returns 405 on the public gateway.
 
 ## Environment knobs
 
@@ -44,5 +44,13 @@ The hosting platform must provide `PORT` (or `TRENTHUB_REMOTE_PORT`). The gatewa
 - `TRENTHUB_REMOTE_MAX_BODY_BYTES` — request-size cap, default 2 MiB
 - `TRENTHUB_REMOTE_MAX_CONCURRENCY` — in-process concurrency cap, default 24
 - `TRENTHUB_REMOTE_TIMEOUT_MS` — upstream MCP request timeout, default 90 seconds
+- `TRENTHUB_REMOTE_SNAPSHOT_ENABLED` — set to `1`/`true`/`yes`/`on` to enable the server-side snapshot scheduler; default off
+- `TRENTHUB_SNAPSHOT_INTERVAL_MIN` — collection cadence in minutes, 15-minute floor, default 60
+- `TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS` — first-run delay after boot, 1-second floor, default 30000
+- `TRENTHUB_DATA_DIR` — data directory; point it at a persistent volume (e.g. `/data/trendhub`) so `snapshots/` and `history/` survive redeploys
+
+### Scheduled snapshots & persistent volume
+
+The scheduler wraps the same `takeSnapshots()` pipeline as the local edition and is **disabled by default**. When enabling it on the host, mount a persistent volume at `TRENTHUB_DATA_DIR` (e.g. `/data/trendhub`); without it, the bounded history is lost on every redeploy. Collection failures only set `snapshotScheduler.lastError` and never exit the MCP process, and overlapping runs are skipped (`skippedBecauseRunning`). State is exposed on `GET /health` as `snapshotScheduler` (`enabled`/`running`/`intervalMs`/`lastRunAt`/`lastSuccessAt`/`lastOk`/`lastTotal`/`lastError`/`skippedBecauseRunning`). See `scheduled-snapshots.md` for local cron / Windows Task Scheduler equivalents.
 
 The remote gateway is a distribution adapter. It does not change TrendHub's 19-tool contract or weaken the local edition's non-loopback bearer-token requirement.

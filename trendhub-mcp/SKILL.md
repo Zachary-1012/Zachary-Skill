@@ -98,6 +98,7 @@ description: 专业级全网趋势情报 Skill，以小红书为深度主打。�
 - stdio：`<NODE_COMMAND> <LAUNCHER>`；Node-free 用户使用 bootstrap 返回绝对路径。
 - HTTP：默认 `127.0.0.1:8333/mcp`；任何非 loopback 监听必须配置 `TRENTHUB_HTTP_TOKEN`。
 - 本地控制台：`npm run ui`。
+- **定时趋势历史（v1.4.2）**：托管 Remote MCP 已按小时自动快照并写入持久化卷（状态见 `/health` 的 `snapshotScheduler`）；本地可用 cron（macOS/Linux）或任务计划程序（Windows）周期运行 `node dist/scripts/snapshot.js`，见 `docs/scheduled-snapshots.md`。
 - deterministic tests：`npm test`。
 - MCP smoke：`npm run smoke`。
 - live source health：`npm run source:health`。
