@@ -4,7 +4,7 @@
 >
 > TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
 >
-> **v1.4.4 公网 Web 修复**：托管 Web Console 默认读取最近成功快照；用户主动实时刷新时，若第三方源临时不可用，则自动回退到持久化快照，避免页面空白。
+> **v1.5.0 Creator Ops**：本地控制台新增“运行与交付”，把进程/数据卷/信源健康、版本来源、手工成本、脱敏反馈和可复制交付简报组织为可读视图；不上传遥测、不读取密钥、不自动重启或发布。公网 Remote 不暴露 `/api/ops/*`。安装使用仍**无需审批、注册、登录或中央服务器**。
 
 ---
 
@@ -23,6 +23,7 @@
 | **Trend Intelligence Engine** | 生命周期、rank velocity、persistence、diffusion、source reliability、history sufficiency、confidence | `trend_intelligence` |
 | **Lead-time Benchmark** | 与外部 ground truth 对比，验证是否提前 24h/72h 发现 | `benchmark_trend_lead` |
 | 内容生产 | 10 套专家模板 + 基于真实证据/爆款样本的 Brief | `list_templates`、`get_template`、`get_content_brief` |
+| **Creator Ops** | 本地运行状态、信源健康、版本来源、手工成本、脱敏反馈、交付简报 | 本地控制台“运行与交付” |
 
 ### 21 个 MCP 工具
 

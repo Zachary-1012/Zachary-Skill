@@ -205,6 +205,7 @@ const TITLES = {
   dashboard: "概览", xhs: "小红书热点", trending: "当下热榜", overlap: "跨平台共振", clusters: "共振话题发现", changes: "新晋 / 掉榜",
   curve: "关键词趋势曲线", related: "相关搜索词", signals: "未来信号", events: "节点日历",
   topic: "话题深度情报", brief: "创作简报", templates: "模板库", settings: "设置与说明",
+  ops: "运行与交付",
 };
 async function route() {
   const { view, params } = parseHash();

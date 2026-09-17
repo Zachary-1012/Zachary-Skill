@@ -10,6 +10,7 @@ data/history/
 data/reliability/
 data/health/
 data/diagnostics/
+data/ops/
 data/benchmarks/
 data/*.sqlite*
 .DS_Store
