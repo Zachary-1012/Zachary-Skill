@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "专业级全网趋势情报 MCP Skill，以小红书为深度主打：覆盖 38 个平台/趋势信源、Source Reliability、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h lead benchmark 与内容生产，共 19 个 MCP 工具。BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "MIT",
@@ -119,7 +119,7 @@
       "terms": "https://trendhub-remote-production.up.railway.app/terms",
       "accountRequired": false,
       "modelApiKeyRequired": false,
-      "note": "Public distribution adapter. The hosted gateway exposes MCP only; the local console/API is not exposed and no visitor XHS_COOKIE is used."
+      "note": "Public distribution adapter. The hosted gateway exposes Remote MCP plus the responsive read/query TrendHub web console. Local-only mutating routes such as /api/snapshot remain private. No visitor XHS_COOKIE is used."
     }
   },
   "intelligence": {

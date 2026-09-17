@@ -1,4 +1,4 @@
-# TrendHub · 全网热点趋势专家 v1.4.1
+# TrendHub · 全网热点趋势专家 v1.4.2
 
 > **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个平台/趋势信源**，以小红书为深度主打，并提供 Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、话题深度分析和内容生产，共 **19 个 MCP 工具**。
 >

@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.2 — Scheduled trend history
+
+- Add an opt-in snapshot scheduler (`src/runtime/snapshot-scheduler.ts`) that periodically runs the existing `takeSnapshots()` pipeline to accumulate the bounded trend history used by lifecycle intelligence and 24h/72h lead benchmarks.
+- The hosted Remote MCP gateway exposes scheduler state on `/health`. Collection is **disabled by default** and enabled only with `TRENTHUB_REMOTE_SNAPSHOT_ENABLED=1` (cadence `TRENTHUB_SNAPSHOT_INTERVAL_MIN`, 15-minute floor; initial delay `TRENTHUB_SNAPSHOT_INITIAL_DELAY_MS`). Collection failures never exit the MCP process and overlapping runs are skipped.
+- Local-only mutating routes such as `/api/snapshot` remain private on the public gateway; no visitor `XHS_COOKIE` is ever injected.
+- Add a deterministic scheduler test and wire it into the release gate.
+- Document cross-platform local scheduled collection (cron on macOS/Linux, Task Scheduler on Windows).
+- No change to the 19-tool / 38-source contract.
+
 ## v1.4.1 — Multi-registry distribution
 
 - Add isolated public Streamable HTTP MCP gateway for marketplace distribution.
