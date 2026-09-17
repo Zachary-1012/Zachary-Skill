@@ -224,6 +224,16 @@ async function route() {
   }
 }
 document.querySelectorAll(".nav-item").forEach((n) =>
-  n.addEventListener("click", () => (location.hash = `#/${n.dataset.view}`))
+  n.addEventListener("click", () => {
+    location.hash = `#/${n.dataset.view}`;
+    document.querySelector(".sidebar")?.classList.remove("nav-open");
+    document.querySelector("#navToggle")?.setAttribute("aria-expanded", "false");
+  })
 );
+document.querySelector("#navToggle")?.addEventListener("click", () => {
+  const sidebar = document.querySelector(".sidebar");
+  const open = sidebar?.classList.toggle("nav-open") ?? false;
+  document.querySelector("#navToggle")?.setAttribute("aria-expanded", String(open));
+  document.querySelector("#navToggle")?.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+});
 window.addEventListener("hashchange", route);
