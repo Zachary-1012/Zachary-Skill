@@ -40,19 +40,19 @@ if (!gateway.includes('req.method !== "GET"')) fail("public web API must remain 
 if (!gateway.includes(`const TOOL_COUNT = ${expectedTools}`)) fail(`remote gateway tool count must be ${expectedTools}`);
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
-if (!index.includes('href="responsive-v2.css"')) fail("responsive v2 stylesheet missing from shell");
-if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js"')) fail("professional/source-universe navigation missing");
-if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js"')) fail("Creator Ops navigation missing");
+if (!index.includes('href="responsive-v2.css?v=1.5.2"') || !index.includes('src="app.js?v=1.5.2"')) fail("public shell assets must be versioned for a mobile hotfix");
+if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js?v=1.5.2"')) fail("professional/source-universe navigation missing");
+if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js?v=1.5.2"')) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
 if (!responsive.includes("display: grid !important") || !responsive.includes("flex-direction: initial !important")) fail("mobile shell must override legacy horizontal navigation flex");
 if (!responsive.includes("@media (max-width: 900px)") || !responsive.includes(".app { display: block; }")) fail("defensive compact shell breakpoint missing");
 if (!responsive.includes("100dvh") || !responsive.includes("safe-area-inset")) fail("mobile safe-area/dynamic viewport support missing");
 if (!responsive.includes("overflow-x: auto") || !responsive.includes("table-wrap")) fail("mobile tables must remain horizontally usable");
-if (!responsive.includes("grid-template-columns: repeat(2, minmax(0, 1fr))") || !responsive.includes("white-space: normal")) fail("mobile navigation must wrap instead of clipping");
+if (!responsive.includes("body .sidebar > .nav") || !responsive.includes("display: none !important") || !responsive.includes("body .sidebar.nav-open > .nav")) fail("mobile navigation must be closed by default and open only as a drawer");
 if (!index.includes('id="navToggle"') || !app.includes("navToggle")) fail("mobile navigation toggle wiring missing");
-if (!responsive.includes(".nav-toggle") || !responsive.includes(".sidebar.nav-open .nav")) fail("mobile navigation open/closed states missing");
-if (!responsive.includes("max-height: 0")) fail("mobile navigation must be collapsed by default");
+if (!responsive.includes(".nav-toggle") || !app.includes("closeMobileNav") || !app.includes('addEventListener("pageshow"')) fail("mobile navigation toggle, click, and browser-restore handling missing");
+if (!gateway.includes('headers["X-TrendHub-Web-Version"] = VERSION') || !gateway.includes('"no-store, max-age=0"')) fail("public HTML/CSS/JS must never retain an obsolete mobile shell");
 if (!responsive.includes("pointer: coarse")) fail("touch target contract missing");
 if (!viewsB.includes("实时话题词组图") || !viewsB.includes('qs.set("topic", topic)')) fail("topic radar/filter UX missing");
 if (!viewsC.includes("动态趋势曲线")) fail("dynamic trend curve explanation missing");

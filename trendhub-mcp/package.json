@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.5.1",
-  "description": "TrendHub MCP — v1.5.1 RC；Agent-native、Evidence-first、21 MCP tools、本地优先。",
+  "version": "1.5.2",
+  "description": "TrendHub MCP — v1.5.2；Agent-native、Evidence-first、21 MCP tools、本地优先。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"

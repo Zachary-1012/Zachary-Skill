@@ -27,7 +27,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.5.1";
+const VERSION = "1.5.2";
 const TOOL_COUNT = 21;
 
 function envBool(name, fallback = false) {
@@ -243,7 +243,10 @@ async function servePublicStatic(pathname, res) {
   headers["Referrer-Policy"] = "no-referrer";
   headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
   headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'";
-  if (pathname === "/" || pathname === "/index.html") headers["Cache-Control"] = "no-cache";
+  headers["X-TrendHub-Web-Version"] = VERSION;
+  // The public console is served from one stable Railway URL. Never allow a
+  // phone browser to keep an obsolete HTML/CSS/JS shell after a hotfix.
+  if (pathname === "/" || pathname === "/index.html" || /\.(?:css|js)$/i.test(pathname)) headers["Cache-Control"] = "no-store, max-age=0";
   res.writeHead(sr.status, headers);
   res.end(Buffer.from(await sr.arrayBuffer()));
 }
