@@ -72,13 +72,14 @@ jobs:
             sleep 0.25
           done
           node -e "const h=require('/tmp/trendhub-health.json'); const expected=Number(process.argv[1]); const version=process.argv[2]; if(!h.ok || h.tools!==expected || h.version!==version || !h.web) process.exit(1)" "$EXPECTED" "$VERSION"
+          EXPECTED_PLATFORMS="$(node --input-type=module -e "import { listPlatforms } from './dist/src/sources/index.js'; process.stdout.write(String(listPlatforms().length))")"
           npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
-          grep -F "REMOTE SMOKE OK tools=${EXPECTED} platforms=38" /tmp/trendhub-remote-smoke.txt
+          grep -F "REMOTE SMOKE OK tools=${EXPECTED} platforms=${EXPECTED_PLATFORMS}" /tmp/trendhub-remote-smoke.txt
           curl -fsS http://127.0.0.1:18444/ >/tmp/trendhub-web.html
           grep -F 'name="viewport"' /tmp/trendhub-web.html
           grep -F 'TrendHub' /tmp/trendhub-web.html
           curl -fsS http://127.0.0.1:18444/api/platforms >/tmp/trendhub-platforms.json
-          node -e "const p=require('/tmp/trendhub-platforms.json'); if(!Array.isArray(p.platforms) || p.platforms.length!==38) process.exit(1)"
+          node -e "const p=require('/tmp/trendhub-platforms.json'); const expected=Number(process.argv[1]); if(!Array.isArray(p.platforms) || p.platforms.length!==expected) process.exit(1)" "$EXPECTED_PLATFORMS"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/snapshot)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/workspaces)" = "404"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18444/api/observability)" = "404"
