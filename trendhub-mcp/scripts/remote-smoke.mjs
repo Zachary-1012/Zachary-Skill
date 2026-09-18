@@ -12,7 +12,7 @@ const manifestTools = existsSync(professionalManifest)
   ? Number(JSON.parse(readFileSync(professionalManifest, "utf8")).expectedToolCount || 19)
   : 19;
 const expectedTools = Number(process.env.TRENTHUB_EXPECTED_TOOLS || manifestTools);
-const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 38);
+const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 51);
 const url = process.argv[2] || process.env.TRENTHUB_REMOTE_URL || "https://trendhub-remote-production.up.railway.app/mcp";
 const client = new Client({ name: "trendhub-remote-smoke", version: "1.0.0" });
 const transport = new StreamableHTTPClientTransport(new URL(url));
@@ -45,7 +45,7 @@ try {
   const uniquePlatformNames = new Set(platformNames);
   if (platforms.length !== expectedPlatforms) throw new Error(`expected ${expectedPlatforms} platforms, got ${platforms.length}: ${platformNames.join(", ")}`);
   if (uniquePlatformNames.size !== expectedPlatforms) throw new Error(`expected ${expectedPlatforms} unique platforms, got ${uniquePlatformNames.size}: ${platformNames.join(", ")}`);
-  for (const required of ["xiaohongshu", "weibo", "bilibili", "hackernews", "github-trending", "reddit-technology"]) {
+  for (const required of ["xiaohongshu", "weibo", "bilibili", "hackernews", "github-trending", "reddit-technology", "bluesky", "gdelt", "apple-podcasts"]) {
     if (!uniquePlatformNames.has(required)) throw new Error(`list_platforms missing representative source ${required}`);
   }
   console.log(`REMOTE SMOKE OK tools=${names.length} platforms=${platforms.length} url=${url}`);
