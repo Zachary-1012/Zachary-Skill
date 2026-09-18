@@ -153,7 +153,7 @@ export const PROFESSIONAL_SOURCE_CATALOG: ProfessionalSourceSpec[] = [
   src("whatsapp-channels", "WhatsApp Channels", "GLOBAL", ["social-attention", "news-authority"], "licensed-connector", "P1", { verticals: ["general", "business-corporate", "fashion-luxury"] }),
 
   // ---- Global/APAC: podcast / audio ----
-  src("apple-podcasts", "Apple Podcasts", "GLOBAL", ["podcast-audio"], "adapter-planned", "P0", { verticals: ["general", "business-corporate", "technology", "fashion-luxury", "culture-entertainment"], notes: "Use public market charts/RSS metadata where available; chart context is market-specific and must be preserved." }),
+  src("apple-podcasts", "Apple Podcasts", "GLOBAL", ["podcast-audio"], "live-public", "P0", { livePlatformId: "apple-podcasts", verticals: ["general", "business-corporate", "technology", "fashion-luxury", "culture-entertainment"], notes: "Public Apple catalog search is live. Search relevance is not a chart rank or listener count." }),
   src("spotify-podcasts", "Spotify Podcasts", "GLOBAL", ["podcast-audio"], "byo-api", "P0", { setupOverride: "user-oauth", verticals: ["general", "business-corporate", "technology", "fashion-luxury", "culture-entertainment"] }),
 
   // ---- Global/APAC: search / web / discovery ----
@@ -162,7 +162,7 @@ export const PROFESSIONAL_SOURCE_CATALOG: ProfessionalSourceSpec[] = [
   src("google-news", "Google News", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P0"),
   src("bing-news", "Bing News/Search", "GLOBAL", ["search-intent", "news-authority", "web-domain"], "byo-api", "P1"),
   src("naver-search", "NAVER Search/DataLab", "APAC", ["search-intent", "web-domain"], "byo-api", "P1", { verticals: ["fashion-luxury", "beauty", "culture-entertainment", "retail-commerce"] }),
-  src("gdelt", "GDELT", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P0", { verticals: ["general", "business-corporate", "finance-markets", "technology", "automotive"] }),
+  src("gdelt", "GDELT", "GLOBAL", ["news-authority", "web-domain"], "live-public", "P0", { livePlatformId: "gdelt", verticals: ["general", "business-corporate", "finance-markets", "technology", "automotive"], notes: "GDELT DOC article evidence is live and query-configurable; it is coverage evidence, not a popularity rank." }),
   src("common-crawl", "Common Crawl", "GLOBAL", ["web-domain"], "adapter-planned", "P2", { notes: "Long-horizon Web/domain evidence, not a real-time hotlist source." }),
   src("brand-owned-domain", "Brand / company owned domains", "GLOBAL", ["web-domain", "news-authority"], "adapter-planned", "P0", { verticals: ["general", "fashion-luxury", "beauty", "business-corporate", "technology", "automotive", "finance-markets", "retail-commerce"], notes: "User supplies official website/newsroom/IR URLs or RSS. Owned media is evaluated separately from earned media to avoid double-counting brand claims as independent coverage." }),
   src("amazon", "Amazon", "GLOBAL", ["commerce-discovery", "search-intent"], "licensed-connector", "P1", { verticals: ["retail-commerce", "beauty", "fashion-luxury", "technology"] }),
@@ -187,9 +187,9 @@ export const PROFESSIONAL_SOURCE_CATALOG: ProfessionalSourceSpec[] = [
   src("forbes", "Forbes", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P1", { verticals: ["business-corporate", "finance-markets", "technology", "fashion-luxury"] }),
   src("fortune", "Fortune", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P1", { verticals: ["business-corporate", "finance-markets", "technology"] }),
   src("business-insider", "Business Insider", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P1", { verticals: ["business-corporate", "finance-markets", "technology", "retail-commerce"] }),
-  src("techcrunch", "TechCrunch", "GLOBAL", ["news-authority", "developer-tech", "web-domain"], "adapter-planned", "P0", { verticals: ["technology", "business-corporate", "finance-markets"] }),
-  src("the-verge", "The Verge", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P1", { verticals: ["technology", "culture-entertainment"] }),
-  src("wired", "WIRED", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P1", { verticals: ["technology", "business-corporate", "culture-entertainment"] }),
+  src("techcrunch", "TechCrunch", "GLOBAL", ["news-authority", "developer-tech", "web-domain"], "live-public", "P0", { livePlatformId: "techcrunch", verticals: ["technology", "business-corporate", "finance-markets"], notes: "Official public RSS evidence; publication recency, not social popularity." }),
+  src("the-verge", "The Verge", "GLOBAL", ["news-authority", "web-domain"], "live-public", "P1", { livePlatformId: "the-verge", verticals: ["technology", "culture-entertainment"], notes: "Official public RSS evidence; publication recency, not social popularity." }),
+  src("wired", "WIRED", "GLOBAL", ["news-authority", "web-domain"], "live-public", "P1", { livePlatformId: "wired", verticals: ["technology", "business-corporate", "culture-entertainment"], notes: "Official public RSS evidence; publication recency, not social popularity." }),
   src("adage", "Ad Age", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P0", { verticals: ["marketing-advertising", "business-corporate"] }),
   src("adweek", "Adweek", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P0", { verticals: ["marketing-advertising", "business-corporate", "fashion-luxury"] }),
   src("campaign", "Campaign", "GLOBAL", ["news-authority", "web-domain"], "adapter-planned", "P0", { verticals: ["marketing-advertising", "business-corporate"] }),

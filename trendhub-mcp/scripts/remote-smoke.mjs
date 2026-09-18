@@ -45,7 +45,9 @@ try {
   const uniquePlatformNames = new Set(platformNames);
   if (platforms.length !== expectedPlatforms) throw new Error(`expected ${expectedPlatforms} platforms, got ${platforms.length}: ${platformNames.join(", ")}`);
   if (uniquePlatformNames.size !== expectedPlatforms) throw new Error(`expected ${expectedPlatforms} unique platforms, got ${uniquePlatformNames.size}: ${platformNames.join(", ")}`);
-  for (const required of ["xiaohongshu", "weibo", "bilibili", "hackernews", "github-trending", "reddit-technology"]) {
+  const requiredSources = ["xiaohongshu", "weibo", "bilibili", "hackernews", "github-trending", "reddit-technology"];
+  if (expectedPlatforms > 38) requiredSources.push("bluesky", "gdelt", "apple-podcasts");
+  for (const required of requiredSources) {
     if (!uniquePlatformNames.has(required)) throw new Error(`list_platforms missing representative source ${required}`);
   }
   console.log(`REMOTE SMOKE OK tools=${names.length} platforms=${platforms.length} url=${url}`);
