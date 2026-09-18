@@ -23,7 +23,7 @@ Last evidence check: **2026-09-17**.
 | Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | `mcp.json` / Cursor MCP install link in README | Cursor supports direct MCP install now. Public Cursor Marketplace publication requires repository submission and Cursor manual review; current public Marketplace search must not be represented as listed until approved. |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | production `/mcp` URL | The public Streamable HTTP endpoint satisfies Smithery URL-publishing requirements. Publishing requires an authenticated Smithery publisher namespace/API key or web publishing session. |
-| ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | production `/mcp` + `/privacy` + `/terms` | OpenAI now uses the Plugins Directory as the primary discovery surface for ChatGPT/Codex workflow capabilities. TrendHub is not currently returned by Plugins Directory search; public distribution requires app/plugin submission, review and publication. |
+| OpenAI Plugins Directory (ChatGPT / Codex) | **READY TO SUBMIT** | production `/mcp` + `/privacy` + `/terms` + [Submission Portal](https://platform.openai.com/apps) | OpenAI uses the Plugins Directory as the shared discovery surface for ChatGPT and Codex workflow capabilities. TrendHub is prepared for a `With MCP` submission; it has not yet been submitted, reviewed, or published. |
 
 **Rule:** only channels in `PUBLISHED · SEARCHABLE` state may be described publicly as “上架 / listed / searchable”. Compatibility, direct-install support or submission readiness is not the same as marketplace publication.
 
@@ -89,7 +89,7 @@ The maintained distribution targets are:
 3. Agent Plugins / direct GitHub distribution — ready and usable from the repository.
 4. Cursor — direct MCP use is ready; public Marketplace publication is manually reviewed by Cursor.
 5. Smithery — endpoint is URL-publish-ready; public listing requires an authenticated Smithery publisher namespace/session.
-6. ChatGPT / Codex Plugins Directory — MCP/privacy/terms are ready; public discovery requires OpenAI submission, review and publication.
+6. OpenAI Plugins Directory (ChatGPT / Codex) — production MCP, privacy, terms and submission materials are ready; submit through the [official portal](https://platform.openai.com/apps), then await review and publication.
 
 All listings must point to the same public repository and, for remote-capable directories, the same verified hosted `/mcp` endpoint.
 
