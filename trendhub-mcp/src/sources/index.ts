@@ -9,6 +9,7 @@ import { recordSourceObservation } from "../store/reliability.js";
 import { DOMESTIC_PLATFORMS, fetchDomestic } from "./domestic.js";
 import { INTERNATIONAL, fetchInternational } from "./international.js";
 import { fetchWeibo, fetchZhihu, fetchBaidu } from "./overrides.js";
+import { fetchPublicAdapter, isPublicAdapterPlatform, PUBLIC_ADAPTER_PLATFORMS } from "./public-adapters.js";
 import {
   fetchXiaohongshu,
   fetchXiaohongshuHotlist,
@@ -45,6 +46,8 @@ export const PLATFORMS: PlatformInfo[] = [
     source: (p.name in OVERRIDES ? "self" : "dailyhot") as PlatformInfo["source"],
   })),
   ...INTERNATIONAL.map((s) => ({ platform: s.platform, label: s.label, category: s.category, source: "self-intl" as const })),
+  { platform: "bluesky", label: "Bluesky public search", category: "social", source: "self-intl" },
+  ...PUBLIC_ADAPTER_PLATFORMS.map((s) => ({ platform: s.platform, label: s.label, category: s.category, source: "self-intl" as const })),
   { platform: "github-trending-weekly", label: "GitHub Trending (weekly)", category: "dev", source: "self-intl" },
   { platform: "github-trending-monthly", label: "GitHub Trending (monthly)", category: "dev", source: "self-intl" },
 ];
@@ -86,6 +89,7 @@ async function getHotRaw(platform: string, limit = 50): Promise<HotResult> {
     return r;
   }
   // 2) 国际源
+  if (isPublicAdapterPlatform(platform)) return fetchPublicAdapter(platform, Math.min(limit, 50));
   if (isInternational(platform)) {
     return fetchInternational(platform, platform.startsWith("reddit") ? 25 : Math.min(limit, 30));
   }
