@@ -57,8 +57,8 @@ must(gateway.includes("snapshotScheduler"), "remote snapshot scheduler health st
 must(lock.version === version && lock.packages?.[""]?.version === version, "package-lock version metadata must match package.json");
 must(manifest.version === version, "manifest version must match package.json");
 must(manifest.tools?.length === 21, "v1.5.0 manifest must declare 21 MCP tools");
-must(registry.version === professional.stableBase, "RC must not mutate Official MCP Registry version");
-must(plugin.version === professional.stableBase, "RC must not mutate portable stable plugin version");
+must(registry.version === (professional.releaseStatus === "release-ready" ? pkg.version : professional.stableBase), "Official MCP Registry version mismatch");
+must(plugin.version === (professional.releaseStatus === "release-ready" ? pkg.version : professional.stableBase), "Agent Plugin version mismatch");
 must(pkg.license === "SEE LICENSE IN LICENSE", "package.json must point to the repository LICENSE");
 must(lock.packages?.[""]?.license === pkg.license, "package-lock root license must match package.json");
 must(manifest.license === "LicenseRef-TrendHub-Free-Use-1.0", "manifest license boundary mismatch");
