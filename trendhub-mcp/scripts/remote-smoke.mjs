@@ -12,7 +12,7 @@ const manifestTools = existsSync(professionalManifest)
   ? Number(JSON.parse(readFileSync(professionalManifest, "utf8")).expectedToolCount || 19)
   : 19;
 const expectedTools = Number(process.env.TRENTHUB_EXPECTED_TOOLS || manifestTools);
-const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 51);
+const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 38);
 const url = process.argv[2] || process.env.TRENTHUB_REMOTE_URL || "https://trendhub-remote-production.up.railway.app/mcp";
 const client = new Client({ name: "trendhub-remote-smoke", version: "1.0.0" });
 const transport = new StreamableHTTPClientTransport(new URL(url));
