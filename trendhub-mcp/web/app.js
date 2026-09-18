@@ -224,17 +224,30 @@ async function route() {
     content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + `<div class="card"><p class="sub">${hint}</p></div>`;
   }
 }
+const mobileNavQuery = window.matchMedia("(max-width: 720px)");
+function setMobileNav(open) {
+  const sidebar = document.querySelector(".sidebar");
+  const toggle = document.querySelector("#navToggle");
+  sidebar?.classList.toggle("nav-open", Boolean(open));
+  toggle?.setAttribute("aria-expanded", String(Boolean(open)));
+  toggle?.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+}
+function closeMobileNav() {
+  if (mobileNavQuery.matches) setMobileNav(false);
+}
 document.querySelectorAll(".nav-item").forEach((n) =>
   n.addEventListener("click", () => {
+    closeMobileNav();
     location.hash = `#/${n.dataset.view}`;
-    document.querySelector(".sidebar")?.classList.remove("nav-open");
-    document.querySelector("#navToggle")?.setAttribute("aria-expanded", "false");
   })
 );
 document.querySelector("#navToggle")?.addEventListener("click", () => {
-  const sidebar = document.querySelector(".sidebar");
-  const open = sidebar?.classList.toggle("nav-open") ?? false;
-  document.querySelector("#navToggle")?.setAttribute("aria-expanded", String(open));
-  document.querySelector("#navToggle")?.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+  const open = !document.querySelector(".sidebar")?.classList.contains("nav-open");
+  setMobileNav(open);
 });
+// iOS can restore a page from its back-forward cache with the old DOM state.
+// Resetting the drawer on load/pageshow guarantees content is visible first.
+closeMobileNav();
+window.addEventListener("pageshow", closeMobileNav);
+mobileNavQuery.addEventListener?.("change", closeMobileNav);
 window.addEventListener("hashchange", route);

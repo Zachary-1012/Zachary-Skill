@@ -177,7 +177,9 @@ button, input, select, textarea { max-width: 100%; }
   .source-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 }
 
-/* Phone / small tablet: navigation is a wrapping grid, never a clipped desktop rail. */
+/* Phone / small tablet shell. The final rules below make navigation an explicit
+   drawer, so a restored browser session can never turn the entire viewport into
+   a menu. */
 @media (max-width: 720px) {
   body { background: var(--card); }
   .app { min-height: 100dvh; }
@@ -332,4 +334,60 @@ button, input, select, textarea { max-width: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* Mobile navigation acceptance contract.
+   Keep this last: the original desktop stylesheet and the first responsive pass
+   both contain legacy navigation declarations. A phone must always open on the
+   current page, with navigation available deliberately from the menu button. */
+@media (max-width: 720px) {
+  .sidebar {
+    position: sticky;
+    overflow: visible;
+    padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+  }
+  .brand { min-height: 52px; padding: 2px 2px; }
+  .brand-name { font-size: 16px; }
+  .nav-toggle {
+    display: inline-flex !important;
+    position: relative;
+    z-index: 2;
+  }
+  body .sidebar > .nav {
+    display: none !important;
+    position: absolute;
+    inset: 100% 0 auto;
+    width: 100%;
+    max-height: none;
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--sidebar-bg);
+    border-top: 1px solid #2a2a2a;
+    border-bottom: 1px solid #2a2a2a;
+    box-shadow: 0 16px 28px rgba(0, 0, 0, .28);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body .sidebar.nav-open > .nav {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px;
+    max-height: calc(100dvh - 64px);
+  }
+  body .sidebar > .nav .nav-group {
+    display: block;
+    padding: 12px 8px 4px;
+  }
+  body .sidebar > .nav .nav-item {
+    display: flex;
+    min-height: 46px;
+    padding: 11px 12px;
+    border-left: 2px solid transparent;
+    border-bottom: 0;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: normal;
+  }
+  body .sidebar > .nav .nav-item.active { border-left-color: var(--accent); border-bottom-color: transparent; }
+  .sidebar-foot { display: none; }
 }
