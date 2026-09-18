@@ -98,7 +98,7 @@ TrendHub 积累有界历史与 Source Reliability 观测：
 后续版本增强：
 
 - **v1.4.1**：公开托管 Remote MCP（零安装）、Official MCP Registry / Glama 分发、公开 `/privacy` `/terms` `/health` 发现端点；本地核心仍 loopback + 私有 Token。
-- **v1.4.2**：定时趋势快照调度器，托管端按小时自动采集并持久化有界历史（默认关闭、显式启用；变更类 `/api/snapshot` 不公开），本地可用 cron / Windows 任务计划程序，见 `docs/scheduled-snapshots.md`。历史 v1.4.x 的 19 工具 / 38 信源契约保持不变。
+- **v1.4.2**：定时趋势快照调度器，托管端按小时自动采集并持久化有界历史（默认关闭、显式启用；变更类 `/api/snapshot` 不公开），本地可用 cron / Windows 任务计划程序，见 `docs/scheduled-snapshots.md`。当前 v1.5.2 运行时合同为 21 工具 / 51 个运行时来源；历史 v1.4.x 资产仍保持不可变。
 
 ## 更新：只跟随 Stable Release
 

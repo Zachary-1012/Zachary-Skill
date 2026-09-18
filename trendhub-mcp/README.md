@@ -1,6 +1,6 @@
 # TrendHub · 全网热点趋势专家 v1.5.2
 
-> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **38 个实时平台/趋势信源**，并维护 **129 个专业分层信源**，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
+> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。**覆盖国内外 **51 个运行时平台/趋势信源**，并维护 **129 个专业分层信源**，新增公开 RSS/Atom、GDELT、Apple Podcasts 公共目录与 Bluesky 证据适配器，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
 >
 > TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
 >
@@ -13,7 +13,7 @@
 | 能力层 | 能力 | 主要工具 |
 | --- | --- | --- |
 | 小红书主打 | 游客热门推荐笔记流 + 标题话题词；登录态解锁官方热搜词榜/关键词爆款搜索 | `xhs_hot_topics`、`get_trending` |
-| 当下热点 | 38 个平台/趋势信源，按平台/分类查询 | `get_trending`、`list_platforms`、`list_categories` |
+| 当下热点 | 51 个运行时平台/趋势信源，按平台/分类查询 | `get_trending`、`list_platforms`、`list_categories` |
 | 共振与变化 | 跨平台共振、自动聚类、新晋/飙升/掉榜、历史快照 | `cross_platform_overlap`、`discover_trending_topics`、`trend_change_alerts`、`take_snapshot` |
 | **Source Reliability** | UP/DEGRADED/DOWN/AUTH_REQUIRED/RATE_LIMITED；24h/7d/30d 可用率；P50/P95；连续失败；schema drift | `source_reliability` |
 | 搜索走势 | Google Trends 0–100 相对热度、top/rising 相关词 | `keyword_trend_curve`、`related_queries` |
@@ -29,14 +29,14 @@
 
 `list_platforms` · `list_categories` · `get_trending` · **`xhs_hot_topics`** · `cross_platform_overlap` · `discover_trending_topics` · `trend_change_alerts` · `take_snapshot` · **`source_reliability`** · `keyword_trend_curve` · `related_queries` · `future_signals` · `upcoming_events` · `analyze_topic` · **`trend_intelligence`** · **`benchmark_trend_lead`** · `list_templates` · `get_template` · `get_content_brief`
 
-### 平台覆盖（38，小红书置顶）
+### 平台覆盖（51，小红书置顶）
 
 - **主打 · 小红书**：`xiaohongshu`（热门推荐笔记，游客可用）、`xiaohongshu-hotlist`（官方热搜词榜，需登录 Cookie）
 - **国内社交/视频/新闻**：微博、知乎、百度、贴吧、虎扑、B站、抖音、快手、今日头条、澎湃、腾讯新闻、网易新闻、新浪新闻
 - **科技/开发者**：36氪、IT之家、虎嗅、少数派、爱范儿、掘金、CSDN、51CTO、V2EX、HelloGitHub、酷安、微信读书、历史上的今天
 - **国际**：Hacker News、GitHub Trending（日/周/月）、Product Hunt、Reddit（technology / programming / MachineLearning / worldnews / marketing）
 
-> “38个平台/趋势信源”代表覆盖范围，不代表 38 个源都拥有同等抓取深度。小红书是当前深度主打；其他平台依各自公开数据能力返回，并通过 Source Reliability 量化真实稳定性。
+> “51 个运行时平台/趋势信源”代表当前代码确实可以调用的范围，不代表 51 个源都拥有同等抓取深度。小红书是当前深度主打；RSS/GDELT/Apple Podcasts 是编辑部、全球新闻或公共目录证据，不代表社媒热度排名；其他平台依各自公开数据能力返回，并通过 Source Reliability 量化真实稳定性。
 
 ---
 
@@ -233,7 +233,7 @@ npm run quality:diagnostic # 用户主动、本地匿名化诊断；零自动上
 - **Release Gate** 证明安装、编译、数据合同、MCP 工具和安全边界；
 - **Source Health** 证明外部平台在某次真实联网观测时的状态。
 
-因此 **CI PASS ≠ 38 个平台此刻全部在线**。登录要求、限流、风控、网络或 schema drift 会被 Source Reliability 如实记录，而不是伪造成成功。
+因此 **CI PASS ≠ 51 个平台此刻全部在线**。登录要求、限流、风控、网络或 schema drift 会被 Source Reliability 如实记录，而不是伪造成成功。
 
 GitHub 定时 Source Health 会保存 30 天机器可读 JSON artifact。
 

@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Zachary-1012/trendhub",
   "title": "TrendHub",
-  "description": "Agent-native evidence-first trend intelligence with 21 MCP tools and Professional Intelligence v2.",
+  "description": "Agent-native trend intelligence with 21 MCP tools and 51 runtime source adapters.",
   "version": "1.5.2",
   "remotes": [
     {
