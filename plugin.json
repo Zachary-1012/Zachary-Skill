@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Evidence-first Professional Intelligence v2 with 21 MCP tools, source reliability, forecasting, brand/entity context, reports and local-first workspaces.",
   "author": {
     "name": "Zachary",

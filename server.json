@@ -3,7 +3,7 @@
   "name": "io.github.Zachary-1012/trendhub",
   "title": "TrendHub",
   "description": "Agent-native evidence-first trend intelligence with 21 MCP tools and Professional Intelligence v2.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "remotes": [
     {
       "type": "streamable-http",
