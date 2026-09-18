@@ -73,7 +73,7 @@ jobs:
           done
           node -e "const h=require('/tmp/trendhub-health.json'); const expected=Number(process.argv[1]); const version=process.argv[2]; if(!h.ok || h.tools!==expected || h.version!==version || !h.web) process.exit(1)" "$EXPECTED" "$VERSION"
           EXPECTED_PLATFORMS="$(node --input-type=module -e "import { listPlatforms } from './dist/src/sources/index.js'; process.stdout.write(String(listPlatforms().length))")"
-          npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
+          TRENTHUB_EXPECTED_PLATFORMS="$EXPECTED_PLATFORMS" npm run smoke:remote -- http://127.0.0.1:18444/mcp | tee /tmp/trendhub-remote-smoke.txt
           grep -F "REMOTE SMOKE OK tools=${EXPECTED} platforms=${EXPECTED_PLATFORMS}" /tmp/trendhub-remote-smoke.txt
           curl -fsS http://127.0.0.1:18444/ >/tmp/trendhub-web.html
           grep -F 'name="viewport"' /tmp/trendhub-web.html
