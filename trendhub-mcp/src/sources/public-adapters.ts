@@ -5,7 +5,8 @@ import { missingResult, nowIso } from "../util/schema.js";
 import { httpGet, TtlCache } from "../util/http.js";
 import { config } from "../config.js";
 
-const parser = new Parser({ timeout: config.timeoutMs, headers: { "User-Agent": "TrendHubMCP/1.5 (+https://github.com/Zachary-1012/Zachary-Skill)" }, maxRedirects: 3 });
+const PUBLIC_TIMEOUT_MS = Math.min(config.timeoutMs, 8000);
+const parser = new Parser({ timeout: PUBLIC_TIMEOUT_MS, headers: { "User-Agent": "TrendHubMCP/1.5 (+https://github.com/Zachary-1012/Zachary-Skill)" }, maxRedirects: 3 });
 const cache = new TtlCache<HotResult>(config.cacheTtlSec);
 type FeedSpec = { platform: string; label: string; category: string; url: string };
 
@@ -53,7 +54,7 @@ async function fetchGdelt(limit: number): Promise<HotResult> {
     url.searchParams.set("query", query); url.searchParams.set("mode", "artlist");
     url.searchParams.set("maxrecords", String(Math.min(limit, 250))); url.searchParams.set("timespan", "1d");
     url.searchParams.set("sort", "datedesc"); url.searchParams.set("format", "json");
-    const payload = await httpGet(url.toString()) as { articles?: GdeltArticle[] };
+    const payload = await httpGet(url.toString(), { timeoutMs: PUBLIC_TIMEOUT_MS, retries: 0 }) as { articles?: GdeltArticle[] };
     const items = (payload.articles ?? []).slice(0, limit).map((article, index) => ({ rank: index + 1,
       title: String(article.title ?? "").trim(), url: article.url ?? null, hot: null,
       hotText: article.seendate ? `seen ${article.seendate}` : "near-real-time global news coverage",
@@ -73,7 +74,7 @@ async function fetchApplePodcasts(limit: number): Promise<HotResult> {
   try {
     const url = new URL("https://itunes.apple.com/search"); url.searchParams.set("term", query); url.searchParams.set("media", "podcast");
     url.searchParams.set("entity", "podcast"); url.searchParams.set("limit", String(Math.min(limit, 200)));
-    const payload = await httpGet(url.toString()) as { results?: ItunesResult[] };
+    const payload = await httpGet(url.toString(), { timeoutMs: PUBLIC_TIMEOUT_MS, retries: 0 }) as { results?: ItunesResult[] };
     const items = (payload.results ?? []).map((podcast, index) => ({ rank: index + 1, title: String(podcast.collectionName ?? "").trim(),
       url: podcast.collectionViewUrl ?? podcast.feedUrl ?? null, hot: null,
       hotText: podcast.releaseDate ? `catalog result · ${podcast.releaseDate.slice(0, 10)}` : "Apple public catalog result",
