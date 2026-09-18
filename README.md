@@ -118,7 +118,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 | 能力层 | 当前能力 |
 | --- | --- |
-| 实时发现 | 38 个平台/趋势信源；小红书热门推荐流为深度主打 |
+| 实时发现 | 51 个运行时平台/趋势信源；小红书热门推荐流为深度主打，并新增公开 RSS、GDELT、Apple Podcasts 与 Bluesky 证据适配器 |
 | 小红书增强 | 游客热门推荐；本地 `XHS_COOKIE` 可解锁官方热搜词榜与关键词爆款搜索 |
 | 跨平台 | 共振、自动聚类、新晋/飙升/掉榜、历史快照 |
 | **定时趋势历史（v1.4.2）** | 托管 Remote MCP 默认每小时自动快照并持久化有界历史；本地支持 cron / Windows 任务计划程序，见 [`docs/scheduled-snapshots.md`](./trendhub-mcp/docs/scheduled-snapshots.md) |
@@ -140,7 +140,7 @@ TrendHub 明确区分：
 - **CI / Release Gate**：证明代码、安装、MCP 工具合同可复现；
 - **Source Health**：证明第三方信源在某次真实联网观测中的当前可用状态。
 
-因此：**CI PASS ≠ 38 个第三方平台此刻全部在线。** 平台登录要求、限流、风控、网络异常或页面结构变化会被如实标记，而不是伪造成成功。
+因此：**CI PASS ≠ 51 个第三方平台此刻全部在线。** 平台登录要求、限流、风控、网络异常或页面结构变化会被如实标记，而不是伪造成成功。RSS、GDELT 和 Apple Podcasts 的结果保留各自的证据口径，不冒充社媒热度排名。
 
 ```bash
 npm run source:health
