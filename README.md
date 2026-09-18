@@ -55,7 +55,7 @@ https://trendhub-remote-production.up.railway.app/
 
 ## 已上架 / 可搜索渠道
 
-以下状态按 **2026-09-17 的实际外部检索结果**记录；“兼容 / 可提交 / 可直连”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
+以下状态按 **2026-09-18 的实际核验结果**记录；“兼容 / 可提交 / 可直连”不会写成“已上架”。完整分发规则见 [`DISTRIBUTION.md`](./DISTRIBUTION.md)。
 
 | 渠道 | 当前状态 | 入口 |
 | --- | --- | --- |
@@ -65,9 +65,9 @@ https://trendhub-remote-production.up.railway.app/
 | Agent Plugins | **READY · DIRECT INSTALL** | 根目录 `plugin.json` + `mcp.json` |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | 上方 MCP 安装入口可直接安装；公共 Cursor Marketplace 上架仍需仓库提交与人工审核 |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | 公开 Streamable HTTP `/mcp` 已满足 URL 发布前置；正式上架需 Smithery 发布者登录及 namespace |
-| ChatGPT / Codex Plugins Directory | **NOT LISTED · APP SUBMISSION READY** | `/mcp`、`/privacy`、`/terms` 已就绪；当前目录搜索不到 TrendHub，正式公开发现仍需提交、审核与发布 |
+| OpenAI Plugins Directory（ChatGPT / Codex） | **READY TO SUBMIT** | `/mcp`、`/privacy`、`/terms` 已就绪；下一步通过 [官方 Submission Portal](https://platform.openai.com/apps) 创建 `With MCP` 提交，之后进入审核与发布 |
 
-**对外口径：目前可以明确写“已上架并可搜索”的目录是 Official MCP Registry 与 Glama。** Cursor、Smithery、ChatGPT/Codex Plugins Directory 只有在各自发布或审核完成并能真实搜索到之后，才升级为 `PUBLISHED · SEARCHABLE`。
+**对外口径：目前可以明确写“已上架并可搜索”的目录是 Official MCP Registry 与 Glama；OpenAI Plugins Directory 当前为 `READY TO SUBMIT`，尚未提交、审核或发布。** Cursor、Smithery 仍需各自提交与审核，只有真实发布并可搜索后才升级为 `PUBLISHED · SEARCHABLE`。
 
 ## 给 AI 的安装合同
 
