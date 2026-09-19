@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.5.2",
-  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具、51 个运行时来源适配器与 129 个分层专业信源目录，覆盖实时热点、公开 RSS/Atom、GDELT、Apple Podcasts 公共目录、Source Reliability、Professional Intelligence v2、多年度历史、异常/预测/回测、品牌与信源宇宙、报告和工作区；BYO-AI、零模型 Key、本地优先。需要 API/OAuth/授权连接器的平台保持明确的访问边界。",
+  "version": "1.5.3",
+  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具、51 个运行时来源适配器与 129 个分层专业信源目录；v1.5.3 增加显式 Truth State、Evidence→Outcome→Evaluation→Learning 本地闭环、Application Trace 与公网 Remote workspace effect fence；BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -119,7 +119,7 @@
       "terms": "https://trendhub-remote-production.up.railway.app/terms",
       "accountRequired": false,
       "modelApiKeyRequired": false,
-      "note": "Public distribution adapter. The hosted gateway exposes Remote MCP plus the responsive read/query TrendHub web console. Local-only mutating routes such as /api/snapshot remain private. No visitor XHS_COOKIE is used."
+      "note": "Public distribution adapter. Hosted gateway exposes Remote MCP plus responsive read/query Web Console. Workspace/collaboration state is local-only and effect-fenced on the public Remote MCP; local-only mutating Web routes are not exposed. No visitor XHS_COOKIE is used."
     }
   },
   "intelligence": {
@@ -205,10 +205,17 @@
     "noFabrication": true,
     "missingValueMarkers": [
       "null",
-      "missing",
-      "degraded"
+      "UNKNOWN",
+      "NOT_AVAILABLE",
+      "NOT_COLLECTED",
+      "STALE",
+      "OFFLINE",
+      "ERROR",
+      "BLOCKED",
+      "PENDING",
+      "SCHEDULED"
     ],
-    "note": "缺失即显式标记 missing/degraded，绝不用 0 或‘未知’静默填充，不估算、不造假。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
+    "note": "0 是合法观测值；NULL/UNKNOWN/NOT_AVAILABLE/NOT_COLLECTED/STALE/OFFLINE/ERROR/BLOCKED/PENDING/SCHEDULED 不得静默改写为 0、healthy 或 success。Google Trends 数值为 0-100 相对热度，非绝对搜索量。",
     "zeroTelemetry": true,
     "noCentralDataReturn": true,
     "targetSourceRequestsOnly": true,
@@ -318,7 +325,7 @@
     {
       "name": "workspace_manage",
       "group": "collaboration",
-      "summary": "本地工作区：RBAC、watchlist、saved query、alert rule 与 audit log；不上传中央服务"
+      "summary": "本地协作与 Evidence→Outcome→Evaluation→Learning 闭环；RBAC、watchlist、saved query、rule、Application Trace、append-only outcome、versioned learning；公网 Remote effect-fenced"
     }
   ],
   "attribution": "See NOTICE for third-party OSS attribution (dailyhot-api, rss-parser, cheerio, @modelcontextprotocol/sdk, zod; Xiaohongshu web signing vendored from lucasygu/redbook and Cloxl/xhshow, both MIT).",
@@ -340,6 +347,12 @@
       "licensed-firehose-coverage",
       "proprietary-demographic-panels",
       "long-lived-real-user-usage-and-outcome-data"
-    ]
+    ],
+    "truthState": "explicit-vocabulary-no-missing-to-zero",
+    "lineage": "source-evidence-canonical-signal-metric-decision-support",
+    "applicationTrace": "content-brief evidence-to-artifact trace",
+    "learningLoop": "local-only trace -> append-only outcome -> evaluation -> versioned learning asset",
+    "publicRemoteWorkspaceAccess": false,
+    "publicRemoteWorkspaceMutations": false
   }
 }
