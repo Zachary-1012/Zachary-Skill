@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "professional-intelligence-v2-rc",
+  "schemaVersion": "professional-intelligence-v2",
   "releaseStatus": "release-ready",
-  "stableBase": "1.5.1",
-  "targetStableVersion": "1.5.2",
-  "candidateVersion": "1.5.2",
+  "stableBase": "1.5.2",
+  "targetStableVersion": "1.5.3",
+  "candidateVersion": "1.5.3",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.5.2 fixes the public mobile shell; v1.5.1 and v1.5.0 remain immutable, and v1.4.5 remains forbidden.",
-    "versionPolicy": "v1.5.2 is a patch release above stable v1.5.1; never rewrite published assets or tags.",
+    "rule": "v1.5.3 adds explicit truth-state lineage, local Evidence→Outcome→Evaluation→Learning closure, and a public-Remote workspace effect fence; v1.5.2 remains immutable rollback.",
+    "versionPolicy": "v1.5.3 is a backward-compatible patch above stable v1.5.2; never rewrite published tags/assets.",
     "prepared": true
   },
   "capabilities": {
@@ -41,7 +41,12 @@
       "audit"
     ],
     "responsiveWeb": "desktop-tablet-phone-safe-area-touch-aware",
-    "observability": "local-otel-compatible-zero-export"
+    "observability": "local-otel-compatible-zero-export",
+    "truthState": "explicit-observed-unknown-not-available-not-collected-stale-offline-error-blocked-pending-scheduled",
+    "evidenceLineage": "source-evidence-canonical-signal-metric-decision-support",
+    "applicationTrace": "content-brief-to-artifact-evidence-trace",
+    "learningLoop": "local-application-trace-append-only-outcome-evaluation-versioned-learning",
+    "publicRemoteEffectFence": "workspace-read-write-disabled-on-public-remote"
   },
   "sourceAccessModes": [
     "live-public",
