@@ -12,6 +12,7 @@ import { historyStoreInfo } from "../store/history.js";
 import { sourceFamilyCoverage, sourceSpec, sourceUserSetup } from "../sources/professional-catalog.js";
 import { entityQueryTerms, resolveBrandEntity, type BrandEntity } from "../entities/brand-catalog.js";
 import { buildProfessionalSignalPack, type ProfessionalSignalPack } from "./professional-signals.js";
+import { TRUTH_POLICY, TRUTH_STATES, type TruthState } from "../agent-native/truth-state.js";
 
 export interface ProfessionalIntelligence {
   methodologyVersion: "professional-intelligence-v2";
@@ -23,6 +24,17 @@ export interface ProfessionalIntelligence {
     queryTerms: string[];
     rule: string;
   };
+  truthContract: {
+    vocabulary: readonly TruthState[];
+    currentEvidenceStates: TruthState[];
+    policy: string;
+  };
+  lineage: Array<{
+    stage: "Source" | "Evidence" | "Canonical Signal" | "Metric" | "Decision Support";
+    status: "READY" | "PARTIAL" | "BLOCKED";
+    truthState: TruthState;
+    detail: string;
+  }>;
   decisionState: {
     evidenceReady: boolean;
     forecastReady: boolean;
@@ -121,6 +133,21 @@ export function buildProfessionalIntelligence(
 
   const evidenceReady = core.lifecycle !== "insufficient_history" && core.evidence.platformsObservableNow > 0;
   const forecastReady = forecast.status === "ok" && forecast.validation.grade !== "weak";
+  const currentEvidenceStates: TruthState[] = [];
+  if (core.evidence.platformsObservableNow > 0) currentEvidenceStates.push("OBSERVED");
+  if (core.evidence.platformsUnavailableOrStale > 0) currentEvidenceStates.push("STALE");
+  if (!currentEvidenceStates.length) currentEvidenceStates.push("NOT_COLLECTED");
+  const sourceTruth: TruthState = core.evidence.platformsObservableNow > 0
+    ? "OBSERVED"
+    : core.evidence.platformsUnavailableOrStale > 0 ? "STALE" : "NOT_COLLECTED";
+  const analysisTruth: TruthState = evidenceReady ? "OBSERVED" : "PENDING";
+  const lineage: ProfessionalIntelligence["lineage"] = [
+    { stage: "Source", status: sourceTruth === "OBSERVED" ? "READY" : sourceTruth === "STALE" ? "PARTIAL" : "BLOCKED", truthState: sourceTruth, detail: `${core.evidence.platformsObservableNow} source(s) observable now; ${core.evidence.platformsUnavailableOrStale} unavailable/stale.` },
+    { stage: "Evidence", status: core.evidence.totalHistorySamples > 0 ? "READY" : "PARTIAL", truthState: core.evidence.totalHistorySamples > 0 ? "OBSERVED" : "NOT_COLLECTED", detail: `${core.evidence.totalHistorySamples} historical sample(s) preserve source/time provenance.` },
+    { stage: "Canonical Signal", status: evidenceReady ? "READY" : "PARTIAL", truthState: analysisTruth, detail: "Signals preserve per-source units and source-family boundaries; incomparable platform values are not summed." },
+    { stage: "Metric", status: evidenceReady ? "READY" : "PARTIAL", truthState: analysisTruth, detail: "Lifecycle, velocity, persistence, diffusion and reliability are deterministic derivatives of captured evidence." },
+    { stage: "Decision Support", status: evidenceReady ? "READY" : "BLOCKED", truthState: analysisTruth, detail: forecastReady ? "Evidence and forecast validation are sufficient for bounded decision support." : "Decision support remains bounded by evidence/history and forecast validation." },
+  ];
   return {
     methodologyVersion: "professional-intelligence-v2",
     keyword,
@@ -131,6 +158,12 @@ export function buildProfessionalIntelligence(
       queryTerms,
       rule: "Entity aliases are used for resolution/context only until each source adapter explicitly supports alias-expanded retrieval; parent/child entities are kept distinct to avoid group/brand double counting.",
     },
+    truthContract: {
+      vocabulary: TRUTH_STATES,
+      currentEvidenceStates,
+      policy: TRUTH_POLICY,
+    },
+    lineage,
     decisionState: {
       evidenceReady,
       forecastReady,
