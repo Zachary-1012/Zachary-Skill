@@ -10,6 +10,10 @@ import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } fro
 import {
   createWorkspace,
   listWorkspaces,
+  recordApplicationTrace,
+  appendOutcome,
+  recordEvaluation,
+  listLearningAssets,
   readWorkspace,
   readAudit,
   saveAlertRule,
@@ -85,9 +89,9 @@ export function registerProfessionalTools(server: McpServer): void {
 
   server.tool(
     "workspace_manage",
-    "本地优先协作工作区：owner/editor/analyst/viewer RBAC、监测词 watchlist、保存查询、告警规则、成员与审计日志。只写 TrendHub 本地数据目录；不会修改任何第三方平台，也不会自动上传。公网托管 Web 不暴露该变更接口。",
+    "本地优先协作与学习闭环：RBAC、watchlist、保存查询、告警规则、Application Trace、append-only outcome、Evaluation 与 Learning Asset。只写本地数据目录；不会修改第三方平台或自动上传。公网 Remote MCP 通过 effect fence 禁止任何 workspace 读取/写入。",
     {
-      action: z.enum(["list", "create", "get", "member_set", "watchlist_set", "query_save", "rule_save", "audit"]),
+      action: z.enum(["list", "create", "get", "member_set", "watchlist_set", "query_save", "rule_save", "trace_record", "outcome_append", "evaluation_record", "learning_list", "audit"]),
       principal: z.string().min(1).describe("本地身份映射，例如 local-owner 或公司 SSO 映射后的非敏感 principal"),
       workspace_id: z.string().optional(),
       name: z.string().optional(),
@@ -100,9 +104,22 @@ export function registerProfessionalTools(server: McpServer): void {
       rule_json: z.string().optional().describe("rule_save 的 JSON 规则对象"),
       enabled: z.boolean().optional(),
       limit: z.number().min(1).max(1000).optional(),
+      topic: z.string().optional().describe("trace_record 的主题/品牌/议题"),
+      capability: z.string().optional().describe("产生该应用轨迹的能力名，默认 get_content_brief"),
+      trace_id: z.string().optional().describe("application trace id"),
+      artifact_id: z.string().optional().describe("可选外部成稿/资产 id"),
+      evidence_refs: z.string().optional().describe("证据引用 id/URL，逗号分隔"),
+      learning_asset_ids: z.string().optional().describe("关联 learning asset id，逗号分隔"),
+      outcome_json: z.string().optional().describe("outcome_append 的 JSON 指标对象；值只能是有限数字或 null"),
+      truth_json: z.string().optional().describe("可选 truth-state JSON；null 不得标为 OBSERVED"),
+      observed_at: z.string().optional().describe("outcome 观测时间 ISO-8601"),
+      outcome_ids: z.string().optional().describe("evaluation_record 关联 outcome id，逗号分隔"),
+      evaluation: z.enum(["SUPPORTED", "CONTRADICTED", "INSUFFICIENT"]).optional(),
+      rationale: z.string().optional(),
+      learning_asset_id: z.string().optional(),
     },
     LOCAL_STATE,
-    async ({ action, principal, workspace_id, name, member_principal, role, keywords, query, platforms, geo, rule_json, enabled, limit }) => observed("workspace_manage", async () => {
+    async ({ action, principal, workspace_id, name, member_principal, role, keywords, query, platforms, geo, rule_json, enabled, limit, topic, capability, trace_id, artifact_id, evidence_refs, learning_asset_ids, outcome_json, truth_json, observed_at, outcome_ids, evaluation, rationale, learning_asset_id }) => observed("workspace_manage", async () => {
       if (action === "list") return json({ workspaces: listWorkspaces(principal) });
       if (action === "create") return json({ workspace: createWorkspace(name ?? "TrendHub Workspace", principal) });
       if (!workspace_id) throw new Error("workspace_id is required for this action");
@@ -137,6 +154,41 @@ export function registerProfessionalTools(server: McpServer): void {
           enabled: enabled !== false,
         }) });
       }
+      if (action === "trace_record") {
+        if (!topic) throw new Error("topic is required");
+        return json({ applicationTrace: recordApplicationTrace(workspace_id, principal, {
+          traceId: trace_id,
+          topic,
+          capability,
+          artifactId: artifact_id ?? null,
+          evidenceRefs: splitList(evidence_refs),
+          learningAssetIds: splitList(learning_asset_ids),
+        }) });
+      }
+      if (action === "outcome_append") {
+        if (!trace_id || !outcome_json) throw new Error("trace_id and outcome_json are required");
+        const parsedMetrics = JSON.parse(outcome_json) as Record<string, number | null>;
+        const parsedTruth = truth_json ? JSON.parse(truth_json) as Record<string, import("../agent-native/truth-state.js").TruthState> : undefined;
+        return json({ outcome: appendOutcome(workspace_id, principal, {
+          traceId: trace_id,
+          observedAt: observed_at,
+          metrics: parsedMetrics,
+          truth: parsedTruth,
+        }) });
+      }
+      if (action === "evaluation_record") {
+        if (!trace_id || !evaluation || !rationale) throw new Error("trace_id, evaluation and rationale are required");
+        return json({ evaluation: recordEvaluation(workspace_id, principal, {
+          traceId: trace_id,
+          result: evaluation,
+          rationale,
+          outcomeIds: splitList(outcome_ids),
+          evidenceRefs: splitList(evidence_refs),
+          learningAssetId: learning_asset_id,
+          title: name,
+        }) });
+      }
+      if (action === "learning_list") return json({ learningAssets: listLearningAssets(workspace_id, principal) });
       throw new Error(`unsupported action: ${action}`);
     }),
   );
