@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 /**
  * 内容生产层：把"真实热点证据"与"专家模板"组装成创作简报（brief）。
  * 插件不写成稿（算力归调用方大模型），而是提供证据、同平台真实爆款样本、模板骨架与逐格填充指引。
@@ -154,10 +156,51 @@ export async function getContentBrief(topic: string, opts: {
     xhsPrompt,
   ].join("");
 
+  const generatedAt = new Date().toISOString();
+  const traceEvidenceRefs = "error" in overlap
+    ? []
+    : overlap.platforms.flatMap((p) => p.items.slice(0, 3).map((item) => ({
+        source: p.platform,
+        title: item.title,
+        uri: item.url || null,
+        rank: item.rank ?? null,
+      }))).slice(0, 24);
+  const traceSeed = JSON.stringify({
+    topic,
+    platform,
+    templateId: template?.id ?? null,
+    goal: opts.goal ?? null,
+    audience: opts.audience ?? null,
+    evidenceRefs: traceEvidenceRefs,
+    generatedAt,
+  });
+  const applicationTrace = {
+    schema: "trendhub-application-trace-v1",
+    traceId: createHash("sha256").update(traceSeed).digest("hex").slice(0, 24),
+    generatedAt,
+    topic,
+    platform,
+    templateId: template?.id ?? null,
+    goal: opts.goal ?? null,
+    audience: opts.audience ?? null,
+    evidenceRefs: traceEvidenceRefs,
+    evidenceCount: traceEvidenceRefs.length,
+    factWall: {
+      policy: "Any factual claim in the final artifact must be supported by the returned evidence/brief or remain explicitly marked as unsupported.",
+      unsupportedMarker: "[待补充]",
+      missingIsZero: false,
+    },
+    persistence: {
+      automatic: false,
+      localWorkflow: "workspace_manage(action=trace_record) may persist this trace locally before an artifact is evaluated.",
+    },
+  };
+
   return {
     topic,
     template,
     evidence,
+    applicationTrace,
     referenceTitles,
     fillSlots: slots,
     productionPrompt,
