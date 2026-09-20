@@ -225,6 +225,32 @@ async function applePodcasts(query: string, limit: number): Promise<QueryEvidenc
   })).filter((item) => item.title);
 }
 
+export async function collectFastQueryEvidence(
+  primaryQuery: string,
+  aliases: string[] = [],
+  limitPerChannel = 10,
+): Promise<QueryEvidenceChannel[]> {
+  const expression = queryExpression(primaryQuery, aliases);
+  return Promise.all([
+    safeChannel(
+      "google-news-cn",
+      "Google News · 中文",
+      "news-authority",
+      expression,
+      () => googleNews(expression, "CN", limitPerChannel),
+      "关键词相关新闻检索；按发布时间/搜索相关性呈现，不代表社交热度。",
+    ),
+    safeChannel(
+      "google-news-global",
+      "Google News · Global",
+      "news-authority",
+      expression,
+      () => googleNews(expression, "GLOBAL", limitPerChannel),
+      "全球相关新闻检索；按发布时间/搜索相关性呈现，不代表社交热度。",
+    ),
+  ]);
+}
+
 export async function collectPublicQueryEvidence(
   primaryQuery: string,
   aliases: string[] = [],
