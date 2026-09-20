@@ -6,59 +6,66 @@ VIEWS.dashboard = async function (content) {
     ensureMeta(),
   ]);
   const universeCounts = universe.counts || {};
+  const runtimeMode = health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地");
   content.innerHTML = `
-    <section class="workspace-home">
-      <div class="workspace-home-copy">
-        <span class="eyebrow">TrendHub · Agent-native Trend Intelligence</span>
-        <h2>不是看新闻。直接研究你关心的主体。</h2>
-        <p>输入品牌、公司、商业体、产品或 Campaign。TrendHub 会主动取证，再给出当前状态、变化、驱动、机会、风险、证据缺口和下一步。</p>
-        <div class="workspace-search">
-          <input id="homeResearchKeyword" placeholder="例如：广州太古汇 / Louis Vuitton / 小米汽车 / 某个 Campaign" />
-          <button class="btn primary" id="homeResearchRun">开始研究</button>
+    <section class="subject-aperture" aria-labelledby="home-question">
+      <div class="field-index">01 · SUBJECT FIELD</div>
+      <div class="subject-aperture-copy">
+        <h2 id="home-question">你要理解什么正在变化？</h2>
+        <p>从一个品牌、公司、商业体、产品或 Campaign 出发。TrendHub 先取证，再把变化、原因、证据与行动连成一条可返回的研究轨迹。</p>
+      </div>
+      <div class="subject-query">
+        <label class="sr-only" for="homeResearchKeyword">研究主体</label>
+        <input id="homeResearchKeyword" autocomplete="off" placeholder="输入一个真实主体，例如：广州太古汇" />
+        <button class="query-submit" id="homeResearchRun">进入研究 <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="subject-examples" aria-label="示例主体">
+        <span>试试</span>
+        <button data-example="广州太古汇">广州太古汇</button>
+        <button data-example="Louis Vuitton">Louis Vuitton</button>
+        <button data-example="小米汽车">小米汽车</button>
+      </div>
+    </section>
+
+    <section class="question-axis" aria-labelledby="question-axis-title">
+      <div class="axis-heading">
+        <div class="field-index">02 · RESEARCH AXIS</div>
+        <h2 id="question-axis-title">一次研究沿着四个问题推进</h2>
+      </div>
+      <div class="axis-track">
+        <div class="axis-step"><span>01</span><strong>发生了什么变化</strong><p>先辨认真实变化，不用热榜替代主体事实。</p></div>
+        <div class="axis-step"><span>02</span><strong>为什么值得注意</strong><p>把重复主题、搜索变化与跨源信号放回上下文。</p></div>
+        <div class="axis-step"><span>03</span><strong>什么证据支持它</strong><p>结论可以沿 Trace 回到来源、时间与限制。</p></div>
+        <div class="axis-step"><span>04</span><strong>接下来能做什么</strong><p>机会、风险与行动必须保留证据边界。</p></div>
+      </div>
+    </section>
+
+    <section class="home-trace" aria-labelledby="home-trace-title">
+      <div class="trace-heading">
+        <div>
+          <div class="field-index">03 · PRODUCTION TRUTH</div>
+          <h2 id="home-trace-title">当前可工作的真实边界</h2>
         </div>
-        <div class="workspace-examples">
-          <button data-example="广州太古汇">广州太古汇</button>
-          <button data-example="Louis Vuitton">Louis Vuitton</button>
-          <button data-example="小米汽车">小米汽车</button>
-        </div>
+        <p>数字只说明系统覆盖，不替代研究结论。</p>
       </div>
-      <div class="workspace-principles">
-        <div><strong>Entity-first</strong><span>品牌/商业主体先主动检索，不再只扫热榜。</span></div>
-        <div><strong>Decision-first</strong><span>结果先给判断和行动，再给原始证据。</span></div>
-        <div><strong>Evidence-first</strong><span>缺失 ≠ 0；每个结论保留来源和限制。</span></div>
-      </div>
-    </section>
-
-    <section class="home-capabilities">
-      <div class="section-heading"><div><span class="eyebrow">INTELLIGENCE OUTPUT</span><h2>一次研究要回答什么</h2></div></div>
-      <div class="capability-rail">
-        <div><span>01</span><strong>现在怎样</strong><p>主体当前可见度、证据强度、趋势状态。</p></div>
-        <div><span>02</span><strong>发生什么</strong><p>搜索、新闻、社交、历史信号发生了什么变化。</p></div>
-        <div><span>03</span><strong>为什么</strong><p>重复主题、相关搜索和跨信号驱动线索。</p></div>
-        <div><span>04</span><strong>怎么办</strong><p>机会、风险、证据缺口和优先行动。</p></div>
+      <dl class="truth-line">
+        <div><dt>运行时平台</dt><dd>${esc(health.platformCount)}</dd></div>
+        <div><dt>分层专业信源</dt><dd>${esc(universeCounts.total ?? 0)}</dd></div>
+        <div><dt>稳定 MCP Tools</dt><dd>${esc(health.tools || 21)}</dd></div>
+        <div><dt>运行模式</dt><dd>${esc(runtimeMode)}</dd></div>
+      </dl>
+      <div class="path-index" aria-label="研究路径">
+        <button data-quick="professional"><span>01</span><strong>主体研究</strong><em>Entity-first Intelligence</em><b aria-hidden="true">→</b></button>
+        <button data-quick="clusters"><span>02</span><strong>趋势发现</strong><em>寻找多平台正在形成的共振</em><b aria-hidden="true">→</b></button>
+        <button data-quick="xhs"><span>03</span><strong>小红书证据</strong><em>查看可用内容与本地授权增强</em><b aria-hidden="true">→</b></button>
+        <button data-quick="sources"><span>04</span><strong>证据覆盖</strong><em>确认信源状态、授权与缺口</em><b aria-hidden="true">→</b></button>
       </div>
     </section>
 
-    <section class="home-system">
-      <div class="section-heading"><div><span class="eyebrow">PRODUCTION TRUTH</span><h2>当前能力边界</h2></div></div>
-      <div class="stats-grid">
-        ${statCard(health.platformCount, "运行时平台")}
-        ${statCard(universeCounts.total ?? 0, "分层专业信源")}
-        ${statCard(health.tools || 21, "稳定 MCP Tools")}
-        ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
-      </div>
-      <div class="home-paths">
-        ${quickCard("professional", "主体研究", "品牌 / 公司 / 商业体 / 产品 / Campaign → Entity-first Intelligence")}
-        ${quickCard("clusters", "趋势发现", "没有明确主体时，发现多平台正在共振的话题")}
-        ${quickCard("xhs", "小红书证据", "查看公开推荐流、内容证据与本地登录态增强")}
-        ${quickCard("sources", "证据覆盖", "查看哪些信源已上线、需要授权或仍在规划")}
-      </div>
-    </section>
-
-    <section class="home-discipline">
-      <div><strong>热榜不是市场全貌</strong><p>主体未进入热榜，只能说明“当前没有热榜命中”，不能推导“无人讨论”。</p></div>
-      <div><strong>公网不收私人 Cookie</strong><p>需要登录态增强时只在使用者自己的本地 TrendHub 配置，公共 Remote MCP 保持共享安全边界。</p></div>
-      <div><strong>预测不是概率</strong><p>预测必须带验证等级与不确定区间；历史不足时直接返回 insufficient_history。</p></div>
+    <section class="boundary-notes" aria-label="研究边界">
+      <div><span>BOUNDARY 01</span><strong>未上热榜 ≠ 没有讨论</strong><p>热榜只是一种可见性证据，不是市场全貌。</p></div>
+      <div><span>BOUNDARY 02</span><strong>公网不接私人 Cookie</strong><p>登录态增强只留在使用者自己的本地环境。</p></div>
+      <div><span>BOUNDARY 03</span><strong>预测不是概率</strong><p>历史不足时保持 insufficient_history，不装作确定。</p></div>
     </section>`;
 
   const run = () => {

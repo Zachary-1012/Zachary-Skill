@@ -10,7 +10,7 @@ const root = new URL("..", import.meta.url).pathname;
 const repoRoot = join(root, "..");
 
 const skill = skillContract();
-assert.equal(skill.productVersion, "1.7.0");
+assert.equal(skill.productVersion, "1.7.1");
 assert.equal(skill.compatibilityTools, 21);
 assert.equal(skill.routing.entityFirst.tool, "professional_intelligence");
 assert.equal(skill.routing.topicFirst.tool, "analyze_topic");
@@ -90,24 +90,39 @@ assert.equal(report.decisionBrief.recommendedActions[0].priority, "now");
 const index = await readFile(join(root, "web", "index.html"), "utf8");
 const home = await readFile(join(root, "web", "views-a.js"), "utf8");
 const professional = await readFile(join(root, "web", "views-e.js"), "utf8");
-const styles = await readFile(join(root, "web", "intelligence-v1.css"), "utf8");
+const styles = await readFile(join(root, "web", "experience-v2.css"), "utf8");
+const app = await readFile(join(root, "web", "app.js"), "utf8");
+const viewsD = await readFile(join(root, "web", "views-d.js"), "utf8");
 const queryEvidence = await readFile(join(root, "src", "sources", "query-evidence.ts"), "utf8");
 
 assert.match(index, /Intelligence Workspace/);
-assert.match(index, /intelligence-v1\.css\?v=1\.7\.0/);
-assert.match(home, /不是看新闻/);
-assert.match(home, /Entity-first/);
-assert.match(professional, /每个信号通道都给结论/);
-assert.match(professional, /证据缺口/);
-assert.match(styles, /decision-workspace/);
+assert.match(index, /experience-v2\.css\?v=1\.7\.1/);
+const dashboardBlock = home.slice(home.indexOf("VIEWS.dashboard ="), home.indexOf("function statCard"));
+const professionalBlock = professional.slice(professional.indexOf("VIEWS.professional ="), professional.indexOf("VIEWS.sources ="));
+assert.match(index, /navigationSheet/);
+assert.match(index, /topbar-inner/);
+assert.match(index, /navBackdrop/);
+assert.match(home, /subject-aperture/);
+assert.match(home, /question-axis/);
+assert.match(home, /你要理解什么正在变化/);
+assert.doesNotMatch(dashboardBlock, /stats-grid|card stat|home-paths|workspace-principles/);
+for (const marker of ["subject-field","trace-flow","trace-change","trace-interpret","trace-evidence","trace-action"]) assert.match(professionalBlock, new RegExp(marker));
+assert.doesNotMatch(professionalBlock, /decision-workspace|decision-panel|stats-grid intelligence-stats/);
+assert.match(styles, /Subject Field -> Change Axis/);
+assert.match(styles, /\.trace-stage/);
+assert.match(styles, /\.topbar-inner,/);
+assert.match(styles, /--th-field-max/);
+assert.doesNotMatch(styles, /decision-workspace/);
+assert.match(app, /DOMContentLoaded/);
+assert.doesNotMatch(viewsD, /\nroute\(\);\s*$/);
 for (const channel of ["google-news-cn", "google-news-global", "gdelt-query", "bluesky-query", "apple-podcasts-query"]) {
   assert.match(queryEvidence, new RegExp(channel));
 }
 
 const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
-assert.equal(manifest.version, "1.7.0");
+assert.equal(manifest.version, "1.7.1");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
-assert.equal(manifest.professionalIntelligence.webExperience, "decision-first-intelligence-workspace");
+assert.equal(manifest.professionalIntelligence.webExperience, "field-axis-trace-intelligence-workspace");
 assert.equal(manifest.tools.length, 21);
 
-console.log("V1.7 INTELLIGENCE WORKSPACE OK entity-first=v1 professional=v3 report=v2 tools=21 web=decision-first");
+console.log("V1.7 EXPERIENCE AUTHORITY OK entity-first=v1 professional=v3 report=v2 tools=21 web=field-axis-trace deep-link=deterministic");

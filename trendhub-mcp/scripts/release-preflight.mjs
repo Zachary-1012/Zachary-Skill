@@ -73,7 +73,14 @@ must(manifest.tools?.length === expected, `manifest tools=${manifest.tools?.leng
 must(manifest.professionalIntelligence?.methodologyVersion === "professional-intelligence-v3", "v1.7 Professional Intelligence v3 contract missing");
 must(manifest.agentNative?.entityFirstResearch === "released", "v1.7 Entity-first research contract missing");
 must(manifest.agentNative?.decisionFirstWeb === "released", "v1.7 Decision-first Web contract missing");
-must(fs.existsSync(path.join(ROOT, "web", "intelligence-v1.css")), "v1.7 Intelligence Workspace stylesheet missing");
+must(fs.existsSync(path.join(ROOT, "web", "experience-v2.css")), "v1.7.1 semantic Experience stylesheet missing");
+must(!fs.existsSync(path.join(ROOT, "web", "intelligence-v1.css")), "superseded dashboard-style experience layer must stay retired");
+const indexHtml = read(path.join(ROOT, "web", "index.html"));
+const appJs = read(path.join(ROOT, "web", "app.js"));
+const viewsD = read(path.join(ROOT, "web", "views-d.js"));
+must(indexHtml.includes(`experience-v2.css?v=${pkg.version}`), "public shell must load semantic Experience stylesheet at current version");
+must(appJs.includes("DOMContentLoaded"), "deep-link route boot must wait for deferred view registration");
+must(!/\nroute\(\);\s*$/.test(viewsD), "views-d must not boot routing before later view modules register");
 must(manifest.aiInstall?.successMarker === `SMOKE OK tools=${expected}`, "AI install success marker mismatch");
 for (const tool of professional.professionalTools || []) must(manifest.tools.some((x) => x?.name === tool), `manifest missing ${tool}`);
 must(registry.description.length <= 100, "registry description exceeds 100 characters");

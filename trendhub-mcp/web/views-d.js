@@ -147,5 +147,3 @@ VIEWS.settings = async function (content) {
     </div>`;
 };
 
-
-route();

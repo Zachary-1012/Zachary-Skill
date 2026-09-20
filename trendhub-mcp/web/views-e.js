@@ -36,31 +36,32 @@ function researchQualityBadge(value) {
 }
 function decisionList(items, emptyText) {
   if (!items || !items.length) return empty(emptyText || "当前没有足够证据");
-  return '<div class="decision-list">' + items.map((x) => {
+  return '<div class="interpretation-list">' + items.map((x, index) => {
     const title = x.title || x.action || "—";
     const body = x.reason || "";
-    const priority = x.priority ? '<span class="decision-priority">' + esc(x.priority) + '</span>' : "";
-    return '<div class="decision-item">' + priority + '<strong>' + esc(title) + '</strong><p>' + esc(body) + '</p></div>';
+    const priority = x.priority ? '<span class="interpretation-priority">' + esc(x.priority) + '</span>' : "";
+    return '<div class="interpretation-item"><span class="interpretation-index">' + String(index + 1).padStart(2, "0") + '</span><div>' + priority + '<strong>' + esc(title) + '</strong><p>' + esc(body) + '</p></div></div>';
   }).join("") + '</div>';
 }
 function gapList(items) {
-  if (!items || !items.length) return '<div class="evidence-ok">当前没有关键证据缺口</div>';
-  return '<div class="decision-list">' + items.map((x) =>
-    '<div class="decision-item gap"><strong>' + esc(x.title) + '</strong><p>' + esc(x.reason) + '</p><div class="next-step">下一步：' + esc(x.nextStep) + '</div></div>'
+  if (!items || !items.length) return '<div class="evidence-clear">当前没有关键证据缺口</div>';
+  return '<div class="gap-list">' + items.map((x, index) =>
+    '<div class="gap-item"><span>' + String(index + 1).padStart(2, "0") + '</span><div><strong>' + esc(x.title) + '</strong><p>' + esc(x.reason) + '</p><div class="next-step">下一步：' + esc(x.nextStep) + '</div></div></div>'
   ).join("") + '</div>';
 }
 function evidenceRefs(items) {
   if (!items || !items.length) return empty("没有可展示的原始证据");
-  return '<div class="evidence-ref-list">' + items.map((x) =>
-    '<div class="evidence-ref"><div class="evidence-source">' + esc(x.source || x.channel || "source") + (x.publishedAt ? ' · ' + esc(fmtTime(x.publishedAt)) : "") + '</div><div class="evidence-title">' + linkOrText(x.title, x.url) + '</div></div>'
+  return '<div class="evidence-ref-list">' + items.map((x, index) =>
+    '<div class="evidence-ref"><span class="evidence-ref-index">' + String(index + 1).padStart(2, "0") + '</span><div><div class="evidence-source">' + esc(x.source || x.channel || "source") + (x.publishedAt ? ' · ' + esc(fmtTime(x.publishedAt)) : "") + '</div><div class="evidence-title">' + linkOrText(x.title, x.url) + '</div></div></div>'
   ).join("") + '</div>';
 }
-function channelResearchCard(channel) {
-  return '<div class="research-channel">' +
-    '<div class="research-channel-head"><div><strong>' + esc(channel.label) + '</strong><span class="channel-family">' + esc(channel.family) + '</span></div><div>' + researchQualityBadge(channel.dataQuality) + '<span class="channel-count">' + esc(channel.itemCount || 0) + ' 条</span></div></div>' +
+function channelResearchCard(channel, index = 0) {
+  return '<article class="evidence-stratum">' +
+    '<div class="evidence-stratum-index">' + String(index + 1).padStart(2, "0") + '</div>' +
+    '<div class="evidence-stratum-main"><div class="evidence-stratum-head"><div><strong>' + esc(channel.label) + '</strong><span class="channel-family">' + esc(channel.family) + '</span></div><div>' + researchQualityBadge(channel.dataQuality) + '<span class="channel-count">' + esc(channel.itemCount || 0) + ' 条</span></div></div>' +
     '<p class="research-conclusion">' + esc(channel.conclusion || "") + '</p>' +
-    '<details class="evidence-details"><summary>查看证据</summary>' + evidenceRefs(channel.evidence || []) + '<div class="evidence-note">' + esc(channel.note || "") + '</div></details>' +
-  '</div>';
+    '<details class="evidence-details"><summary>沿 Trace 查看原始证据</summary>' + evidenceRefs(channel.evidence || []) + '<div class="evidence-note">' + esc(channel.note || "") + '</div></details></div>' +
+  '</article>';
 }
 function changeSummary(research, core) {
   const s = research?.searchIntent || {};
@@ -102,21 +103,27 @@ VIEWS.professional = async function (root, params) {
   const initial = params.keyword || "";
   const initialVertical = params.vertical || "";
   root.innerHTML = `
-    <div class="research-launch">
-      <div class="research-launch-copy">
-        <span class="eyebrow">TrendHub · Intelligence Workspace</span>
-        <h2>研究一个品牌、公司、商业体、产品或 Campaign</h2>
-        <p>先主动检索主体证据，再判断趋势。热榜只是一个信号，不再拿“没上热搜”冒充“没人讨论”。</p>
+    <section class="research-entry" aria-labelledby="research-entry-title">
+      <div class="field-index">01 · SUBJECT CONTEXT</div>
+      <div class="research-entry-copy">
+        <h2 id="research-entry-title">从一个真实主体开始，而不是从一堵数据墙开始。</h2>
+        <p>品牌、公司、商业体、产品与 Campaign 先进入 Entity-first 取证，再沿同一条 Trace 看变化、原因、证据与行动。</p>
       </div>
-      <div class="research-form">
-        <input id="proKeyword" value="${esc(initial)}" placeholder="例如：广州太古汇 / Louis Vuitton / 小米汽车 / 某 Campaign" />
-        <select id="proVertical">${verticalOptions(initialVertical)}</select>
-        <select id="proGeo"><option value="CN" selected>中国</option><option value="HK">香港</option><option value="US">美国</option><option value="">全球</option></select>
-        <button class="btn primary research-run" id="proRun">开始研究</button>
+      <div class="research-entry-form">
+        <label class="subject-input" for="proKeyword">
+          <span>Subject</span>
+          <input id="proKeyword" value="${esc(initial)}" autocomplete="off" placeholder="例如：广州太古汇 / Louis Vuitton / 小米汽车" />
+        </label>
+        <button class="query-submit" id="proRun">开始研究 <span aria-hidden="true">→</span></button>
       </div>
-      <details class="advanced-controls"><summary>高级设置</summary><div class="form-row"><input id="proPlatforms" placeholder="可选：手动平台 id；留空自动选专业信源" /><select id="proTimeframe"><option value="today 3-m">近3个月</option><option value="today 1-m">近1个月</option><option value="today 12-m">近12个月</option><option value="now 7-d">近7天</option></select></div></details>
-    </div>
-    <div id="proResult">${initial ? loading() : '<div class="research-empty"><strong>不是新闻阅读器。</strong><span>输入一个主体后，TrendHub 会给你结构化判断、证据、变化、驱动、风险、机会、缺口与行动。</span></div>'}</div>`;
+      <div class="research-scope-line">
+        <label>领域 <select id="proVertical">${verticalOptions(initialVertical)}</select></label>
+        <label>地区 <select id="proGeo"><option value="CN" selected>中国</option><option value="HK">香港</option><option value="US">美国</option><option value="">全球</option></select></label>
+        <label>时间窗 <select id="proTimeframe"><option value="today 3-m">近3个月</option><option value="today 1-m">近1个月</option><option value="today 12-m">近12个月</option><option value="now 7-d">近7天</option></select></label>
+        <details class="scope-advanced"><summary>指定平台</summary><input id="proPlatforms" placeholder="可选：平台 id；留空自动选择" /></details>
+      </div>
+    </section>
+    <div id="proResult">${initial ? loading() : '<div class="research-empty"><span>SUBJECT → TRACE</span><strong>输入主体后开始研究</strong><p>结果会沿“变化 → 原因 → 证据 → 行动”展开，而不是把新闻列表当结论。</p></div>'}</div>`;
 
   const run = async () => {
     const keyword = $("#proKeyword").value.trim();
@@ -145,71 +152,97 @@ VIEWS.professional = async function (root, params) {
       const change = changeSummary(research, core);
       const entityLabel = subject.resolved ? "已解析实体" : "自定义主体";
       const stateTone = state.evidenceStrength === "strong" || state.evidenceStrength === "moderate" ? "ready" : "limited";
+      const upcoming = research.upcomingNodes || [];
 
       target.innerHTML = `
-        <section class="research-hero ${stateTone}">
-          <div class="research-hero-main">
-            <div class="research-subject-line"><span class="eyebrow">${esc(entityLabel)}</span><span class="truth-chip">${esc(d.evidenceState?.overall || "UNKNOWN")}</span></div>
-            <h2>${esc(subject.canonicalName || keyword)}</h2>
-            <p class="research-state">${esc(state.conclusion || "当前证据不足，无法形成主体判断。")}</p>
-            <div class="research-meta">
-              <span>证据强度 <strong>${esc(researchStrengthLabel(state.evidenceStrength))}</strong></span>
-              <span>可见状态 <strong>${esc(visibilityLabel(state.visibility))}</strong></span>
-              <span>主体证据 <strong>${esc(state.totalEvidenceItems ?? 0)}</strong></span>
-              <span>可观测通道 <strong>${esc(state.observedChannels ?? 0)}</strong></span>
+        <article class="subject-field ${stateTone}" id="subject-field">
+          <div class="field-index">02 · SUBJECT FIELD</div>
+          <div class="subject-field-grid">
+            <div class="subject-field-main">
+              <div class="subject-identity"><span>${esc(entityLabel)}</span><span class="truth-chip">${esc(d.evidenceState?.overall || "UNKNOWN")}</span></div>
+              <h2>${esc(subject.canonicalName || keyword)}</h2>
+              <p class="subject-conclusion">${esc(state.conclusion || "当前证据不足，无法形成主体判断。")}</p>
             </div>
+            <aside class="change-axis-summary">
+              <span>WHAT CHANGED</span>
+              <p>${esc(change)}</p>
+            </aside>
           </div>
-          <div class="research-change"><span class="eyebrow">发生了什么</span><p>${esc(change)}</p></div>
-        </section>
+          <dl class="subject-facts">
+            <div><dt>证据强度</dt><dd>${esc(researchStrengthLabel(state.evidenceStrength))}</dd></div>
+            <div><dt>可见状态</dt><dd>${esc(visibilityLabel(state.visibility))}</dd></div>
+            <div><dt>主体证据</dt><dd>${esc(state.totalEvidenceItems ?? 0)}</dd></div>
+            <div><dt>可观测通道</dt><dd>${esc(state.observedChannels ?? 0)}</dd></div>
+          </dl>
+        </article>
 
-        <section class="decision-workspace">
-          <div class="decision-column">
-            <div class="decision-panel"><div class="panel-kicker">DRIVERS</div><h3>驱动因素</h3>${decisionList(research.drivers, "目前没有足够证据识别驱动因素")}</div>
-            <div class="decision-panel opportunity"><div class="panel-kicker">OPPORTUNITIES</div><h3>机会</h3>${decisionList(research.opportunities, "当前没有证据支持的明确机会")}</div>
-          </div>
-          <div class="decision-column">
-            <div class="decision-panel risk"><div class="panel-kicker">RISKS</div><h3>风险</h3>${decisionList(research.risks, "当前没有证据支持的明确风险")}</div>
-            <div class="decision-panel"><div class="panel-kicker">NEXT ACTIONS</div><h3>下一步</h3>${decisionList(research.recommendedActions, "先补充主体证据")}</div>
-          </div>
-        </section>
+        <nav class="trace-index" aria-label="研究轨迹">
+          <a href="#trace-change"><span>01</span>变化</a>
+          <a href="#trace-interpret"><span>02</span>原因</a>
+          <a href="#trace-evidence"><span>03</span>证据</a>
+          <a href="#trace-action"><span>04</span>行动</a>
+        </nav>
 
-        <section class="research-section">
-          <div class="section-heading"><div><span class="eyebrow">EVIDENCE COVERAGE</span><h2>每个信号通道都给结论</h2></div><span class="section-hint">原始内容只作为证据，不作为首页产品本身</span></div>
-          <div class="research-channel-grid">${(research.channelAnalysis || []).map(channelResearchCard).join("") || empty("暂无可用信号通道")}</div>
-        </section>
+        <div class="trace-flow">
+          <section class="trace-stage" id="trace-change">
+            <header class="trace-stage-head"><span class="trace-no">01</span><div><small>CHANGE</small><h2>发生了什么</h2></div></header>
+            <div class="trace-stage-body">
+              <p class="stage-lead">${esc(change)}</p>
+              <dl class="signal-line">
+                <div><dt>生命周期</dt><dd>${esc(core.lifecycle || "—")}</dd><small>置信度 ${esc(core.confidence ?? "—")}</small></div>
+                <div><dt>速度</dt><dd>${esc(pct(metrics.velocityScore))}</dd><small>0–100</small></div>
+                <div><dt>扩散</dt><dd>${esc(pct(metrics.diffusionScore))}</dd><small>0–100</small></div>
+                <div><dt>持续性</dt><dd>${esc(pct(metrics.persistenceScore))}</dd><small>0–100</small></div>
+                <div><dt>信源可靠度</dt><dd>${esc(pct(metrics.sourceReliabilityScore))}</dd><small>0–100</small></div>
+                <div><dt>信号家族</dt><dd>${esc(d.decisionState?.signalFamiliesCovered ?? "—")}</dd><small>跨家族确认</small></div>
+              </dl>
+              <div class="signal-views">
+                <section><div class="subsection-label">历史轨迹</div>${series.length ? lineChart([{ name: keyword, points: series }]) : empty("历史不足，当前以 Query Evidence 为主")}</section>
+                <section><div class="subsection-label">6–72h 条件预测</div>${forecastTable(f.forecast)}<p class="sub">预测验证：${esc(f.validation?.grade || "—")} · 不是概率，也不替代证据。</p></section>
+              </div>
+            </div>
+          </section>
 
-        <section class="research-section">
-          <div class="section-heading"><div><span class="eyebrow">EVIDENCE GAPS</span><h2>哪里不能下结论</h2></div></div>
-          <div class="decision-panel gaps-panel">${gapList(research.evidenceGaps)}</div>
-        </section>
+          <section class="trace-stage" id="trace-interpret">
+            <header class="trace-stage-head"><span class="trace-no">02</span><div><small>INTERPRET</small><h2>为什么值得注意</h2></div></header>
+            <div class="trace-stage-body">
+              <div class="interpretation-strata">
+                <section><span class="stratum-label">DRIVERS</span><h3>驱动因素</h3>${decisionList(research.drivers, "目前没有足够证据识别驱动因素")}</section>
+                <section><span class="stratum-label">OPPORTUNITIES</span><h3>机会</h3>${decisionList(research.opportunities, "当前没有证据支持的明确机会")}</section>
+                <section><span class="stratum-label">RISKS</span><h3>风险</h3>${decisionList(research.risks, "当前没有证据支持的明确风险")}</section>
+              </div>
+            </div>
+          </section>
 
-        <section class="research-section">
-          <div class="section-heading"><div><span class="eyebrow">TREND STATE</span><h2>趋势状态与历史信号</h2></div></div>
-          <div class="stats-grid intelligence-stats">
-            ${scoreCard("生命周期", core.lifecycle || "—", `置信度 ${core.confidence ?? "—"}`)}
-            ${scoreCard("速度", pct(metrics.velocityScore), "0–100")}
-            ${scoreCard("扩散", pct(metrics.diffusionScore), "0–100")}
-            ${scoreCard("持续性", pct(metrics.persistenceScore), "0–100")}
-            ${scoreCard("信源可靠度", pct(metrics.sourceReliabilityScore), "0–100")}
-            ${scoreCard("信号家族", d.decisionState?.signalFamiliesCovered ?? "—", "跨家族确认")}
-          </div>
-          <div class="analysis-split">
-            <div class="analysis-panel"><h3>历史信号</h3>${series.length ? lineChart([{ name: keyword, points: series }]) : empty("历史不足，当前以 Query Evidence 为主")}</div>
-            <div class="analysis-panel"><h3>6–72h 条件预测</h3>${forecastTable(f.forecast)}<p class="sub">预测验证：${esc(f.validation?.grade || "—")} · 不是概率，也不替代证据。</p></div>
-          </div>
-        </section>
+          <section class="trace-stage" id="trace-evidence">
+            <header class="trace-stage-head"><span class="trace-no">03</span><div><small>EVIDENCE TRACE</small><h2>什么证据支持它</h2></div></header>
+            <div class="trace-stage-body">
+              <p class="stage-note">每个信号通道先给自己的结论与状态，再允许沿 Trace 打开原始证据。缺失通道保持缺失，不用 0 填平。</p>
+              <div class="evidence-stack">${(research.channelAnalysis || []).map((channel, index) => channelResearchCard(channel, index)).join("") || empty("暂无可用信号通道")}</div>
+              <div class="evidence-boundary">
+                <div class="subsection-label">EVIDENCE GAPS</div>
+                <h3>哪里不能下结论</h3>
+                ${gapList(research.evidenceGaps)}
+              </div>
+              <div class="context-strata">
+                <section><div class="subsection-label">CREATOR / AUDIENCE PROXY</div><h3>公开受众与创作者代理</h3><p class="sub">不推断敏感人口属性。匹配内容 ${esc(audience.evidence?.matchedItems ?? 0)} · 创作者 ${esc(audience.evidence?.creatorsObserved ?? 0)}</p>${renderAny((audience.creatorSignals || []).slice(0, 10))}</section>
+                <section><div class="subsection-label">MEDIA EVIDENCE</div><h3>媒体证据</h3><p class="sub">证据 ${esc(media.evidenceCount ?? 0)} · 图片 ${esc(media.imageEvidenceCount ?? 0)}</p>${renderAny((media.items || []).slice(0, 10))}</section>
+              </div>
+            </div>
+          </section>
 
-        <section class="research-section">
-          <div class="section-heading"><div><span class="eyebrow">CONTEXT</span><h2>受众、创作者与媒体证据</h2></div></div>
-          <div class="analysis-split">
-            <div class="analysis-panel"><h3>公开受众 / 创作者代理</h3><p class="sub">不推断敏感人口属性。匹配内容 ${esc(audience.evidence?.matchedItems ?? 0)} · 创作者 ${esc(audience.evidence?.creatorsObserved ?? 0)}</p>${renderAny((audience.creatorSignals || []).slice(0, 10))}</div>
-            <div class="analysis-panel"><h3>媒体证据</h3><p class="sub">证据 ${esc(media.evidenceCount ?? 0)} · 图片 ${esc(media.imageEvidenceCount ?? 0)}</p>${renderAny((media.items || []).slice(0, 10))}</div>
-          </div>
-        </section>
+          <section class="trace-stage" id="trace-action">
+            <header class="trace-stage-head"><span class="trace-no">04</span><div><small>ACTION / RETURN</small><h2>接下来能做什么</h2></div></header>
+            <div class="trace-stage-body">
+              <div class="action-path">${decisionList(research.recommendedActions, "先补充主体证据")}</div>
+              ${upcoming.length ? `<div class="upcoming-axis"><div class="subsection-label">UPCOMING NODES</div><h3>临近节点</h3>${upcoming.slice(0, 8).map((node, index) => `<div class="upcoming-node"><span>${String(index + 1).padStart(2, "0")}</span><strong>${esc(node.name)}</strong><time>${esc(node.startDate)}</time><p>${esc(node.expectedImpact || node.category || "")}</p></div>`).join("")}</div>` : ""}
+            </div>
+          </section>
+        </div>
 
-        <section class="research-section">
-          <details class="technical-details">
-            <summary>查看技术口径、信源架构与专业告警</summary>
+        <section class="research-technical">
+          <details>
+            <summary>技术口径 / 信源架构 / 专业告警</summary>
             <div class="technical-grid">
               <div><h3>信源架构</h3>${renderAny((architecture.selected || []).map((x) => ({ source: x.label || x.requestedId, access: x.access, families: (x.families || []).join(", ") })))}</div>
               <div><h3>专业告警</h3>${renderAny(d.alerts?.triggered || [])}</div>
@@ -218,8 +251,8 @@ VIEWS.professional = async function (root, params) {
         </section>
 
         <section class="research-delivery">
-          <div><span class="eyebrow">DELIVERY</span><h2>把同一份 Intelligence Truth 交给人或 AI</h2><p>报告与页面来自同一后端结构，不让前端另编一套“总结”。</p></div>
-          <div class="delivery-actions"><button class="btn" id="proJson">复制 JSON</button><button class="btn" id="proMd">复制决策简报</button><button class="btn" id="proCsv">复制 CSV</button></div>
+          <div><span class="field-index">RETURN · DELIVERY</span><h2>同一份 Intelligence Truth，交给人或 AI</h2><p>页面、Markdown、JSON 与 CSV 共用同一后端证据链。</p></div>
+          <div class="delivery-actions"><button class="text-action" id="proMd">复制决策简报</button><button class="text-action" id="proJson">JSON</button><button class="text-action" id="proCsv">CSV</button></div>
         </section>
       `;
 
