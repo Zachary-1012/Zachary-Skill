@@ -27,7 +27,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.5.3";
+const VERSION = "1.6.0";
 const TOOL_COUNT = 21;
 const OPENAI_APPS_CHALLENGE_TOKEN = String(process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
 
@@ -313,6 +313,10 @@ const server = createServer(async (req, res) => {
         releaseState: "RELEASED",
         operatingState: (() => { const s = snapshotScheduler.getState(); const last = s.lastSuccessAt ? Date.parse(s.lastSuccessAt) : NaN; return s.enabled && Number.isFinite(last) && Date.now() - last <= Math.max(Number(s.intervalMs || 0) * 2, 21600000) ? "OPERATING" : s.enabled ? "DEGRADED" : "UNVERIFIED"; })(),
         truthSemantics: "trendhub-truth-state-v1",
+        evidenceContract: "trendhub-evidence-contract-v1",
+        namespace: "trendhub-namespace-v1",
+        skillContract: "trendhub-skill-v2",
+        resources: { static: 7, templates: 3 },
         snapshotScheduler: snapshotScheduler.getState(),
       });
     }
