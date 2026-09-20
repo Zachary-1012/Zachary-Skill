@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.1 — Semantic Experience Correction
+
+- Replace the primary dashboard/card grammar with Subject Field → Change Axis → Interpretation Strata → Evidence Trace → Action Return.
+- Remove the four-KPI wall and shortcut-card wall from the research home.
+- Replace the persistent admin-style sidebar with an on-demand contextual index sheet.
+- Put the global header and every research surface on one shared alignment axis.
+- Recompose Professional Intelligence as a continuous research trace instead of a 2×2 decision-card layout.
+- Fix the deep-link initialization race where the Professional route could render the dashboard before VIEWS.professional registered.
+- Retire the superseded intelligence-v1.css layer and add release tests preventing a return to the primary KPI/card dashboard skeleton.
+- Preserve Professional Intelligence v3, Entity-first Query Evidence Acquisition, Evidence Contract, MCP Resources and the stable 21-tool facade.
+
+
 ## v1.7.0 — Entity-first Intelligence Workspace
 
 - Upgrade business-subject research from hotlist-first to **Entity-first Query Evidence Acquisition**.
