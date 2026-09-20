@@ -78,7 +78,11 @@ must(!fs.existsSync(path.join(ROOT, "web", "intelligence-v1.css")), "superseded 
 const indexHtml = read(path.join(ROOT, "web", "index.html"));
 const appJs = read(path.join(ROOT, "web", "app.js"));
 const viewsD = read(path.join(ROOT, "web", "views-d.js"));
-must(indexHtml.includes(`experience-v2.css?v=${pkg.version}`), "public shell must load semantic Experience stylesheet at current version");\nconst viewsE = read(path.join(ROOT, "web", "views-e.js"));\nmust(viewsE.includes('depth: "quick"'), "progressive quick Decision View layer missing");\nmust(viewsE.includes("正在补充更多平台和趋势数据"), "progressive research user feedback missing");
+must(indexHtml.includes(`experience-v2.css?v=${pkg.version}`), "public shell must load Experience stylesheet at current version");
+const viewsE = read(path.join(ROOT, "web", "views-e.js"));
+must(viewsE.includes('depth: "quick"'), "progressive quick Decision View layer missing");
+must(viewsE.includes("发生了什么"), "continuous research surface missing");
+must(viewsE.includes("evidenceDrawer"), "on-demand evidence drawer missing");
 must(appJs.includes("DOMContentLoaded"), "deep-link route boot must wait for deferred view registration");
 must(!/\nroute\(\);\s*$/.test(viewsD), "views-d must not boot routing before later view modules register");
 must(manifest.aiInstall?.successMarker === `SMOKE OK tools=${expected}`, "AI install success marker mismatch");
