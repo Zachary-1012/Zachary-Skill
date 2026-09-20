@@ -1,6 +1,6 @@
 export const TRENDHUB_NAMESPACE = {
   schema: "trendhub-namespace-v1",
-  productVersion: "1.6.1",
+  productVersion: "1.6.2",
   capabilityPrefix: "trendhub.",
   resourceScheme: "trendhub://",
   toolCompatibility: {
