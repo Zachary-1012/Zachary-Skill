@@ -19,7 +19,7 @@ const registry = json(path.join(REPO, "server.json"));
 const plugin = json(path.join(REPO, "plugin.json"));
 const gateway = read(path.join(ROOT, "scripts", "remote-gateway.mjs"));
 const serverTs = read(path.join(ROOT, "src", "server.ts"));
-const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md"];
+const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md", "V1_7_0_INTELLIGENCE_WORKSPACE.md"];
 for (const doc of requiredDocs) must(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
 
 const target = professional.targetStableVersion ?? professional.candidateVersion;
@@ -69,7 +69,7 @@ must(expected === 21, `expected tool count=${expected}`);
 must(manifest.agentNative?.namespace === "trendhub-namespace-v1", "v1.6 namespace contract missing");
 must(manifest.agentNative?.evidenceContract === "trendhub-evidence-contract-v1", "v1.6 evidence contract missing");
 must(manifest.agentNative?.skillContract === "trendhub-skill-v2", "v1.6 Skill 2.0 contract missing");
-must(manifest.tools?.length === expected, `manifest tools=${manifest.tools?.length}, expected=${expected}`);
+must(manifest.tools?.length === expected, `manifest tools=${manifest.tools?.length}, expected=${expected}`);\nmust(manifest.professionalIntelligence?.methodologyVersion === "professional-intelligence-v3", "v1.7 Professional Intelligence v3 contract missing");\nmust(manifest.agentNative?.entityFirstResearch === "released", "v1.7 Entity-first research contract missing");\nmust(manifest.agentNative?.decisionFirstWeb === "released", "v1.7 Decision-first Web contract missing");\nmust(fs.existsSync(path.join(ROOT, "web", "intelligence-v1.css")), "v1.7 Intelligence Workspace stylesheet missing");
 must(manifest.aiInstall?.successMarker === `SMOKE OK tools=${expected}`, "AI install success marker mismatch");
 for (const tool of professional.professionalTools || []) must(manifest.tools.some((x) => x?.name === tool), `manifest missing ${tool}`);
 must(registry.description.length <= 100, "registry description exceeds 100 characters");
