@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.6.1",
-  "description": "TrendHub MCP — v1.6.1；Agent-native Resources、统一 Evidence Contract、Skill 2.0、21 MCP tools，修复生产适配器噪声边界。",
+  "version": "1.6.2",
+  "description": "TrendHub MCP — v1.6.2；Agent-native Resources、统一 Evidence Contract、Skill 2.0、21 MCP tools，修正公网 Source Universe Truth 展示。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"
