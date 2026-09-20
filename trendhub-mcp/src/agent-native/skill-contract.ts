@@ -38,5 +38,5 @@ export const TRENDHUB_SKILL_CONTRACT = {
 } as const;
 
 export function skillContract() {
-  return JSON.parse(JSON.stringify(TRENHUB_SKILL_CONTRACT)) as typeof TRENDHUB_SKILL_CONTRACT;
+  return JSON.parse(JSON.stringify(TRENDHUB_SKILL_CONTRACT)) as typeof TRENDHUB_SKILL_CONTRACT;
 }
