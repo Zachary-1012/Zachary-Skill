@@ -158,6 +158,7 @@ function text(value: unknown): string {
 }
 
 function num(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -204,9 +205,20 @@ function extractForecast(intel: ProfessionalIntelligence): DecisionView["change"
   if (status === "insufficient_history") {
     return { statusText: "历史样本不足，暂不给出预测", rows: [], validationText: "等积累更多采集后再参考。" };
   }
+  if (!rows.length) return null;
+
+  // 全部预测为 0 / +0% 通常意味着没有可用的主体历史信号。
+  // 这种结果没有决策价值，也不能把“缺失”伪装成“稳定为零”。
+  const hasMeaningfulForecast = rows.some((row) => {
+    const value = Number(row.value);
+    const deltaMatch = row.deltaText.match(/-?\d+(?:\.\d+)?/);
+    const delta = deltaMatch ? Number(deltaMatch[0]) : 0;
+    return (Number.isFinite(value) && value > 0) || Math.abs(delta) >= 1;
+  });
+  if (!hasMeaningfulForecast) return null;
+
   const validationText =
     grade === "weak" ? "回测验证较弱，预测仅作方向参考。" : grade === "strong" || grade === "ok" ? "已有历史回测验证，仍属条件外推、不保证发生。" : "预测为基于历史的条件外推，不保证发生。";
-  if (!rows.length) return null;
   const statusText = status === "weak_backtest" ? "可做条件外推，但回测偏弱" : "可做条件外推";
   return { statusText, rows, validationText };
 }
@@ -224,11 +236,13 @@ export function buildDecisionView(intel: ProfessionalIntelligence): DecisionView
 
   const strength = text(current.evidenceStrength) || "insufficient";
   const visibility = text(current.visibility) || "insufficient-evidence";
-  const hotlistHit = num(current.hotlistPlatformsHit) ?? 0;
-  const hotlistMentions = num(current.hotlistMentions) ?? 0;
-  const hotlistText = hotlistHit > 0
-    ? `在 ${hotlistHit} 类公开热榜出现，热榜相关条目约 ${hotlistMentions} 条`
-    : "暂未在公开热榜形成共振（不等于没有人讨论）";
+  const hotlistHit = num(current.hotlistPlatformsHit);
+  const hotlistMentions = num(current.hotlistMentions);
+  const hotlistText = hotlistHit === null
+    ? "本次公开热榜证据暂缺，不能据此判断是否形成共振"
+    : hotlistHit > 0
+      ? `在 ${hotlistHit} 类公开热榜出现，热榜相关条目约 ${hotlistMentions ?? "若干"} 条`
+      : "暂未在公开热榜形成共振（不等于没有人讨论）";
 
   const platforms: DecisionPlatform[] = asList(r?.channelAnalysis)
     .map((item) => {
