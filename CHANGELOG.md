@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6.2 — Web truth alignment
+
+- Fix the public dashboard to load the full P2 Professional Source Universe, so the displayed total matches the canonical 129-source catalog.
+- Remove stale DEV badges from stable Professional Intelligence views.
+- Add a deterministic Web Truth Contract test.
+- Preserve v1.6.1 runtime adapter fixes and all v1.6 protocol contracts.
+
+
 ## v1.6.1 — Runtime adapter noise hotfix
 
 - Isolate embedded `dailyhot-api` usage at the route-handler layer instead of importing its full Hono Web application, removing the unrelated `./public` static-directory warning from TrendHub production.
