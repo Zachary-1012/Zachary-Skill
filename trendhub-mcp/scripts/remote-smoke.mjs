@@ -12,7 +12,11 @@ const manifestTools = existsSync(professionalManifest)
   ? Number(JSON.parse(readFileSync(professionalManifest, "utf8")).expectedToolCount || 19)
   : 19;
 const expectedTools = Number(process.env.TRENTHUB_EXPECTED_TOOLS || manifestTools);
-const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 38);
+// Stable v1.5.3 exposes 51 runtime platform/source adapters. Keep the env override
+// for explicit release contracts, but default to the current canonical runtime count
+// so Registry publication and ad-hoc remote smoke checks do not fall back to the
+// historical v1.4.x 38-platform contract.
+const expectedPlatforms = Number(process.env.TRENTHUB_EXPECTED_PLATFORMS || 51);
 const url = process.argv[2] || process.env.TRENTHUB_REMOTE_URL || "https://trendhub-remote-production.up.railway.app/mcp";
 const client = new Client({ name: "trendhub-remote-smoke", version: "1.0.0" });
 const transport = new StreamableHTTPClientTransport(new URL(url));
