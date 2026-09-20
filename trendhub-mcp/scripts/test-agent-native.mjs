@@ -21,7 +21,8 @@ const envelope = completeResult({ data: { ok: true }, capability: "trendhub.test
 assert.equal(envelope.resultType, "complete");
 for (const key of ["data", "evidence", "reliability", "confidence", "limitations", "trace"]) assert.ok(key in envelope);
 assert.equal(decideLiveSkill({ sourceReliabilityScore: 40, historySamples: 2, lifecycle: "accelerating" }).forecastAllowed, false);
-assert.equal(routeIntent("品牌 campaign 研究").capability, "trendhub.intelligence.cross_signal");
+assert.equal(routeIntent("品牌 campaign 研究").capability, "trendhub.intelligence.professional");
+assert.equal(routeIntent("趋势生命周期速度").canonicalTool, "trend_intelligence");
 assert.equal(metric("trendhub.request.duration", 12, "ms").unit, "ms");
 const task = { taskId: "t1", status: "created", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), progress: 0, resultAvailable: false };
 assert.equal(transitionTask(task, "running").status, "running");
