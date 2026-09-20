@@ -27,7 +27,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "1.5.2";
+const VERSION = "1.5.3";
 const TOOL_COUNT = 21;
 
 function envBool(name, fallback = false) {
@@ -309,6 +309,9 @@ const server = createServer(async (req, res) => {
         tools: TOOL_COUNT,
         platforms: Number(coreHealth.platformCount || 38),
         web: true,
+        releaseState: "RELEASED",
+        operatingState: (() => { const s = snapshotScheduler.getState(); const last = s.lastSuccessAt ? Date.parse(s.lastSuccessAt) : NaN; return s.enabled && Number.isFinite(last) && Date.now() - last <= Math.max(Number(s.intervalMs || 0) * 2, 21600000) ? "OPERATING" : s.enabled ? "DEGRADED" : "UNVERIFIED"; })(),
+        truthSemantics: "trendhub-truth-state-v1",
         snapshotScheduler: snapshotScheduler.getState(),
       });
     }
@@ -322,7 +325,7 @@ const server = createServer(async (req, res) => {
         name: "io.github.Zachary-1012/trendhub",
         title: "TrendHub",
         version: VERSION,
-        description: `Evidence-first trend intelligence across 38 public trend sources with ${TOOL_COUNT} MCP tools.`,
+        description: `Evidence-first trend intelligence across 51 runtime source adapters with ${TOOL_COUNT} MCP tools.`,
         transport: { type: "streamable-http", url: `${base}/mcp` },
         web: `${base}/`,
         privacy: `${base}/privacy`,
