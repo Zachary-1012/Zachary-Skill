@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · Agent-native Trend Intelligence",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "专业级 Agent-native 趋势情报 MCP：快速渐进研究、普通人可读 Decision View、Entity-first Professional Intelligence v3、21 个稳定工具与 Evidence Contract。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
