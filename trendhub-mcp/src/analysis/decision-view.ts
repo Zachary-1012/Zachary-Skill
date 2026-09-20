@@ -23,6 +23,12 @@ export interface DecisionEvidenceItem {
   url: string | null;
 }
 
+export interface DecisionInsight {
+  title: string;
+  reason: string;
+  evidence: DecisionEvidenceItem[];
+}
+
 export interface DecisionPlatform {
   name: string;
   familyText: string;
@@ -59,10 +65,10 @@ export interface DecisionView {
     curve: { points: Array<{ date: string; value: number }>; scaleNote: string } | null;
     forecast: { statusText: string; rows: Array<{ horizonText: string; value: string; deltaText: string }>; validationText: string } | null;
   };
-  drivers: Array<{ title: string; reason: string }>;
+  drivers: DecisionInsight[];
   platforms: DecisionPlatform[];
-  opportunities: Array<{ title: string; reason: string }>;
-  risks: Array<{ title: string; reason: string }>;
+  opportunities: DecisionInsight[];
+  risks: DecisionInsight[];
   gaps: Array<{ title: string; reason: string; nextStep: string }>;
   suggestions: Array<{ title: string; reason: string; priority: string; priorityText: string }>;
   upcoming: Array<{ name: string; date: string; impact: string }>;
@@ -272,11 +278,24 @@ export function buildDecisionView(intel: ProfessionalIntelligence): DecisionView
     })
     .filter((p) => p.name && p.name !== "未命名来源");
 
-  const mapItems = (key: string): Array<{ title: string; reason: string }> =>
+  const mapItems = (key: string): DecisionInsight[] =>
     asList(r ? (r as Record<string, unknown>)[key] : undefined)
       .map((item) => {
         const o = asRecord(item);
-        return { title: text(o.title ?? o.action ?? o.name), reason: text(o.reason ?? o.nextStep) };
+        const evidence = asList(o.evidenceRefs).map((entry) => {
+          const ev = asRecord(entry);
+          return {
+            source: text(ev.source ?? ev.channel) || "公开来源",
+            time: text(ev.publishedAt ?? ev.time) || null,
+            title: text(ev.title) || "(无标题)",
+            url: text(ev.url) || null,
+          };
+        });
+        return {
+          title: text(o.title ?? o.action ?? o.name),
+          reason: text(o.reason ?? o.nextStep),
+          evidence,
+        };
       })
       .filter((o) => o.title);
 
