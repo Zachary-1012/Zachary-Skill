@@ -40,7 +40,7 @@
       "alert-rule",
       "audit"
     ],
-    "responsiveWeb": "task-first-decision-view-desktop-tablet-phone",
+    "responsiveWeb": "user-task-research-workspace-desktop-tablet-phone",
     "observability": "local-otel-compatible-zero-export",
     "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
     "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
@@ -54,10 +54,11 @@
     "queryEvidence": "google-news-cn-global-gdelt-bluesky-apple-podcasts-xhs-curated-rss",
     "professionalIntelligence": "v3-entity-first-decision-support",
     "executiveReport": "v2-decision-brief",
-    "webExperience": "task-first-decision-view",
+    "webExperience": "user-task-research-workspace",
     "deepLinkRouting": "deferred-view-registration-safe",
     "progressiveResearch": "quick-view-then-full-evidence",
-    "reviewQuality": "missing-not-zero-driver-noise-filtering-relevant-events"
+    "reviewQuality": "missing-not-zero-driver-noise-filtering-relevant-events",
+    "evidenceInteraction": "on-demand-source-drawer"
   },
   "sourceAccessModes": [
     "live-public",
@@ -69,8 +70,11 @@
   ],
   "uxRules": [
     "user-sees-only-task-content-result-and-action",
+    "primary-navigation-is-home-research-discover-settings-not-tool-list",
     "single-intent-search-entry-with-progressive-results",
     "frontend-is-renderer-backend-decision-view-owns-all-judgement",
+    "research-is-continuous-summary-change-support-next-not-eight-section-report",
+    "evidence-opens-on-demand-in-context-drawer",
     "generic-kpi-wall-is-not-a-primary-research-composition",
     "generic-card-grid-is-not-a-primary-research-composition",
     "no-long-full-page-spinner-show-immediate-then-fill-slow-sources",
