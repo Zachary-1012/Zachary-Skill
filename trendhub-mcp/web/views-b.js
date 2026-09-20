@@ -1,3 +1,81 @@
+VIEWS.discover = async function (content) {
+  content.innerHTML = `
+    <div class="discover-page">
+      <section class="discover-section">
+        <div class="discover-section-head">
+          <h2>正在聚集</h2>
+          <span>多个平台同时出现的话题</span>
+        </div>
+        <div id="discoverClusters">${loading("正在整理跨平台变化…")}</div>
+      </section>
+
+      <section class="discover-section">
+        <div class="discover-section-head">
+          <h2>刚刚出现</h2>
+          <span>相对上一轮采集的新变化</span>
+        </div>
+        <div id="discoverChanges">${loading("正在读取最近变化…")}</div>
+      </section>
+    </div>`;
+
+  const labelFor = (platform) => {
+    const row = (META?.platforms || []).find((item) => item.platform === platform);
+    return row?.label || platform;
+  };
+
+  const changesTask = api("/api/changes")
+    .then((data) => {
+      const rows = [];
+      for (const group of (data.withHistory || [])) {
+        for (const item of (group.newTopics || []).slice(0, 3)) {
+          rows.push({ ...item, label: labelFor(group.platform) });
+          if (rows.length >= 12) break;
+        }
+        if (rows.length >= 12) break;
+      }
+      const box = $("#discoverChanges", content);
+      if (!box) return;
+      box.innerHTML = rows.length
+        ? rows.map((row) => `
+            <div class="discovery-item">
+              <button type="button" class="discovery-topic" data-keyword="${esc(row.title)}">${esc(row.title)}</button>
+              <span class="discovery-meta">${esc(row.label)}${row.currentRank ? ` · #${esc(row.currentRank)}` : ""}</span>
+            </div>`).join("")
+        : homeEmpty("还没有足够的历史快照用于比较");
+      box.querySelectorAll("[data-keyword]").forEach((button) => {
+        button.addEventListener("click", () => startResearch(button.dataset.keyword));
+      });
+    })
+    .catch(() => {
+      const box = $("#discoverChanges", content);
+      if (box) box.innerHTML = homeEmpty("最近变化暂时不可用");
+    });
+
+  const clusterTask = api("/api/clusters?min_platforms=2&limit=16")
+    .then((data) => {
+      const box = $("#discoverClusters", content);
+      if (!box) return;
+      const clusters = data.clusters || [];
+      box.innerHTML = clusters.length
+        ? clusters.map((cluster) => `
+            <div class="discovery-cluster">
+              <button type="button" class="discovery-topic" data-keyword="${esc(cluster.topic)}">${esc(cluster.topic)}</button>
+              <div class="discovery-meta">${esc(cluster.platformCount)} 个平台同时出现 · 共振 ${esc(cluster.resonanceScore)}</div>
+              <div class="discovery-platforms">${(cluster.members || []).slice(0, 4).map((member) => esc(member.label || member.platform)).join(" · ")}</div>
+            </div>`).join("")
+        : homeEmpty("当前没有检测到跨平台同时出现的话题");
+      box.querySelectorAll("[data-keyword]").forEach((button) => {
+        button.addEventListener("click", () => startResearch(button.dataset.keyword));
+      });
+    })
+    .catch(() => {
+      const box = $("#discoverClusters", content);
+      if (box) box.innerHTML = homeEmpty("跨平台聚合暂时不可用");
+    });
+
+  await Promise.allSettled([changesTask, clusterTask]);
+};
+
 VIEWS.trending = function (content, params) {
   const catOpts = ['<option value="">核心榜单（默认 10 平台 · 小红书打头）</option>']
     .concat(CATS.platformCategories.map((c) => `<option ${params.category === c ? "selected" : ""}>${esc(c)}</option>`))
