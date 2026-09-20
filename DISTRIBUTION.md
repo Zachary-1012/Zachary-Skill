@@ -6,7 +6,7 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.6.0, 21 MCP tools, MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 layered sources**
+- Stable tool contract: **TrendHub v1.6.1, 21 MCP tools, MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 layered sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
@@ -33,9 +33,9 @@ Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub
 
 Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
 
-## v1.6.0 hosted protocol behavior
+## v1.6.1 hosted protocol behavior
 
-The hosted Remote MCP preserves the 21-tool compatibility facade and adds protocol-native Resources for namespace, evidence contract, capabilities, source contracts, Skill 2.0 and local history. Registry publication validates these Resources against the deployed production endpoint. The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The stable hosted contract is now 21 MCP tools with the layered source universe; published releases remain immutable; v1.5.3 is the immediate rollback target for v1.6.0.
+The hosted Remote MCP preserves the 21-tool compatibility facade and adds protocol-native Resources for namespace, evidence contract, capabilities, source contracts, Skill 2.0 and local history. Registry publication validates these Resources against the deployed production endpoint. The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The stable hosted contract is now 21 MCP tools with the layered source universe; published releases remain immutable; v1.6.0 is the immediate rollback target for v1.6.1.
 
 ## Direct-use paths
 

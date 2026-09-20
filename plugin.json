@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.6.0",
-  "description": "TrendHub v1.6: evidence-first trend intelligence with 21 MCP tools, protocol-native Resources, unified Evidence Contract, namespace and Skill 2.0.",
+  "version": "1.6.1",
+  "description": "TrendHub v1.6.1: evidence-first trend intelligence with 21 tools, MCP Resources, unified Evidence Contract, Skill 2.0 and cleaner source-adapter runtime boundaries.",
   "author": {
     "name": "Zachary",
     "url": "https://github.com/Zachary-1012"

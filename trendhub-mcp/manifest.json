@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.6.0",
-  "description": "专业级 Agent-native 趋势情报 MCP：21 个稳定工具 + MCP Resources、统一 Evidence Contract v1、canonical namespace、Skill 2.0、51 个运行时适配器与 129 个分层信源；BYO-AI、本地优先。",
+  "version": "1.6.1",
+  "description": "专业级 Agent-native 趋势情报 MCP：21 个稳定工具 + MCP Resources、统一 Evidence Contract v1、Skill 2.0、51 个运行时适配器与 129 个分层信源；v1.6.1 收敛第三方适配器运行时噪声。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",

@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.6.0",
-  "description": "TrendHub MCP — v1.6.0；Agent-native Resources、统一 Evidence Contract、canonical namespace、Skill 2.0、21 MCP tools。",
+  "version": "1.6.1",
+  "description": "TrendHub MCP — v1.6.1；Agent-native Resources、统一 Evidence Contract、Skill 2.0、21 MCP tools，修复生产适配器噪声边界。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"
@@ -23,7 +23,7 @@
     "upgrade": "node scripts/upgrade.mjs",
     "smoke": "node scripts/smoke.mjs",
     "build": "tsc -p tsconfig.json",
-    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs && node scripts/test-distribution.mjs && node scripts/test-snapshot-scheduler.mjs && node scripts/test-remote-web.mjs && node scripts/test-web-snapshot-fallback.mjs && node scripts/test-professional.mjs && node scripts/test-professional-e2e.mjs && node scripts/test-creator-ops.mjs && node scripts/test-agent-native.mjs && node scripts/test-v1-6-foundation.mjs && node scripts/test-truth-contract.mjs && node scripts/test-public-adapters.mjs && node scripts/test-release-candidate.mjs",
+    "test": "node scripts/test.mjs && node scripts/test-intelligence.mjs && node scripts/test-distribution.mjs && node scripts/test-snapshot-scheduler.mjs && node scripts/test-remote-web.mjs && node scripts/test-web-snapshot-fallback.mjs && node scripts/test-professional.mjs && node scripts/test-professional-e2e.mjs && node scripts/test-creator-ops.mjs && node scripts/test-agent-native.mjs && node scripts/test-v1-6-foundation.mjs && node scripts/test-runtime-noise.mjs && node scripts/test-truth-contract.mjs && node scripts/test-public-adapters.mjs && node scripts/test-release-candidate.mjs",
     "release:gate": "npm run release:preflight && npm run build && npm test && npm run smoke",
     "release:preflight": "node scripts/release-preflight.mjs",
     "release:promote": "node scripts/promote-professional-release.mjs",

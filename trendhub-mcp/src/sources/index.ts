@@ -8,7 +8,7 @@ import { missingResult } from "../util/schema.js";
 import { recordSourceObservation } from "../store/reliability.js";
 import { DOMESTIC_PLATFORMS, fetchDomestic } from "./domestic.js";
 import { INTERNATIONAL, fetchInternational } from "./international.js";
-import { fetchWeibo, fetchZhihu, fetchBaidu } from "./overrides.js";
+import { fetchWeibo, fetchZhihu, fetchBaidu, fetchDouyin } from "./overrides.js";
 import { fetchPublicAdapter, isPublicAdapterPlatform, PUBLIC_ADAPTER_PLATFORMS } from "./public-adapters.js";
 import {
   fetchXiaohongshu,
@@ -33,6 +33,7 @@ const OVERRIDES: Record<string, (limit: number) => Promise<HotResult>> = {
   weibo: fetchWeibo,
   zhihu: fetchZhihu,
   baidu: fetchBaidu,
+  douyin: fetchDouyin,
 };
 
 /** 国内核心 + 长尾平台（小红书置顶，其后 dailyhot name） */
