@@ -1,55 +1,80 @@
 VIEWS.dashboard = async function (content) {
   content.innerHTML = loading();
-  const [health, latest, universe] = await Promise.all([
+  const [health, universe] = await Promise.all([
     api("/api/health"),
-    api("/api/trending?mode=snapshot&limit=5"),
     api("/api/professional/sources?priority=P1"),
     ensureMeta(),
   ]);
-  const catTiles = CATS.platformCategories
-    .map((c) => `<div class="tile" data-cat="${esc(c)}">${esc(c)} <span class="cat">分类</span></div>`)
-    .join("");
-  const latestCards = (latest.results || [])
-    .slice(0, 4)
-    .map((r) => `<div class="card" style="margin-bottom:12px"><h3>${esc(r.label || r.platform)}</h3><div class="captured">最近成功快照 ${fmtTime(r.capturedAt)}</div><div style="margin-top:8px">${itemsTable((r.items || []).slice(0, 5))}</div></div>`)
-    .join("");
-  const livePlatforms = PLATFORMS
-    .filter((p) => p.platform !== "xiaohongshu-hotlist")
-    .map((p) => `<span class="platform-chip"><strong>${esc(p.label)}</strong><small>${esc(p.category)} · ${esc(p.source)}</small></span>`)
-    .join("");
   const universeCounts = universe.counts || {};
   content.innerHTML = `
-    <div class="grid cols-4">
-      ${statCard(health.platformCount, "实时接入平台")}
-      ${statCard(universeCounts.total ?? 0, "专业信源宇宙")}
-      ${statCard(health.tools || 21, "MCP 工具")}
-      ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
-    </div>
-    <div class="section-title">最新趋势快照</div>
-    ${latestCards || note("warn", "托管端暂时没有可展示的成功快照；进入“当下热榜”可立即实时刷新。")}
-    <div class="section-title">快捷入口</div>
-    <div class="grid cols-4">
-      ${quickCard("xhs", "小红书热点 · 主打", "最近成功快照 + 实时刷新；失败自动回退")}
-      ${quickCard("trending", "当下热榜", "全平台快照优先，实时刷新失败自动回退")}
-      ${quickCard("clusters", "共振话题发现", "无需关键词，自动聚类全网热点")}
-      ${quickCard("brief", "创作简报", "证据卡 + 模板 + 可交给 AI 的 Prompt")}
-    </div>
-    <div class="section-title">按分类浏览热榜</div>
-    <div class="card"><div class="platform-tiles">${catTiles}</div></div>
-    <div class="section-title">平台与专业信源覆盖</div>
-    <div class="card platform-overview">
-      <div class="coverage-line"><strong>${esc(universeCounts.total ?? 0)} 个分层专业信源</strong><span class="sub">实时源 ${esc(health.platformCount)} · 零配置 ${esc(universeCounts.zeroConfig ?? 0)} · API/OAuth ${esc(universeCounts.credentialed ?? 0)} · 授权连接器 ${esc(universeCounts.licensed ?? 0)} · 规划中 ${esc(universeCounts.planned ?? 0)}</span></div>
-      <div class="platform-cloud">${livePlatforms}</div>
-      <p class="sub coverage-note">完整的国内、全球社媒/视频/播客/搜索/新闻/Web/时尚奢侈品/商业财经/科技汽车/营销媒体矩阵，请进入“信源与品牌宇宙”按行业和接入方式筛选。</p>
-    </div>
-    <div class="section-title">数据纪律</div>
-    <div class="grid cols-2">
-      <div class="card"><h3>不编造、不估算</h3><p class="sub">取不到的字段一律为 null，并用 正常 / 降级 / 缺失 标记；每条数据带采集时刻 capturedAt 与来源链接；平台公布时间与采集时间分离。</p></div>
-      <div class="card"><h3>隐私与算力</h3><p class="sub">TrendHub 不内置任何大模型 Key；趋势判断与脚本/文案/方案成稿仍由你正在使用的 AI 完成。公网模式仅开放安全查询能力，本地模式保留完整本机能力。</p></div>
-    </div>`;
-  content.querySelectorAll("[data-cat]").forEach((t) =>
-    t.addEventListener("click", () => (location.hash = `#/trending?category=${encodeURIComponent(t.dataset.cat)}`))
-  );
+    <section class="workspace-home">
+      <div class="workspace-home-copy">
+        <span class="eyebrow">TrendHub · Agent-native Trend Intelligence</span>
+        <h2>不是看新闻。直接研究你关心的主体。</h2>
+        <p>输入品牌、公司、商业体、产品或 Campaign。TrendHub 会主动取证，再给出当前状态、变化、驱动、机会、风险、证据缺口和下一步。</p>
+        <div class="workspace-search">
+          <input id="homeResearchKeyword" placeholder="例如：广州太古汇 / Louis Vuitton / 小米汽车 / 某个 Campaign" />
+          <button class="btn primary" id="homeResearchRun">开始研究</button>
+        </div>
+        <div class="workspace-examples">
+          <button data-example="广州太古汇">广州太古汇</button>
+          <button data-example="Louis Vuitton">Louis Vuitton</button>
+          <button data-example="小米汽车">小米汽车</button>
+        </div>
+      </div>
+      <div class="workspace-principles">
+        <div><strong>Entity-first</strong><span>品牌/商业主体先主动检索，不再只扫热榜。</span></div>
+        <div><strong>Decision-first</strong><span>结果先给判断和行动，再给原始证据。</span></div>
+        <div><strong>Evidence-first</strong><span>缺失 ≠ 0；每个结论保留来源和限制。</span></div>
+      </div>
+    </section>
+
+    <section class="home-capabilities">
+      <div class="section-heading"><div><span class="eyebrow">INTELLIGENCE OUTPUT</span><h2>一次研究要回答什么</h2></div></div>
+      <div class="capability-rail">
+        <div><span>01</span><strong>现在怎样</strong><p>主体当前可见度、证据强度、趋势状态。</p></div>
+        <div><span>02</span><strong>发生什么</strong><p>搜索、新闻、社交、历史信号发生了什么变化。</p></div>
+        <div><span>03</span><strong>为什么</strong><p>重复主题、相关搜索和跨信号驱动线索。</p></div>
+        <div><span>04</span><strong>怎么办</strong><p>机会、风险、证据缺口和优先行动。</p></div>
+      </div>
+    </section>
+
+    <section class="home-system">
+      <div class="section-heading"><div><span class="eyebrow">PRODUCTION TRUTH</span><h2>当前能力边界</h2></div></div>
+      <div class="stats-grid">
+        ${scoreCard ? "" : ""}
+        ${statCard(health.platformCount, "运行时平台")}
+        ${statCard(universeCounts.total ?? 0, "分层专业信源")}
+        ${statCard(health.tools || 21, "稳定 MCP Tools")}
+        ${statCard(health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地"), "运行模式")}
+      </div>
+      <div class="home-paths">
+        ${quickCard("professional", "主体研究", "品牌 / 公司 / 商业体 / 产品 / Campaign → Entity-first Intelligence")}
+        ${quickCard("clusters", "趋势发现", "没有明确主体时，发现多平台正在共振的话题")}
+        ${quickCard("xhs", "小红书证据", "查看公开推荐流、内容证据与本地登录态增强")}
+        ${quickCard("sources", "证据覆盖", "查看哪些信源已上线、需要授权或仍在规划")}
+      </div>
+    </section>
+
+    <section class="home-discipline">
+      <div><strong>热榜不是市场全貌</strong><p>主体未进入热榜，只能说明“当前没有热榜命中”，不能推导“无人讨论”。</p></div>
+      <div><strong>公网不收私人 Cookie</strong><p>需要登录态增强时只在使用者自己的本地 TrendHub 配置，公共 Remote MCP 保持共享安全边界。</p></div>
+      <div><strong>预测不是概率</strong><p>预测必须带验证等级与不确定区间；历史不足时直接返回 insufficient_history。</p></div>
+    </section>`;
+
+  const run = () => {
+    const keyword = $("#homeResearchKeyword").value.trim();
+    if (!keyword) return toast("请输入研究主体");
+    location.hash = `#/professional?keyword=${encodeURIComponent(keyword)}`;
+  };
+  $("#homeResearchRun").onclick = run;
+  $("#homeResearchKeyword").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+  content.querySelectorAll("[data-example]").forEach((button) => {
+    button.onclick = () => {
+      $("#homeResearchKeyword").value = button.dataset.example || "";
+      run();
+    };
+  });
   content.querySelectorAll("[data-quick]").forEach((t) =>
     t.addEventListener("click", () => (location.hash = `#/${t.dataset.quick}`))
   );
