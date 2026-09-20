@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.7.1",
-  "targetStableVersion": "1.7.2",
-  "candidateVersion": "1.7.2",
+  "stableBase": "1.7.2",
+  "targetStableVersion": "1.7.3",
+  "candidateVersion": "1.7.3",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.7.2 rebuilds the public Web around ordinary users: a single search entry with recent research, watched subjects and trend discovery on the home page, and a task-to-result research page (current conclusion, change, drivers, platform performance, evidence, opportunities/risks, suggestions and actions) rendered from a backend Decision View; results return progressively without long full-page spinners. Internal system language is hidden from the UI; the 21-tool, Evidence and Professional Intelligence contracts are unchanged.",
-    "versionPolicy": "v1.7.1 remains immutable rollback; v1.7.2 is the next patch release.",
+    "rule": "v1.7.3 improves user-facing research quality and latency: quick Decision View first, bounded slow sources, missing-not-zero forecasts, cleaner drivers, and subject-relevant upcoming nodes; 21-tool and Evidence contracts remain unchanged.",
+    "versionPolicy": "v1.7.2 remains immutable rollback; v1.7.3 is the next patch release.",
     "prepared": true
   },
   "capabilities": {
@@ -55,7 +55,9 @@
     "professionalIntelligence": "v3-entity-first-decision-support",
     "executiveReport": "v2-decision-brief",
     "webExperience": "task-first-decision-view",
-    "deepLinkRouting": "deferred-view-registration-safe"
+    "deepLinkRouting": "deferred-view-registration-safe",
+    "progressiveResearch": "quick-view-then-full-evidence",
+    "reviewQuality": "missing-not-zero-driver-noise-filtering-relevant-events"
   },
   "sourceAccessModes": [
     "live-public",

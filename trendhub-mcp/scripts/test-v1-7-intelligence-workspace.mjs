@@ -10,7 +10,7 @@ const root = new URL("..", import.meta.url).pathname;
 const repoRoot = join(root, "..");
 
 const skill = skillContract();
-assert.equal(skill.productVersion, "1.7.2");
+assert.equal(skill.productVersion, "1.7.3");
 assert.equal(skill.compatibilityTools, 21);
 assert.equal(skill.routing.entityFirst.tool, "professional_intelligence");
 assert.equal(skill.routing.topicFirst.tool, "analyze_topic");
@@ -97,7 +97,7 @@ const queryEvidence = await readFile(join(root, "src", "sources", "query-evidenc
 
 /* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
 assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
-assert.match(index, /experience-v2\.css\?v=1\.7\.2/);
+assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
 assert.match(index, /data-view="research"/);
 assert.match(index, /开始研究/);
 assert.match(index, /data-view="research"/);
@@ -116,6 +116,8 @@ assert.doesNotMatch(home, /subject-aperture|question-axis|你要理解什么正�
 const researchBlock = professional.slice(professional.indexOf("VIEWS.research ="), professional.indexOf("VIEWS.sources ="));
 assert.ok(researchBlock.includes("VIEWS.research ="), "research view block must exist");
 assert.match(researchBlock, /\/api\/review/);
+assert.match(researchBlock, /depth: "quick"/);
+assert.match(researchBlock, /正在补充更多平台和趋势数据/);
 for (const section of ["当前结论", "趋势变化", "关键驱动", "平台表现", "证据", "机会与风险", "建议", "操作"]) {
   assert.match(researchBlock, new RegExp(section), `research view missing section ${section}`);
 }
@@ -142,7 +144,7 @@ for (const channel of ["google-news-cn", "google-news-global", "gdelt-query", "b
 }
 
 const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
-assert.equal(manifest.version, "1.7.2");
+assert.equal(manifest.version, "1.7.3");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
 assert.equal(manifest.professionalIntelligence.webExperience, "task-first-decision-view");
 assert.equal(manifest.professionalIntelligence.primaryComposition, "task-content-result-action-user-only-language");

@@ -108,6 +108,23 @@ assert.equal(view.suggestions[0].priorityText, "建议立即做");
 assert.ok(view.dataNote.length > 20);
 assert.match(view.dataNote, /不会被当作|不等于/);
 
+
+/* missing != 0: null evidence must remain unknown, and zero-only forecasts are hidden. */
+const zeroIntel = buildProfessionalIntelligence("广州太古汇", [], new Date("2026-09-20T00:00:00.000Z"), mockResearch);
+zeroIntel.research.currentState.hotlistPlatformsHit = null;
+zeroIntel.research.currentState.hotlistMentions = null;
+zeroIntel.forecast.status = "ok";
+zeroIntel.forecast.forecast = [
+  { horizonHours: 6, projected: 0, deltaFromNow: 0 },
+  { horizonHours: 24, projected: 0, deltaFromNow: 0 },
+  { horizonHours: 48, projected: 0, deltaFromNow: 0 },
+  { horizonHours: 72, projected: 0, deltaFromNow: 0 },
+];
+zeroIntel.forecast.validation.grade = "strong";
+const zeroView = buildDecisionView(zeroIntel);
+assert.match(zeroView.current.hotlistText, /暂缺/);
+assert.equal(zeroView.change.forecast, null, "all-zero forecast must not masquerade as a meaningful prediction");
+
 // 内部系统术语零泄漏：VM 序列化后不得出现方法论/契约/工具/实体优先等机器字段
 const json = JSON.stringify(view);
 for (const banned of [

@@ -7,10 +7,10 @@
     return Object.fromEntries(Object.entries(value).filter(([key, v]) => !/cookie|secret|token|password/i.test(key) && ["string", "number", "boolean"].includes(typeof v)));
   };
   window.TRENDHUB_WEBMCP = {
-    version: "1.7.2",
+    version: "1.7.3",
     mode: "read-only-page-context",
     listTools: () => [...tools],
-    getContext: () => ({ version: "1.7.2", route: location.hash || "#/dashboard", title: document.title, readOnly: true }),
+    getContext: () => ({ version: "1.7.3", route: location.hash || "#/dashboard", title: document.title, readOnly: true }),
     call: async (name, args) => {
       if (!tools.includes(name)) throw new Error("unsupported read-only page capability");
       const query = new URLSearchParams(safeArgs(args));

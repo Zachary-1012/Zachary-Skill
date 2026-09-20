@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.7.2",
-  "description": "TrendHub MCP — 多平台热点趋势采集与证据优先的研究分析：趋势曲线、未来信号、节点日历、小红书专区、普通人可读的研究结果视图与创作简报，21 个稳定 MCP 工具。",
+  "version": "1.7.3",
+  "description": "TrendHub MCP — v1.7.3；快速渐进研究、Decision View、Entity-first Professional Intelligence v3、21 stable tools。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"

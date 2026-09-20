@@ -100,41 +100,43 @@ VIEWS.research = async function (root, params) {
       <div id="rvBody">${rvSkeleton()}</div>
     </div>`;
 
-  /* 快层：读已有快照，毫秒级先给一条可看的信号，不等慢源 */
-  api(`/api/overlap?keyword=${encodeURIComponent(keyword)}&limit=20`)
-    .then((d) => {
-      const box = $("#rvQuick");
-      if (!box) return;
-      const hit = d.platformsHit ?? 0;
-      const mentions = d.totalMentions ?? 0;
-      if (mentions > 0) {
-        box.innerHTML = note("info", `正在完成完整分析。先看到：最近采集的榜单里，「${esc(keyword)}」在 ${hit} 个平台出现约 ${mentions} 条相关条目。`);
-      }
+  /* 渐进返回：先给普通用户可读的快速结果，再无缝补齐完整证据。 */
+  const base = {
+    keyword,
+    geo: params.geo || "CN",
+    timeframe: params.timeframe || "today 3-m",
+    ...(params.refresh === "1" ? {} : { refresh: "0" }),
+  };
+  const quickQs = new URLSearchParams({ ...base, depth: "quick", _: String(Date.now()) });
+  const fullQs = new URLSearchParams({ ...base, _: String(Date.now() + 1) });
+  let finalRendered = false;
+
+  const quickTask = api(`/api/review?${quickQs}`)
+    .then((view) => {
+      if (!finalRendered) renderDecision(root, keyword, view, params, true);
     })
     .catch(() => {});
 
-  /* 慢层：完整研究结果视图（结论由后端给出） */
   try {
-    // 通用热榜走最近快照（refresh=0，弱网更快）；主体证据仍由后端实时检索。
-    // 追加 refresh=1 进入研究页时会强制连热榜一起实时刷新。
-    const qs = new URLSearchParams({
-      keyword,
-      geo: params.geo || "CN",
-      timeframe: params.timeframe || "today 3-m",
-      ...(params.refresh === "1" ? {} : { refresh: "0" }),
-      _: String(Date.now()),
-    });
-    const view = await api(`/api/review?${qs}`);
-    $("#rvQuick")?.remove();
-    renderDecision(root, keyword, view, params);
+    const view = await api(`/api/review?${fullQs}`);
+    finalRendered = true;
+    await quickTask;
+    renderDecision(root, keyword, view, params, false);
   } catch (e) {
-    $("#rvQuick")?.remove();
-    const progress = $("#rvProgress");
-    if (progress) progress.innerHTML = "";
-    $("#rvBody").innerHTML =
-      note("err", `这次研究没有完成：${esc(e.message)}。可以重试，或先到“热点榜 / 小红书”看公开数据。`) +
-      `<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/dashboard">返回首页</a></div>`;
-    $("#rvRetry").onclick = () => VIEWS.research(root, params);
+    await quickTask;
+    const body = $("#rvBody");
+    if (body && !body.querySelector(".rv-section")) {
+      const progress = $("#rvProgress");
+      if (progress) progress.innerHTML = "";
+      body.innerHTML =
+        note("err", `这次研究没有完成：${esc(e.message)}。可以重试，或先到“热点榜 / 小红书”看公开数据。`) +
+        `<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/dashboard">返回首页</a></div>`;
+      $("#rvRetry").onclick = () => VIEWS.research(root, params);
+    } else {
+      const progress = $("#rvProgress");
+      if (progress) progress.innerHTML = "";
+      toast("更多平台暂时没有补齐，已保留当前可用结果");
+    }
   }
 };
 VIEWS.professional = VIEWS.research;
@@ -143,9 +145,9 @@ function rvBadge(text, cls = "") {
   return `<span class="rv-badge ${cls}">${esc(text)}</span>`;
 }
 
-function renderDecision(root, keyword, view, params) {
+function renderDecision(root, keyword, view, params, updating = false) {
   const progress = $("#rvProgress");
-  if (progress) progress.innerHTML = "";
+  if (progress && !updating) progress.innerHTML = "";
 
   const watching = TH_STORE.isWatching(keyword);
   $("#rvKind").textContent = view.subject.kind || "研究结果";
@@ -231,7 +233,9 @@ function renderDecision(root, keyword, view, params) {
     ? `<div class="rv-upcoming"><div class="rv-col-head">近期相关节点</div>${view.upcoming.slice(0, 6).map((u) => `
       <div class="rv-node"><div><strong>${esc(u.name)}</strong>${u.impact ? `<p>${esc(u.impact)}</p>` : ""}</div><time>${esc(u.date || "")}</time></div>`).join("")}</div>` : "";
 
-  $("#rvBody").innerHTML = `
+  const updatingBlock = updating ? note("info", "已先返回可用结果，正在补充更多平台和趋势数据…") : "";
+
+  $("#rvBody").innerHTML = `${updatingBlock}
     <section class="rv-section rv-current tone-${esc(c.tone || "insufficient")}">
       <div class="rv-kicker">当前结论</div>
       <p class="rv-conclusion">${esc(c.conclusion || "正在整理该主体的公开证据。")}</p>

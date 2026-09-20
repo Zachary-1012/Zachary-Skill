@@ -63,8 +63,8 @@ assert.match(app, /startResearch/);
 assert.match(viewsD, /交给 AI 的写作提示词/);
 assert.doesNotMatch(viewsD, /的 productionPrompt/);
 
-/* 资源版本随 1.7.2 */
-assert.match(index, /experience-v2\.css\?v=1\.7\.2/);
-assert.match(index, /app\.js\?v=1\.7\.2/);
+/* 资源版本随 1.7.3 */
+assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
+assert.match(index, /app\.js\?v=1\.7\.3/);
 
 console.log("UI LANGUAGE TEST OK user-only-words home=4sections research=8sections renderer-only no-internal-terms");
