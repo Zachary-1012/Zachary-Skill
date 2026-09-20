@@ -36,31 +36,32 @@ function researchQualityBadge(value) {
 }
 function decisionList(items, emptyText) {
   if (!items || !items.length) return empty(emptyText || "当前没有足够证据");
-  return '<div class="decision-list">' + items.map((x) => {
+  return '<div class="interpretation-list">' + items.map((x, index) => {
     const title = x.title || x.action || "—";
     const body = x.reason || "";
-    const priority = x.priority ? '<span class="decision-priority">' + esc(x.priority) + '</span>' : "";
-    return '<div class="decision-item">' + priority + '<strong>' + esc(title) + '</strong><p>' + esc(body) + '</p></div>';
+    const priority = x.priority ? '<span class="interpretation-priority">' + esc(x.priority) + '</span>' : "";
+    return '<div class="interpretation-item"><span class="interpretation-index">' + String(index + 1).padStart(2, "0") + '</span><div>' + priority + '<strong>' + esc(title) + '</strong><p>' + esc(body) + '</p></div></div>';
   }).join("") + '</div>';
 }
 function gapList(items) {
-  if (!items || !items.length) return '<div class="evidence-ok">当前没有关键证据缺口</div>';
-  return '<div class="decision-list">' + items.map((x) =>
-    '<div class="decision-item gap"><strong>' + esc(x.title) + '</strong><p>' + esc(x.reason) + '</p><div class="next-step">下一步：' + esc(x.nextStep) + '</div></div>'
+  if (!items || !items.length) return '<div class="evidence-clear">当前没有关键证据缺口</div>';
+  return '<div class="gap-list">' + items.map((x, index) =>
+    '<div class="gap-item"><span>' + String(index + 1).padStart(2, "0") + '</span><div><strong>' + esc(x.title) + '</strong><p>' + esc(x.reason) + '</p><div class="next-step">下一步：' + esc(x.nextStep) + '</div></div></div>'
   ).join("") + '</div>';
 }
 function evidenceRefs(items) {
   if (!items || !items.length) return empty("没有可展示的原始证据");
-  return '<div class="evidence-ref-list">' + items.map((x) =>
-    '<div class="evidence-ref"><div class="evidence-source">' + esc(x.source || x.channel || "source") + (x.publishedAt ? ' · ' + esc(fmtTime(x.publishedAt)) : "") + '</div><div class="evidence-title">' + linkOrText(x.title, x.url) + '</div></div>'
+  return '<div class="evidence-ref-list">' + items.map((x, index) =>
+    '<div class="evidence-ref"><span class="evidence-ref-index">' + String(index + 1).padStart(2, "0") + '</span><div><div class="evidence-source">' + esc(x.source || x.channel || "source") + (x.publishedAt ? ' · ' + esc(fmtTime(x.publishedAt)) : "") + '</div><div class="evidence-title">' + linkOrText(x.title, x.url) + '</div></div></div>'
   ).join("") + '</div>';
 }
-function channelResearchCard(channel) {
-  return '<div class="research-channel">' +
-    '<div class="research-channel-head"><div><strong>' + esc(channel.label) + '</strong><span class="channel-family">' + esc(channel.family) + '</span></div><div>' + researchQualityBadge(channel.dataQuality) + '<span class="channel-count">' + esc(channel.itemCount || 0) + ' 条</span></div></div>' +
+function channelResearchCard(channel, index = 0) {
+  return '<article class="evidence-stratum">' +
+    '<div class="evidence-stratum-index">' + String(index + 1).padStart(2, "0") + '</div>' +
+    '<div class="evidence-stratum-main"><div class="evidence-stratum-head"><div><strong>' + esc(channel.label) + '</strong><span class="channel-family">' + esc(channel.family) + '</span></div><div>' + researchQualityBadge(channel.dataQuality) + '<span class="channel-count">' + esc(channel.itemCount || 0) + ' 条</span></div></div>' +
     '<p class="research-conclusion">' + esc(channel.conclusion || "") + '</p>' +
-    '<details class="evidence-details"><summary>查看证据</summary>' + evidenceRefs(channel.evidence || []) + '<div class="evidence-note">' + esc(channel.note || "") + '</div></details>' +
-  '</div>';
+    '<details class="evidence-details"><summary>沿 Trace 查看原始证据</summary>' + evidenceRefs(channel.evidence || []) + '<div class="evidence-note">' + esc(channel.note || "") + '</div></details></div>' +
+  '</article>';
 }
 function changeSummary(research, core) {
   const s = research?.searchIntent || {};
