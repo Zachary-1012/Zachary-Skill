@@ -42,7 +42,6 @@ VIEWS.dashboard = async function (content) {
     <section class="home-system">
       <div class="section-heading"><div><span class="eyebrow">PRODUCTION TRUTH</span><h2>当前能力边界</h2></div></div>
       <div class="stats-grid">
-        ${scoreCard ? "" : ""}
         ${statCard(health.platformCount, "运行时平台")}
         ${statCard(universeCounts.total ?? 0, "分层专业信源")}
         ${statCard(health.tools || 21, "稳定 MCP Tools")}
