@@ -39,6 +39,8 @@ if (allowlistMatch[1].includes("/api/ops/")) fail("Creator Ops routes must remai
 if (!gateway.includes('req.method !== "GET"')) fail("public web API must remain GET/query only");
 if (!gateway.includes(`const TOOL_COUNT = ${expectedTools}`)) fail(`remote gateway tool count must be ${expectedTools}`);
 if (!gateway.includes('releaseState: "RELEASED"') || !gateway.includes("operatingState") || !gateway.includes('truthSemantics: "trendhub-truth-state-v1"')) fail("release/operating/truth-state health semantics missing");
+if (!gateway.includes("OPENAI_APPS_CHALLENGE_TOKEN") || !gateway.includes('url.pathname === "/.well-known/openai-apps-challenge"')) fail("OpenAI Plugins Directory domain-verification route missing");
+if (!gateway.includes('return res.end(OPENAI_APPS_CHALLENGE_TOKEN)') || !gateway.includes('"Cache-Control": "no-store"')) fail("OpenAI domain challenge must return only the configured token without caching");
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
 if (!index.includes('href="responsive-v2.css?v=1.5.3"') || !index.includes('src="app.js?v=1.5.3"')) fail("public shell assets must be versioned for a mobile hotfix");
