@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6.1 — Runtime adapter noise hotfix
+
+- Isolate embedded `dailyhot-api` usage at the route-handler layer instead of importing its full Hono Web application, removing the unrelated `./public` static-directory warning from TrendHub production.
+- Replace the fragile upstream Douyin temporary-cookie parser with a TrendHub-owned public adapter that treats missing cookies/network restrictions as explicit source availability evidence.
+- Add a deterministic runtime-noise contract test.
+- Preserve all v1.6 Agent-native protocol contracts and the stable 21-tool facade; v1.6.0 remains immutable rollback.
+
+
 ## v1.6.0 — Agent-native protocol foundation
 
 - Promote MCP Resources from incubated capability to a first-class public contract without changing the stable 21-tool compatibility facade.
