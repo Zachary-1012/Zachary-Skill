@@ -97,7 +97,7 @@ const queryEvidence = await readFile(join(root, "src", "sources", "query-evidenc
 
 /* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
 assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
-assert.match(index, /experience-v2\.css\?v=1\\.7\\.4/);
+assert.match(index, /experience-v2\.css\?v=1\.7\.4/);
 for (const view of ["dashboard", "research", "discover", "settings"]) {
   assert.match(index, new RegExp(`data-view="${view}"`));
 }
