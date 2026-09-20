@@ -98,44 +98,56 @@ const queryEvidence = await readFile(join(root, "src", "sources", "query-evidenc
 /* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
 assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
 assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
-assert.match(index, /data-view="research"/);
-assert.match(index, /开始研究/);
-assert.match(index, /data-view="research"/);
+for (const view of ["dashboard", "research", "discover", "settings"]) {
+  assert.match(index, new RegExp(`data-view="${view}"`));
+}
+for (const hiddenTool of ["xhs", "trending", "clusters", "overlap", "curve", "related", "signals", "events", "topic", "sources", "workspace", "ops"]) {
+  assert.doesNotMatch(index, new RegExp(`data-view="${hiddenTool}"`), `tool route leaked into primary navigation: ${hiddenTool}`);
+}
+assert.match(index, /sidebarRecents/);
 assert.match(index, /navigationSheet/);
-assert.match(index, /topbar-inner/);
-assert.match(index, /navBackdrop/);
 
-/* 首页：单一搜索入口 + 最近研究/正在关注/趋势发现，发现走快照保证首屏秒开 */
+/* 首页：单一研究入口 + 最近研究 + 关注 + 最近出现。 */
 assert.match(home, /home-search/);
 assert.match(home, /\/api\/trending\?mode=snapshot/);
 assert.match(home, /startResearch/);
-for (const label of ["最近研究", "正在关注", "趋势发现"]) assert.match(home, new RegExp(label));
-assert.doesNotMatch(home, /subject-aperture|question-axis|你要理解什么正在变化/);
+assert.match(home, /最近研究/);
+assert.match(home, /关注/);
+assert.match(home, /最近出现/);
+assert.doesNotMatch(home, /研究一个主体，先看证据再下结论|你要理解什么正在变化|subject-aperture|question-axis/);
 
-/* 主体页：八区由后端 /api/review ViewModel 驱动，前端只渲染；渐进返回，不长时间整屏 spinner */
+/* 发现：跨平台聚集 + 最近变化。 */
+const viewsB = await readFile(join(root, "web", "views-b.js"), "utf8");
+assert.match(viewsB, /VIEWS\.discover/);
+assert.match(viewsB, /\/api\/clusters/);
+assert.match(viewsB, /\/api\/changes/);
+assert.match(viewsB, /正在聚集/);
+assert.match(viewsB, /刚刚出现/);
+
+/* 研究页：连续工作面 + 按需来源抽屉；快速层先返回。 */
 const researchBlock = professional.slice(professional.indexOf("VIEWS.research ="), professional.indexOf("VIEWS.sources ="));
 assert.ok(researchBlock.includes("VIEWS.research ="), "research view block must exist");
 assert.match(researchBlock, /\/api\/review/);
 assert.match(researchBlock, /depth: "quick"/);
-assert.match(researchBlock, /正在补充更多平台和趋势数据/);
-for (const section of ["当前结论", "趋势变化", "关键驱动", "平台表现", "证据", "机会与风险", "建议", "操作"]) {
-  assert.match(researchBlock, new RegExp(section), `research view missing section ${section}`);
+for (const section of ["发生了什么", "为什么值得注意", "哪些平台支持这个判断", "下一步"]) {
+  assert.match(researchBlock, new RegExp(section), `research flow missing: ${section}`);
 }
+assert.match(researchBlock, /evidenceDrawer/);
+assert.match(researchBlock, /openEvidenceDrawer/);
 assert.match(researchBlock, /renderDecision/);
 assert.match(researchBlock, /rv-skeleton|rvSkeleton/);
 assert.doesNotMatch(researchBlock, /subject-field|trace-flow|trace-change|trace-interpret|trace-evidence|trace-action|trace-stage|changeSummary|SUBJECT CONTEXT|EVIDENCE TRACE/);
-/* 机器合同 /api/professional 与深链别名保留给 MCP/报告/高级使用者 */
-assert.match(professional, /\/api\/professional/);
-assert.match(professional, /VIEWS\.professional/);
 
-/* 样式：任务→结果编辑式分区，旧 field/axis/trace 视觉全部移除，外壳对齐轴保留 */
-assert.match(styles, /\.rv-section/);
+/* 样式：内容优先，不是 KPI 卡片墙或八区报表。 */
+assert.match(styles, /\.research-summary/);
+assert.match(styles, /\.evidence-drawer/);
 assert.match(styles, /\.home-search/);
-assert.match(styles, /\.topbar-inner,/);
-assert.doesNotMatch(styles, /Subject Field -> Change Axis|\.trace-stage|--th-field-max|subject-aperture|question-axis/);
+assert.match(styles, /\.sidebar-recents/);
+assert.doesNotMatch(styles, /\.rv-section|subject-aperture|question-axis|trace-stage|interpretation-strata/);
 
 assert.match(app, /DOMContentLoaded/);
 assert.match(app, /TH_STORE/);
+assert.match(app, /renderSidebarRecents/);
 assert.match(app, /startResearch/);
 assert.doesNotMatch(viewsD, /\nroute\(\);\s*$/);
 assert.match(viewsD, /交给 AI 的写作提示词/);
@@ -146,8 +158,8 @@ for (const channel of ["google-news-cn", "google-news-global", "gdelt-query", "b
 const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
 assert.equal(manifest.version, "1.7.3");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
-assert.equal(manifest.professionalIntelligence.webExperience, "task-first-decision-view");
-assert.equal(manifest.professionalIntelligence.primaryComposition, "task-content-result-action-user-only-language");
+assert.equal(manifest.professionalIntelligence.webExperience, "user-task-research-workspace");
+assert.equal(manifest.professionalIntelligence.primaryComposition, "research-summary-change-support-next");
 assert.equal(manifest.tools.length, 21);
 
-console.log("V1.7 TASK-RESULT AUTHORITY OK entity-first=v1 professional=v3 report=v2 tools=21 web=task-first-decision-view home=4 sections research=8 sections renderer-only deep-link=deterministic");
+console.log("V1.7 USER PRODUCT AUTHORITY OK tools=21 nav=user-tasks research=continuous evidence=on-demand renderer-only");
