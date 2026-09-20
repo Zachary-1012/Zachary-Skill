@@ -51,7 +51,7 @@ export function registerTools(server: McpServer): void {
   /* ---------- 当下热点 ---------- */
   server.tool(
     "get_trending",
-    "获取当下热点榜单。可按 platform（逗号分隔多个平台调用名）或 category（social/video/news/tech/dev/ai/global）查询；都不传则返回跨平台核心榜单。每次查询会在本地积累快照和有界历史，用于趋势变化、生命周期与 benchmark。",
+    "获取当前原始热点榜单并积累本地快照。只问“现在热什么”时使用；生命周期用 trend_intelligence，完整品牌/预测/风险机会用 professional_intelligence。",
     {
       platform: z.string().optional().describe("平台调用名，多个用逗号分隔，如 weibo,zhihu,bilibili,hackernews"),
       category: z.string().optional().describe("分类：social/video/news/tech/dev/ai/global"),
@@ -246,7 +246,7 @@ export function registerTools(server: McpServer): void {
   /* ---------- 深度分析 ---------- */
   server.tool(
     "analyze_topic",
-    "话题深度情报包：一次性聚合跨平台共振、搜索热度曲线与动量、相关词、未来信号、临近节点、规则情感，供大模型做定性/阶段判断/机会风险分析。",
+    "话题研究包：聚合当前共振、搜索曲线/动量、相关词、未来信号、节点与规则情感；需要多年度生命周期、验证预测、品牌实体或高管报告时使用 professional_intelligence。",
     {
       keyword: z.string().describe("要分析的话题"),
       geo: z.string().optional().describe("Google Trends 地区，留空全球"),
@@ -258,7 +258,7 @@ export function registerTools(server: McpServer): void {
 
   server.tool(
     "trend_intelligence",
-    "Trend Intelligence Engine：基于本地真实历史计算生命周期(emerging/accelerating/mainstream/saturating/declining)、排名速度、持续性、跨平台扩散、数据源可靠度和置信度。默认先刷新当前核心平台；历史不足会明确返回 insufficient_history。",
+    "轻量纵向 Trend Intelligence：基于本地真实历史计算生命周期、速度、持续性、扩散、Source Reliability 与确定性置信度；品牌实体、媒体、异常/预测、告警和报告请用 professional_intelligence。历史不足返回 insufficient_history。",
     {
       keyword: z.string().min(1).describe("要评估生命周期的关键词/话题"),
       platforms: z.string().optional().describe("可选平台，逗号分隔；默认核心平台"),
