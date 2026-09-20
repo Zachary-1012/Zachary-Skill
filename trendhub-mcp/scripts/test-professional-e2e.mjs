@@ -106,8 +106,8 @@ try {
     assert.equal(entity.resolved?.id, expected, `entity resolution failed for ${query}`);
   }
 
-  const intelligence = await fetchJson(`${base}/api/professional?keyword=LV&verticals=fashion-luxury&refresh=0`);
-  assert.equal(intelligence.methodologyVersion, "professional-intelligence-v2");
+  const intelligence = await fetchJson(`${base}/api/professional?keyword=LV&verticals=fashion-luxury&refresh=0&research=0`);
+  assert.equal(intelligence.methodologyVersion, "professional-intelligence-v3");
   assert.equal(intelligence.entityContext?.entity?.id, "louis-vuitton");
   assert.ok(Array.isArray(intelligence.sourceArchitecture?.selected));
   assert.ok(intelligence.sourceArchitecture.selected.length >= 8);
