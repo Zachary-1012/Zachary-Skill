@@ -1,27 +1,33 @@
-# TrendHub v1.6.1 — Runtime Adapter Hotfix
+# TrendHub v1.7.0 — Release Candidate
 
-Status: **release-ready; pending required PR checks, merge, stable release, production deployment verification and Registry publication**.
+Status: **release-ready; pending required CI, merge, stable release, production deployment verification and Registry publication**.
 
-v1.6.1 is a patch above the immutable v1.6.0 Agent-native Foundation release.
+Stable base / rollback: **v1.6.1**.
 
-## Hotfix scope
+## Candidate scope
 
-- Stop importing the full `dailyhot-api` Hono application for embedded source collection.
-- Load only individual upstream route handlers, preventing its unrelated `./public` static-shell lookup from polluting TrendHub production logs.
-- Route Douyin through a TrendHub-owned public adapter with defensive temporary-cookie parsing.
-- A missing Douyin temporary cookie now becomes explicit degraded/missing source evidence, never a thrown parser error and never a fabricated empty/zero result.
-- Preserve the v1.6 protocol foundation: 21 tools, MCP Resources, Namespace v1, Unified Evidence Contract v1 and Skill 2.0.
+- Entity-first Query Evidence Acquisition
+- Professional Intelligence v3
+- Decision-first Intelligence Workspace
+- Executive Report v2
+- canonical Skill 2.0 routing for entity vs topic vs raw trending
+- stable 21-tool facade preserved
+- v1.6 MCP Resources / Namespace / Evidence Contract preserved
+
+## Non-goals
+
+- No 22nd MCP tool.
+- No private-cookie upload path on public Remote MCP.
+- No claim that all 129 catalogued sources are live.
+- No conversion of missing evidence into zero.
+- No replacement of licensed/proprietary datasets with brittle private scraping.
 
 ## Acceptance
 
-1. Node 22 and Node 24 release gates pass.
-2. Windows/macOS/Linux bootstrap E2E pass.
-3. Runtime noise contract verifies no embedded `dailyhot-api/dist/app.js` dependency path and a canonical TrendHub Douyin override.
-4. Public install E2E succeeds from a fresh clone.
-5. Railway production runs v1.6.1 and production logs no longer emit the upstream `serveStatic ./public` or Douyin cookie-parser error.
-6. Production Remote MCP still exposes 21 tools, 51 platform adapters and the v1.6 Resources/Templates contract.
-7. Official MCP Registry publishes v1.6.1 only after the production protocol contract is verified.
+See `V1_7_0_INTELLIGENCE_WORKSPACE.md` for the full release gate.
+
+The release is complete only after code → CI → GitHub Stable Release → Public Install E2E → Railway production → public Web/MCP verification → Official MCP Registry publication.
 
 ## Rollback
 
-v1.6.0 remains the immediate immutable rollback release. Do not rewrite published tags or assets.
+v1.6.1 remains immutable and must not be rewritten.
