@@ -62,7 +62,7 @@ if (!viewsB.includes("实时话题词组图") || !viewsB.includes('qs.set("topic
 if (!viewsC.includes("动态趋势曲线")) fail("dynamic trend curve explanation missing");
 if (!app.includes("chart-line") || !responsive.includes("chart-draw")) fail("animated trend curve contract missing");
 if (!app.includes("TRENHUB_IS_REMOTE") || !app.includes("TRENHUB_RUNTIME_MODE")) fail("web console must detect local vs public runtime");
-if (!viewsE.includes("Professional Intelligence v2") || !viewsE.includes("/api/professional")) fail("professional dashboard view missing");
+if (!viewsE.includes("Intelligence Workspace") || !viewsE.includes("/api/professional")) fail("professional dashboard view missing");
 if (!viewsE.includes("/api/professional/sources") || !viewsE.includes("/api/professional/entities")) fail("source universe UX missing");
 if (!viewsE.includes("TRENHUB_IS_REMOTE")) fail("workspace view must distinguish remote from local mode");
 if (!viewsF.includes("/api/ops/summary") || !viewsF.includes("TRENHUB_IS_REMOTE")) fail("Creator Ops must have local API and public-boundary UX");
