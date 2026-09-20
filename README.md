@@ -1,6 +1,6 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.5.2** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v2、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.5.3** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v2、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.5.3 起明确区分 AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED 等 Evidence Truth State，并将 RELEASED 与 OPERATING 分开报告**；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
@@ -114,7 +114,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## TrendHub v1.5.2 能力
+## TrendHub v1.5.3 能力
 
 | 能力层 | 当前能力 |
 | --- | --- |
