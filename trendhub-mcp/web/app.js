@@ -200,11 +200,22 @@ const TH_STORE = {
 };
 window.TH_STORE = TH_STORE;
 
-/* 统一研究入口：首页大搜索、示例、最近/关注、顶部按钮都走这里 */
+function renderSidebarRecents() {
+  const box = $("#sidebarRecents");
+  if (!box) return;
+  const rows = TH_STORE.recents().slice(0, 6);
+  box.innerHTML = rows.length
+    ? rows.map((keyword) => `<a class="sidebar-recent" href="#/research?keyword=${encodeURIComponent(keyword)}" title="${esc(keyword)}">${esc(keyword)}</a>`).join("")
+    : '<span class="sidebar-recent-empty">还没有研究记录</span>';
+}
+window.renderSidebarRecents = renderSidebarRecents;
+
+/* 统一研究入口：首页搜索、最近研究和新研究按钮都走这里 */
 function startResearch(keyword) {
   const kw = String(keyword || "").trim();
   if (!kw) { location.hash = "#/research"; return; }
   TH_STORE.addRecent(kw);
+  renderSidebarRecents();
   location.hash = `#/research?keyword=${encodeURIComponent(kw)}`;
 }
 window.startResearch = startResearch;
@@ -238,11 +249,11 @@ window.CATS = CATS;
 /* ---------- 路由 ---------- */
 const VIEWS = {};
 const TITLES = {
-  dashboard: "首页", research: "研究结果", professional: "研究结果", xhs: "小红书",
-  trending: "热点榜", overlap: "跨平台共振", clusters: "话题发现", curve: "趋势曲线",
-  related: "相关搜索词", signals: "未来信号", events: "节点日历", topic: "话题情报",
-  brief: "创作简报", templates: "模板库", sources: "数据源", workspace: "协作（本机）",
-  ops: "运行与交付", settings: "设置",
+  dashboard: "首页", research: "研究", professional: "研究", discover: "发现",
+  xhs: "小红书", trending: "热点榜", overlap: "跨平台共振", clusters: "话题发现",
+  curve: "趋势曲线", related: "相关搜索词", signals: "未来信号", events: "节点日历",
+  topic: "话题情报", brief: "创作简报", templates: "模板库", sources: "数据源",
+  workspace: "协作（本机）", ops: "运行与交付", settings: "设置",
 };
 window.VIEWS = VIEWS;
 window.TITLES = TITLES;
@@ -270,9 +281,14 @@ async function route() {
   const viewTitle = $("#viewTitle");
   if (viewTitle) viewTitle.textContent = title;
   document.title = title ? `${title} · TrendHub` : "TrendHub · 趋势研究";
-  $$(".nav-item").forEach((a) => {
+  $(".nav-item").forEach((a) => {
     const dv = a.dataset.view;
-    a.classList.toggle("active", dv === view || (view === "professional" && dv === "research"));
+    const active =
+      dv === view ||
+      (view === "professional" && dv === "research") ||
+      (["trending", "clusters", "overlap", "curve", "related", "signals", "events", "topic", "xhs"].includes(view) && dv === "discover") ||
+      (["sources", "workspace", "ops", "templates"].includes(view) && dv === "settings");
+    a.classList.toggle("active", active);
   });
   content.scrollIntoView?.({ block: "start" });
   window.scrollTo({ top: 0 });
@@ -305,6 +321,16 @@ document.addEventListener("DOMContentLoaded", () => {
     backdrop.addEventListener("click", closeNavigation);
     $("#closeNavigation")?.addEventListener("click", closeNavigation);
   }
-  $("#newResearchTop")?.addEventListener("click", () => { location.hash = "#/research"; });
-  window.addEventListener("pageshow", (event) => { if (event.persisted) route(); });
+  const openNewResearch = () => {
+    closeNavigation();
+    location.hash = "#/research";
+  };
+  $("#newResearchTop")?.addEventListener("click", openNewResearch);
+  $("#sidebarNewResearch")?.addEventListener("click", openNewResearch);
+  $("#sheetNewResearch")?.addEventListener("click", openNewResearch);
+  renderSidebarRecents();
+  window.addEventListener("pageshow", (event) => {
+    renderSidebarRecents();
+    if (event.persisted) route();
+  });
 });
