@@ -77,6 +77,8 @@ jobs:
 
       - name: Real MCP handshake against public endpoint
         working-directory: trendhub-mcp
+        env:
+          TRENHUB_EXPECT_AGENT_FOUNDATION: "1"
         run: npm run smoke:remote -- https://trendhub-remote-production.up.railway.app/mcp
 
       - name: Install official mcp-publisher
