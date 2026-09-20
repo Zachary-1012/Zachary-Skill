@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.6.1",
-  "targetStableVersion": "1.7.0",
-  "candidateVersion": "1.7.0",
+  "stableBase": "1.7.0",
+  "targetStableVersion": "1.7.1",
+  "candidateVersion": "1.7.1",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.7.0 promotes Entity-first Query Evidence Acquisition, Professional Intelligence v3 and the Decision-first Intelligence Workspace while preserving the 21-tool facade, Evidence Contract and v1.6 protocol resources.",
-    "versionPolicy": "v1.6.1 remains immutable rollback; v1.7.0 is the next stable minor release.",
+    "rule": "v1.7.1 corrects the public Experience: semantic Subject Field / Research Axis / Evidence Trace composition, deterministic deep-link routing, and shared alignment without changing the 21-tool, Evidence or Professional Intelligence contracts.",
+    "versionPolicy": "v1.7.0 remains immutable rollback; v1.7.1 is the next patch release.",
     "prepared": true
   },
   "capabilities": {
@@ -40,7 +40,7 @@
       "alert-rule",
       "audit"
     ],
-    "responsiveWeb": "decision-first-intelligence-workspace-desktop-tablet-phone",
+    "responsiveWeb": "semantic-field-axis-trace-desktop-tablet-phone",
     "observability": "local-otel-compatible-zero-export",
     "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
     "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
@@ -53,7 +53,9 @@
     "entityFirstResearch": "active-query-evidence-before-hotlist-interpretation",
     "queryEvidence": "google-news-cn-global-gdelt-bluesky-apple-podcasts-xhs-curated-rss",
     "professionalIntelligence": "v3-entity-first-decision-support",
-    "executiveReport": "v2-decision-brief"
+    "executiveReport": "v2-decision-brief",
+    "webExperience": "field-axis-trace-intelligence-workspace",
+    "deepLinkRouting": "deferred-view-registration-safe"
   },
   "sourceAccessModes": [
     "live-public",
@@ -64,14 +66,14 @@
     "adapter-planned"
   ],
   "uxRules": [
+    "subject-field-change-axis-evidence-trace-action-return",
+    "generic-kpi-wall-is-not-a-primary-research-composition",
+    "generic-card-grid-is-not-a-primary-research-composition",
+    "one-shared-content-axis-aligns-header-and-research-field",
     "business-entity-research-starts-with-subject-specific-evidence-not-hotlist-absence",
-    "decision-first-results-before-raw-evidence",
     "raw-news-and-feed-items-are-evidence-not-the-product-summary",
-    "prefer-zero-config-live-sources",
-    "optional-local-session-never-blocks-basic-use",
     "never-upload-private-cookie-to-public-hosted-service",
-    "missing-is-not-zero",
-    "planned-adapters-do-not-count-as-live-coverage"
+    "missing-is-not-zero"
   ],
   "externalConstraints": [
     "licensed-firehose-coverage",
