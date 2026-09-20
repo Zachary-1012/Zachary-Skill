@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "professional-intelligence-v2-rc",
+  "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.6.0",
-  "targetStableVersion": "1.6.1",
-  "candidateVersion": "1.6.1",
+  "stableBase": "1.6.1",
+  "targetStableVersion": "1.7.0",
+  "candidateVersion": "1.7.0",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.6.1 is a runtime hotfix above v1.6.0: isolate dailyhot route adapters from the upstream Web shell and own the Douyin public adapter while preserving all v1.6 protocol contracts and the stable 21-tool facade.",
-    "versionPolicy": "v1.6.0 remains immutable; v1.6.1 is the next patch release and rollback keeps published artifacts intact.",
+    "rule": "v1.7.0 promotes Entity-first Query Evidence Acquisition, Professional Intelligence v3 and the Decision-first Intelligence Workspace while preserving the 21-tool facade, Evidence Contract and v1.6 protocol resources.",
+    "versionPolicy": "v1.6.1 remains immutable rollback; v1.7.0 is the next stable minor release.",
     "prepared": true
   },
   "capabilities": {
@@ -40,7 +40,7 @@
       "alert-rule",
       "audit"
     ],
-    "responsiveWeb": "desktop-tablet-phone-safe-area-touch-aware",
+    "responsiveWeb": "decision-first-intelligence-workspace-desktop-tablet-phone",
     "observability": "local-otel-compatible-zero-export",
     "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
     "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
@@ -49,7 +49,11 @@
     "mcpResources": "static-plus-template-protocol-native",
     "namespace": "trendhub-dot-capabilities-plus-trendhub-uri-resources",
     "evidenceContract": "trendhub-evidence-contract-v1",
-    "skill": "trendhub-skill-v2-progressive-disclosure"
+    "skill": "trendhub-skill-v2-progressive-disclosure",
+    "entityFirstResearch": "active-query-evidence-before-hotlist-interpretation",
+    "queryEvidence": "google-news-cn-global-gdelt-bluesky-apple-podcasts-xhs-curated-rss",
+    "professionalIntelligence": "v3-entity-first-decision-support",
+    "executiveReport": "v2-decision-brief"
   },
   "sourceAccessModes": [
     "live-public",
@@ -60,10 +64,13 @@
     "adapter-planned"
   ],
   "uxRules": [
+    "business-entity-research-starts-with-subject-specific-evidence-not-hotlist-absence",
+    "decision-first-results-before-raw-evidence",
+    "raw-news-and-feed-items-are-evidence-not-the-product-summary",
     "prefer-zero-config-live-sources",
     "optional-local-session-never-blocks-basic-use",
-    "request-api-or-oauth-only-when-user-selects-required-capability",
     "never-upload-private-cookie-to-public-hosted-service",
+    "missing-is-not-zero",
     "planned-adapters-do-not-count-as-live-coverage"
   ],
   "externalConstraints": [
