@@ -43,6 +43,8 @@ export interface SourceReliability {
   lastSuccessAt: string | null;
   consecutiveFailures: number;
   schemaDriftSignals: number;
+  lastFailureClass: FailureClass | null;
+  actionHints: string[];
   windows: ReliabilityWindow[];
 }
 
@@ -135,6 +137,7 @@ function summarizeWindow(observations: SourceObservation[], hours: number, nowMs
   };
 }
 
+export function actionHintsForReliability(input:{failureClass:FailureClass|null;consecutiveFailures:number;p95LatencyMs:number|null}):string[]{const h:string[]=[];if(input.failureClass==="auth_required")h.push("Observed authorization failure: request user-authorized access only when required.");if(input.failureClass==="rate_limited")h.push("Observed rate-limit/risk response: back off before retrying.");if(input.failureClass==="schema_drift")h.push("Observed schema drift: validate the adapter before trusting fresh coverage.");if(input.failureClass==="network")h.push("Observed network/timeout failure: verify network/DNS/timeout boundaries; do not convert failure to zero demand.");if(input.failureClass==="upstream")h.push("Observed upstream failure: retain last valid evidence with freshness labels instead of treating failure as topic absence.");if(input.consecutiveFailures>=3)h.push("Repeated observed failures: reduce source weight until a successful observation resets the streak.");if(input.p95LatencyMs!=null&&input.p95LatencyMs>=10000)h.push("Observed high P95 source latency: isolate this adapter from latency-sensitive default routing.");return h;}
 export function getSourceReliability(platform: string, now = new Date()): SourceReliability {
   const observations = readFile(platform).observations;
   const latest = observations.at(-1) ?? null;
@@ -168,6 +171,8 @@ export function getSourceReliability(platform: string, now = new Date()): Source
     lastSuccessAt: lastSuccess?.at ?? null,
     consecutiveFailures,
     schemaDriftSignals: observations.filter((x) => x.failureClass === "schema_drift").length,
+    lastFailureClass: latest?.failureClass ?? null,
+    actionHints: actionHintsForReliability({ failureClass: latest?.failureClass ?? null, consecutiveFailures, p95LatencyMs: windows[1]?.p95LatencyMs ?? null }),
     windows,
   };
 }
