@@ -1,6 +1,6 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.6.1** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v2、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.6.0 正式发布 MCP Resources、canonical namespace、Unified Evidence Contract v1 与 Skill 2.0，同时保持 21-tool 兼容面不变；v1.6.1 收敛 dailyhot Web 壳与抖音 Cookie 解析造成的生产日志噪声，不改变能力合同**；**v1.5.3 起明确区分 AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED 等 Evidence Truth State，并将 RELEASED 与 OPERATING 分开报告**；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.7.0** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v2、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.7.0 将品牌/公司/商业体/产品/Campaign 研究升级为 Entity-first Professional Intelligence v3：先主动检索主体证据，再判断趋势；公网/本地 Web 同步升级为 Decision-first Intelligence Workspace，先输出当前状态、变化、驱动、机会、风险、证据缺口与行动，原始新闻/列表退到 Evidence 层；仍保持 21-tool 兼容面不变**；**v1.5.3 起明确区分 AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED 等 Evidence Truth State，并将 RELEASED 与 OPERATING 分开报告**；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
@@ -43,9 +43,9 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJo
 
 如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
 
-### 浏览器 Web Console
+### 浏览器 Intelligence Workspace
 
-不写配置、只想用浏览器查看时，打开托管的响应式 Web Console（只读/查询，模型推理仍由你自己的 AI 完成）：
+不写配置、只想用浏览器研究时，打开托管的响应式 Intelligence Workspace。默认入口不是新闻流，而是主体研究：输入品牌、公司、商业体、产品或 Campaign 后直接得到结构化 Intelligence 结果。
 
 ```text
 https://trendhub-remote-production.up.railway.app/
@@ -114,7 +114,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## TrendHub v1.6.1 能力
+## TrendHub v1.7.0 能力
 
 | 能力层 | 当前能力 |
 | --- | --- |
@@ -129,9 +129,22 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 | **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势；支持批量 benchmark cases |
 | 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
 | 内容生产 | 脚本/文案/方案模板 + Evidence-first 创作 Brief |
-| 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |\n| **Agent-native Foundation · v1.6** | MCP Resources + `trendhub.* / trendhub://` namespace + Unified Evidence Contract v1 + Skill 2.0；Tool 仍保持 21 个兼容名称 |
+| 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |\n| **Entity-first Intelligence · v1.7** | 品牌/公司/商业体/产品/Campaign → 主动 Query Evidence Acquisition → Professional Intelligence v3；热榜只作为次级“是否形成全网热点”信号 |
+| **Decision-first Web · v1.7** | 默认首页直接研究主体；先给状态/变化/驱动/机会/风险/缺口/行动，原始 Feed/新闻退到 Evidence 层 |
+| **Agent-native Foundation · v1.6+** | MCP Resources + `trendhub.* / trendhub://` namespace + Unified Evidence Contract v1 + Skill 2.0；Tool 保持 21 个兼容名称 |
 
 完整的 21-tool 契约见 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json)。指标公式和生命周期规则见 [`trendhub-mcp/docs/intelligence-methodology.md`](./trendhub-mcp/docs/intelligence-methodology.md)。
+
+## 研究路由：品牌 ≠ 热榜关键词
+
+TrendHub v1.7 的 canonical routing：
+
+- 品牌 / 公司 / 商业体 / 产品 / Campaign / business subject → `professional_intelligence`
+- 话题 / 热点 / 议题 / meme / event topic → `analyze_topic`
+- “现在热什么 / 榜单排名” → `get_trending`
+- 只看纵向生命周期 → `trend_intelligence`
+
+**未进入热榜只能说明“本次热榜未命中”，不能说明品牌/商业主体没有讨论。** Professional Intelligence v3 会主动查询 Google News（中/全球）、GDELT、Bluesky、Apple Podcasts、小红书可用证据、curated RSS、Google Trends 等主体证据，再与热榜和历史信号交叉判断。
 
 ## Source Reliability 与真实世界状态
 
