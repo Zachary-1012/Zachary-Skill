@@ -12,6 +12,7 @@ import { historyStoreInfo } from "../store/history.js";
 import { sourceFamilyCoverage, sourceSpec, sourceUserSetup } from "../sources/professional-catalog.js";
 import { entityQueryTerms, resolveBrandEntity, type BrandEntity } from "../entities/brand-catalog.js";
 import { buildProfessionalSignalPack, type ProfessionalSignalPack } from "./professional-signals.js";
+import { summarizeTruthState, truthStateFromTrajectory, type EvidenceTruthAssessment, type EvidenceTruthState } from "../agent-native/truth-state.js";
 
 export interface ProfessionalIntelligence {
   methodologyVersion: "professional-intelligence-v2";
@@ -31,6 +32,7 @@ export interface ProfessionalIntelligence {
     riskFlags: string[];
     opportunityFlags: string[];
   };
+  evidenceState: { overall: EvidenceTruthState; observedPresent: number; observedAbsent: number; undetermined: number; sources: EvidenceTruthAssessment[]; rule: string; };
   core: TrendIntelligence;
   forecast: TrendForecast;
   audience: AudienceSignals;
@@ -81,6 +83,8 @@ export function buildProfessionalIntelligence(
   const alerts = evaluateProfessionalAlerts(keyword, core, forecast, undefined, now);
   const professionalSignals = buildProfessionalSignalPack(keyword, platforms, entity, now, forecast.validation);
   const familyCoverage = sourceFamilyCoverage(platforms);
+  const truthAssessments = core.trajectories.map((trajectory) => truthStateFromTrajectory(trajectory));
+  const overallTruthState = summarizeTruthState(truthAssessments);
   const selectedSources = platforms.map((requestedId) => {
     const spec = sourceSpec(requestedId);
     const onboarding = spec ? sourceUserSetup(spec) : null;
@@ -108,6 +112,7 @@ export function buildProfessionalIntelligence(
   if (forecast.anomaly.direction === "drop") riskFlags.push("negative_anomaly");
   if (familyCoverage.length < 2) riskFlags.push("signal_family_coverage_narrow");
   if (selectedSources.some((x) => x.blocksBasicUse === true)) riskFlags.push("selected_sources_need_user_setup");
+  if (overallTruthState !== "AVAILABLE") riskFlags.push(`evidence_state_${overallTruthState.toLowerCase()}`);
 
   if (core.lifecycle === "emerging") opportunityFlags.push("early_signal");
   if (core.lifecycle === "accelerating") opportunityFlags.push("accelerating_signal");
@@ -139,6 +144,7 @@ export function buildProfessionalIntelligence(
       riskFlags,
       opportunityFlags,
     },
+    evidenceState: { overall: overallTruthState, observedPresent: truthAssessments.filter((x) => x.presence === "PRESENT").length, observedAbsent: truthAssessments.filter((x) => x.presence === "ABSENT").length, undetermined: truthAssessments.filter((x) => x.presence === "UNDETERMINED").length, sources: truthAssessments, rule: "ABSENT is asserted only from fresh usable observations. Missing/unavailable states never become zero or topic absence." },
     core,
     forecast,
     audience,
