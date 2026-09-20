@@ -38,11 +38,12 @@ if (allowlistMatch[1].includes("/api/observability")) fail("internal process obs
 if (allowlistMatch[1].includes("/api/ops/")) fail("Creator Ops routes must remain private on the public remote");
 if (!gateway.includes('req.method !== "GET"')) fail("public web API must remain GET/query only");
 if (!gateway.includes(`const TOOL_COUNT = ${expectedTools}`)) fail(`remote gateway tool count must be ${expectedTools}`);
+if (!gateway.includes('releaseState: "RELEASED"') || !gateway.includes("operatingState") || !gateway.includes('truthSemantics: "trendhub-truth-state-v1"')) fail("release/operating/truth-state health semantics missing");
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
-if (!index.includes('href="responsive-v2.css?v=1.5.2"') || !index.includes('src="app.js?v=1.5.2"')) fail("public shell assets must be versioned for a mobile hotfix");
-if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js?v=1.5.2"')) fail("professional/source-universe navigation missing");
-if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js?v=1.5.2"')) fail("Creator Ops navigation missing");
+if (!index.includes('href="responsive-v2.css?v=1.5.3"') || !index.includes('src="app.js?v=1.5.3"')) fail("public shell assets must be versioned for a mobile hotfix");
+if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js?v=1.5.3"')) fail("professional/source-universe navigation missing");
+if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js?v=1.5.3"')) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
 if (!responsive.includes("display: grid !important") || !responsive.includes("flex-direction: initial !important")) fail("mobile shell must override legacy horizontal navigation flex");

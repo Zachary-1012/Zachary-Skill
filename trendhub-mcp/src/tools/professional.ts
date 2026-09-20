@@ -1,4 +1,4 @@
-/** Professional Intelligence v2 MCP extensions (development branch). */
+/** Professional Intelligence v2 MCP extensions. */
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getMany } from "../sources/index.js";
@@ -52,7 +52,7 @@ async function observed<T>(name: string, fn: () => T | Promise<T>): Promise<T> {
 export function registerProfessionalTools(server: McpServer): void {
   server.tool(
     "professional_intelligence",
-    "Professional Intelligence v2：统一返回生命周期、速度/持续性/扩散、Source Reliability、鲁棒异常、6/24/48/72h可验证趋势预测、品牌/公司实体解析、公开证据受众/创作者、媒体证据、专业告警与可选高管报告。默认优先零配置且可用的高优先级信源；用户明确选择需要授权的平台时才提示 API/OAuth/本地会话。历史不足时不预测。",
+    "Professional Intelligence v2：品牌/话题统一决策入口，返回生命周期、Source Reliability、Evidence Truth State、异常、6/24/48/72h验证预测、品牌实体、媒体证据、告警与可选高管报告。只要当前榜单用 get_trending，只要生命周期用 trend_intelligence，只要研究包用 analyze_topic。",
     {
       keyword: z.string().min(1).describe("要研究的话题、品牌、公司或关键词，例如 LV / 小米 / Tesla"),
       platforms: z.string().optional().describe("可选平台调用名，逗号分隔；留空时由专业 Source Planner 自动选择零配置核心源"),
@@ -85,21 +85,21 @@ export function registerProfessionalTools(server: McpServer): void {
 
   server.tool(
     "workspace_manage",
-    "本地优先协作工作区：owner/editor/analyst/viewer RBAC、监测词 watchlist、保存查询、告警规则、成员与审计日志。只写 TrendHub 本地数据目录；不会修改任何第三方平台，也不会自动上传。公网托管 Web 不暴露该变更接口。",
+    "管理 TrendHub 本地工作区状态：创建/读取 workspace，维护 owner/editor/analyst/viewer 成员、watchlist、saved query、alert rule 与 audit。只写本地数据目录，不修改第三方平台、不自动上传；公网托管 Web 不暴露该变更接口。list/create 不需要 workspace_id，其余 action 必须提供 workspace_id。",
     {
-      action: z.enum(["list", "create", "get", "member_set", "watchlist_set", "query_save", "rule_save", "audit"]),
+      action: z.enum(["list", "create", "get", "member_set", "watchlist_set", "query_save", "rule_save", "audit"]).describe("操作：list/create/get/member_set/watchlist_set/query_save/rule_save/audit"),
       principal: z.string().min(1).describe("本地身份映射，例如 local-owner 或公司 SSO 映射后的非敏感 principal"),
-      workspace_id: z.string().optional(),
-      name: z.string().optional(),
-      member_principal: z.string().optional(),
-      role: z.enum(["owner", "editor", "analyst", "viewer"]).optional(),
+      workspace_id: z.string().optional().describe("工作区 ID；除 list/create 外均必填"),
+      name: z.string().optional().describe("create 的工作区名，或 saved query / alert rule 的显示名"),
+      member_principal: z.string().optional().describe("member_set 要新增/更新的非敏感 principal"),
+      role: z.enum(["owner", "editor", "analyst", "viewer"]).optional().describe("member_set 的目标角色"),
       keywords: z.string().optional().describe("watchlist 关键词，逗号分隔"),
       query: z.string().optional().describe("query_save 时的关键词"),
-      platforms: z.string().optional(),
-      geo: z.string().optional(),
+      platforms: z.string().optional().describe("query_save 的平台调用名，逗号分隔"),
+      geo: z.string().optional().describe("query_save 的地区/geo 过滤"),
       rule_json: z.string().optional().describe("rule_save 的 JSON 规则对象"),
-      enabled: z.boolean().optional(),
-      limit: z.number().min(1).max(1000).optional(),
+      enabled: z.boolean().optional().describe("rule_save 是否启用，默认 true"),
+      limit: z.number().min(1).max(1000).optional().describe("audit 返回条数，默认 200，最大 1000"),
     },
     LOCAL_STATE,
     async ({ action, principal, workspace_id, name, member_principal, role, keywords, query, platforms, geo, rule_json, enabled, limit }) => observed("workspace_manage", async () => {

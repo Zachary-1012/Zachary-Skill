@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { truthStateFromTrajectory, summarizeTruthState } from "../dist/src/agent-native/truth-state.js";
+import { capabilityRegistry, listCapabilities } from "../dist/src/agent-native/capability-registry.js";
+import { completeResult } from "../dist/src/agent-native/evidence-contract.js";
+import { routeIntent } from "../dist/src/agent-native/router.js";
+import { actionHintsForReliability } from "../dist/src/store/reliability.js";
+const n=truthStateFromTrajectory({platform:"x",historySamples:0,observableNow:false,current:false,sourceStatus:"UNKNOWN",latestEvidenceAt:null,latestEvidenceAgeHours:null});
+assert.equal(n.state,"NOT_COLLECTED"); assert.equal(n.presence,"UNDETERMINED");
+const a=truthStateFromTrajectory({platform:"x",historySamples:5,observableNow:true,current:false,sourceStatus:"UP",latestEvidenceAt:new Date().toISOString(),latestEvidenceAgeHours:.1});
+assert.equal(a.state,"AVAILABLE"); assert.equal(a.presence,"ABSENT");
+const s=truthStateFromTrajectory({platform:"x",historySamples:5,observableNow:false,current:false,sourceStatus:"UP",latestEvidenceAt:"2026-01-01T00:00:00Z",latestEvidenceAgeHours:24});
+assert.equal(s.state,"STALE"); assert.equal(s.presence,"UNDETERMINED"); assert.equal(summarizeTruthState([n,s]),"STALE");
+const e=completeResult({data:{ok:false},capability:"trendhub.test"}); assert.equal(e.truthState,"NOT_COLLECTED"); assert.equal(e.resultType,"unavailable");
+assert.equal(capabilityRegistry().schema,"trendhub-capability-registry-v2"); assert.ok(listCapabilities().every(x=>x.owner&&x.lifecycle));
+assert.equal(routeIntent("LV 品牌竞品风险预测").canonicalTool,"professional_intelligence"); assert.equal(routeIntent("趋势生命周期扩散阶段").canonicalTool,"trend_intelligence"); assert.equal(routeIntent("现在各平台热榜").canonicalTool,"get_trending");
+const h=actionHintsForReliability({failureClass:"network",consecutiveFailures:1,p95LatencyMs:12000}); assert.ok(h.some(x=>/network|timeout/i.test(x))); assert.ok(h.some(x=>/latency/i.test(x)));
+const here=path.dirname(fileURLToPath(import.meta.url)); const g=fs.readFileSync(path.join(here,"remote-gateway.mjs"),"utf8"); assert.match(g,/releaseState: "RELEASED"/); assert.match(g,/operatingState/);
+console.log("TRUTH CONTRACT OK states=explicit capability-registry=v2 routing=disambiguated release-operating=separate");

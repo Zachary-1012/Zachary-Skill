@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.3 — Evidence truth and capability convergence
+
+- Transfer current LUMENIS evidence/truth principles without importing LUMENIS business truth: explicit NOT_COLLECTED/UNAVAILABLE/STALE/OFFLINE/AUTH_REQUIRED/RATE_LIMITED states never become zero or observed absence.
+- Add Capability Registry v2 with one canonical owner/method, evidence lifecycle and use/avoid routing guidance.
+- Disambiguate get_trending, analyze_topic, trend_intelligence and professional_intelligence while preserving the 21-tool compatibility contract.
+- Add evidence-bound source remediation hints and separate RELEASED from OPERATING in public health.
+- Add deterministic truth-contract coverage and remove the stale Professional Intelligence DEV navigation label.
+
+
 ## v1.5.0 — Professional Intelligence and topic radar
 
 - Promote Professional Intelligence v2 to the stable 21-tool contract with a 129-source professional universe and explicit zero-config/API/OAuth/local-session/licensed/planned boundaries.

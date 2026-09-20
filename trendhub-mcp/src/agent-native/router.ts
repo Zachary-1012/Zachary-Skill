@@ -1,8 +1,7 @@
-export function routeIntent(text: string): { intent: "trend-discovery" | "brand-radar" | "campaign-research" | "content-research" | "source-health"; capability: string; requiresEvidence: boolean } {
-  const s = text.toLowerCase();
-  if (/source|reliab|信源|可靠|健康/.test(s)) return { intent: "source-health", capability: "trendhub.reliability.source_health", requiresEvidence: true };
-  if (/brand|品牌|sov|竞品|campaign|营销|广告/.test(s)) return { intent: "brand-radar", capability: "trendhub.intelligence.cross_signal", requiresEvidence: true };
-  if (/brief|content|内容|选题|创作/.test(s)) return { intent: "content-research", capability: "trendhub.content.build_brief", requiresEvidence: true };
-  if (/campaign|活动|投放/.test(s)) return { intent: "campaign-research", capability: "trendhub.intelligence.cross_signal", requiresEvidence: true };
-  return { intent: "trend-discovery", capability: "trendhub.discovery.trending", requiresEvidence: true };
-}
+export function routeIntent(text:string){const s=text.toLowerCase();
+if(/source|reliab|信源|可靠|健康|限流|rate.?limit|schema/.test(s))return{intent:"source-health" as const,capability:"trendhub.reliability.source_health",canonicalTool:"source_reliability",reason:"Source observability/reliability request.",requiresEvidence:true};
+if(/lifecycle|生命周期|velocity|速度|持续性|persistence|diffusion|扩散阶段/.test(s))return{intent:"lifecycle-analysis" as const,capability:"trendhub.intelligence.lifecycle",canonicalTool:"trend_intelligence",alternative:"professional_intelligence",reason:"Focused longitudinal lifecycle request.",requiresEvidence:true};
+if(/brand|品牌|sov|竞品|竞争|campaign|营销|广告|机会|风险|forecast|预测|高管|report/.test(s))return{intent:/campaign|营销|广告/.test(s)?"campaign-research" as const:"professional-intelligence" as const,capability:"trendhub.intelligence.professional",canonicalTool:"professional_intelligence",alternative:"analyze_topic",reason:"Entity/cross-signal/decision context required.",requiresEvidence:true};
+if(/brief|content|内容|选题|创作/.test(s))return{intent:"content-research" as const,capability:"trendhub.content.build_brief",canonicalTool:"get_content_brief",reason:"Evidence-backed production brief required.",requiresEvidence:true};
+if(/研究|research|综合分析|深度话题|related|相关词|节点/.test(s))return{intent:"professional-intelligence" as const,capability:"trendhub.intelligence.topic_research",canonicalTool:"analyze_topic",alternative:"professional_intelligence",reason:"Broad topic research packet requested.",requiresEvidence:true};
+return{intent:"trend-discovery" as const,capability:"trendhub.discovery.trending",canonicalTool:"get_trending",alternative:"discover_trending_topics",reason:"Current raw trend discovery.",requiresEvidence:true};}

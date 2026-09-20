@@ -1,34 +1,24 @@
-export type CapabilityKind = "tool" | "resource" | "skill" | "app" | "task";
-export type CapabilityStatus = "compatibility" | "available" | "designed" | "planned";
-
-export interface CapabilityDescriptor {
-  id: string;
-  kind: CapabilityKind;
-  status: CapabilityStatus;
-  description: string;
-  canonicalMethod?: string;
-  requires?: string[];
-  readOnly?: boolean;
-}
-
-const entries: CapabilityDescriptor[] = [
-  { id: "trendhub.discovery.trending", kind: "tool", status: "compatibility", canonicalMethod: "get_trending", description: "Current multi-source trend discovery", readOnly: false },
-  { id: "trendhub.discovery.platforms", kind: "tool", status: "compatibility", canonicalMethod: "list_platforms", description: "Live platform inventory", readOnly: true },
-  { id: "trendhub.intelligence.cross_signal", kind: "tool", status: "compatibility", canonicalMethod: "cross_platform_overlap", description: "Cross-signal topic confirmation", readOnly: true },
-  { id: "trendhub.history.topic", kind: "resource", status: "available", description: "Read local topic/platform history", readOnly: true },
-  { id: "trendhub.reliability.source_health", kind: "resource", status: "available", description: "Read local source reliability observations", readOnly: true },
-  { id: "trendhub.research.deep_topic", kind: "skill", status: "available", description: "Progressively disclosed evidence-first research workflow", readOnly: true },
-  { id: "trendhub.content.build_brief", kind: "tool", status: "compatibility", canonicalMethod: "get_content_brief", description: "Build a structured content brief", readOnly: true },
-  { id: "trendhub.apps.trend_radar", kind: "app", status: "designed", description: "Interactive trend radar descriptor", readOnly: true },
-  { id: "trendhub.apps.source_health", kind: "app", status: "designed", description: "Interactive source health descriptor", readOnly: true },
-  { id: "trendhub.apps.evidence_explorer", kind: "app", status: "designed", description: "Evidence exploration descriptor", readOnly: true },
-  { id: "trendhub.tasks.async_intelligence", kind: "task", status: "planned", description: "Durable long-running research tasks; protocol extension pending E2E validation", requires: ["durable-task-store", "tasks-extension-e2e"] },
+export type CapabilityKind="tool"|"resource"|"skill"|"app"|"task";
+export type CapabilityStatus="compatibility"|"available"|"designed"|"planned";
+export type CapabilityLifecycle="PLANNED"|"IMPLEMENTED"|"INTEGRATED"|"TESTED"|"VERIFIED"|"RELEASED"|"OPERATING";
+export type EffectClass="read"|"local-state"|"external-read";
+export interface CapabilityDescriptor{id:string;kind:CapabilityKind;status:CapabilityStatus;lifecycle:CapabilityLifecycle;owner:"trendhub-core"|"professional-intelligence"|"local-workspace"|"agent-native";description:string;canonicalMethod?:string;useWhen?:string;avoidWhen?:string;requires?:string[];evidenceRequired?:string[];effectClass?:EffectClass;readOnly?:boolean;}
+const entries:CapabilityDescriptor[]=[
+{id:"trendhub.discovery.trending",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"get_trending",description:"Current raw multi-source trend discovery",useWhen:"You need current hotlists.",avoidWhen:"You need lifecycle, forecast, entity context or decision support.",evidenceRequired:["current-source-result"],effectClass:"external-read",readOnly:false},
+{id:"trendhub.discovery.platforms",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"list_platforms",description:"Live runtime source inventory",evidenceRequired:["runtime-registry"],effectClass:"read",readOnly:true},
+{id:"trendhub.intelligence.cross_signal",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"cross_platform_overlap",description:"Current cross-source topic confirmation",useWhen:"You need concurrent visibility for a known topic.",avoidWhen:"You need longitudinal lifecycle analysis.",evidenceRequired:["source-hit-evidence"],effectClass:"external-read",readOnly:true},
+{id:"trendhub.intelligence.topic_research",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"analyze_topic",description:"Topic research pack across resonance, search, related queries, signals and events",useWhen:"You need a broad research packet.",avoidWhen:"You need validated forecast, entity context, alerts or executive reports.",evidenceRequired:["topic-source-evidence"],effectClass:"external-read",readOnly:true},
+{id:"trendhub.intelligence.lifecycle",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"trend_intelligence",description:"Deterministic lifecycle/velocity/persistence/diffusion over local history",useWhen:"You need focused longitudinal lifecycle assessment.",avoidWhen:"You need entity/media/forecast/alerts/reports.",evidenceRequired:["local-history","source-reliability"],effectClass:"external-read",readOnly:false},
+{id:"trendhub.intelligence.professional",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"professional-intelligence",canonicalMethod:"professional_intelligence",description:"Unified evidence-first decision-support layer",useWhen:"You need lifecycle, entity context, cross-signal evidence, anomaly, validated forecast, alerts and report.",avoidWhen:"A raw hotlist or lightweight lifecycle metric is sufficient.",evidenceRequired:["local-history","source-reliability","signal-family-coverage"],effectClass:"external-read",readOnly:false},
+{id:"trendhub.reliability.source_health",kind:"resource",status:"available",lifecycle:"RELEASED",owner:"trendhub-core",description:"Local reliability observations and evidence-bound action hints",evidenceRequired:["source-observation"],effectClass:"read",readOnly:true},
+{id:"trendhub.history.topic",kind:"resource",status:"available",lifecycle:"RELEASED",owner:"trendhub-core",description:"Read bounded local topic/platform history",evidenceRequired:["local-history"],effectClass:"read",readOnly:true},
+{id:"trendhub.research.deep_topic",kind:"skill",status:"available",lifecycle:"RELEASED",owner:"agent-native",description:"Progressively disclosed evidence-first research workflow",readOnly:true},
+{id:"trendhub.content.build_brief",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"trendhub-core",canonicalMethod:"get_content_brief",description:"Build an evidence-backed content brief",evidenceRequired:["content-evidence"],effectClass:"external-read",readOnly:true},
+{id:"trendhub.workspace.local",kind:"tool",status:"compatibility",lifecycle:"RELEASED",owner:"local-workspace",canonicalMethod:"workspace_manage",description:"Local-only RBAC/workspace/watchlist/query/rule/audit state",evidenceRequired:["local-principal","rbac-decision"],effectClass:"local-state",readOnly:false},
+{id:"trendhub.apps.trend_radar",kind:"app",status:"designed",lifecycle:"IMPLEMENTED",owner:"agent-native",description:"Interactive trend radar descriptor",readOnly:true},
+{id:"trendhub.apps.source_health",kind:"app",status:"designed",lifecycle:"IMPLEMENTED",owner:"agent-native",description:"Interactive source health descriptor",readOnly:true},
+{id:"trendhub.apps.evidence_explorer",kind:"app",status:"designed",lifecycle:"IMPLEMENTED",owner:"agent-native",description:"Evidence exploration descriptor",readOnly:true},
+{id:"trendhub.tasks.async_intelligence",kind:"task",status:"planned",lifecycle:"PLANNED",owner:"agent-native",description:"Durable long-running research tasks; protocol extension pending E2E validation",requires:["durable-task-store","tasks-extension-e2e"]}
 ];
-
-export function listCapabilities(filter: { kind?: CapabilityKind; namespace?: string } = {}): CapabilityDescriptor[] {
-  return entries.filter((x) => (!filter.kind || x.kind === filter.kind) && (!filter.namespace || x.id.startsWith(filter.namespace))).map((x) => ({ ...x, requires: x.requires ? [...x.requires] : undefined })).sort((a, b) => a.id.localeCompare(b.id));
-}
-
-export function capabilityRegistry(): { schema: "trendhub-capability-registry-v1"; capabilities: CapabilityDescriptor[] } {
-  return { schema: "trendhub-capability-registry-v1", capabilities: listCapabilities() };
-}
+export function listCapabilities(filter:{kind?:CapabilityKind;namespace?:string}={}):CapabilityDescriptor[]{return entries.filter(x=>(!filter.kind||x.kind===filter.kind)&&(!filter.namespace||x.id.startsWith(filter.namespace))).map(x=>({...x,requires:x.requires?[...x.requires]:undefined,evidenceRequired:x.evidenceRequired?[...x.evidenceRequired]:undefined})).sort((a,b)=>a.id.localeCompare(b.id));}
+export function capabilityRegistry(){return {schema:"trendhub-capability-registry-v2" as const,lifecycleRule:"PLANNED→IMPLEMENTED→INTEGRATED→TESTED→VERIFIED→RELEASED→OPERATING; code or CI alone never upgrades a capability to OPERATING.",capabilities:listCapabilities()};}
