@@ -957,6 +957,98 @@ body.evidence-open { overflow: hidden; }
   100% { background-position: 0 0; }
 }
 
+/* settings */
+.settings-page { max-width: 720px; }
+
+.settings-section {
+  padding: 8px 0 26px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--th-line);
+}
+
+.settings-section h2 {
+  margin: 0 0 9px;
+  font-family: var(--th-serif);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 58px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--th-line-soft);
+  color: var(--th-ink);
+  text-decoration: none;
+}
+
+.settings-row strong { display: block; font-size: 13.5px; }
+
+.settings-row p,
+.settings-note,
+.settings-about p {
+  margin: 3px 0 0;
+  color: var(--th-muted);
+  font-size: 11.8px;
+  line-height: 1.6;
+}
+
+.settings-row > span {
+  color: var(--th-muted);
+  font-size: 20px;
+}
+
+.settings-details {
+  padding: 11px 2px;
+  border-bottom: 1px solid var(--th-line-soft);
+}
+
+.settings-details summary {
+  cursor: pointer;
+  color: var(--th-soft);
+  font-size: 12.8px;
+}
+
+.settings-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding-top: 12px;
+}
+
+.settings-links a {
+  color: #526158;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.settings-links a:hover { text-decoration: underline; }
+
+.settings-config {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.settings-config > div {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 12px;
+  font-size: 11.8px;
+}
+
+.settings-config code { color: var(--th-soft); }
+.settings-config span { color: var(--th-muted); line-height: 1.55; }
+
+.settings-about {
+  padding: 10px 0 0;
+  color: var(--th-muted);
+  font-size: 11.8px;
+}
+
 /* settings / advanced tools remain secondary */
 body.experience-v2 .source-summary .stat,
 body.experience-v2 .stat,
