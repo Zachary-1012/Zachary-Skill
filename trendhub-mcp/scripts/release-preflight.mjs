@@ -19,7 +19,7 @@ const registry = json(path.join(REPO, "server.json"));
 const plugin = json(path.join(REPO, "plugin.json"));
 const gateway = read(path.join(ROOT, "scripts", "remote-gateway.mjs"));
 const serverTs = read(path.join(ROOT, "src", "server.ts"));
-const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_5_3_LUMENIS_CONVERGENCE.md"];
+const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md"];
 for (const doc of requiredDocs) must(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
 
 const target = professional.targetStableVersion ?? professional.candidateVersion;
@@ -39,7 +39,7 @@ if (professional.releaseStatus === "release-candidate-ready") {
   must(gateway.includes(`const VERSION = "${pkg.version}"`), "RC remote gateway must remain on stable version");
   must(serverTs.includes(`export const SERVER_VERSION = "${pkg.version}"`), "RC MCP server must remain on stable version");
   const expected = Number(professional.expectedToolCount);
-  must(expected === 21, `expected tool count=${expected}`);
+  must(expected === 21, `expected tool count=${expected}`);\n  must(manifest.agentNative?.namespace === "trendhub-namespace-v1", "v1.6 namespace contract missing");\n  must(manifest.agentNative?.evidenceContract === "trendhub-evidence-contract-v1", "v1.6 evidence contract missing");\n  must(manifest.agentNative?.skillContract === "trendhub-skill-v2", "v1.6 Skill 2.0 contract missing");
   must(manifest.tools?.length === Number(professional.stableToolCount), `stable manifest tools=${manifest.tools?.length}, expected ${professional.stableToolCount}`);
   must(manifest.aiInstall?.successMarker === `SMOKE OK tools=${professional.stableToolCount}`, "stable AI install success marker mismatch");
   const promotion = buildPromotionPlan(target, { dryRun: true });
