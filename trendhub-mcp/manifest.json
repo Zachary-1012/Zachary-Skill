@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.5.2",
-  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具、51 个运行时来源适配器与 129 个分层专业信源目录，覆盖实时热点、公开 RSS/Atom、GDELT、Apple Podcasts 公共目录、Source Reliability、Professional Intelligence v2、多年度历史、异常/预测/回测、品牌与信源宇宙、报告和工作区；BYO-AI、零模型 Key、本地优先。需要 API/OAuth/授权连接器的平台保持明确的访问边界。",
+  "version": "1.5.3",
+  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具、51 个运行时来源适配器与 129 个分层专业信源目录；v1.5.3 增加显式 Evidence Truth State、Capability Registry v2、工具路由消歧、证据化运行建议以及 RELEASED/OPERATING 分离。BYO-AI、零模型 Key、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -341,5 +341,27 @@
       "proprietary-demographic-panels",
       "long-lived-real-user-usage-and-outcome-data"
     ]
+  },
+  "truthSemantics": {
+    "schema": "trendhub-truth-state-v1",
+    "states": [
+      "AVAILABLE",
+      "NOT_COLLECTED",
+      "UNAVAILABLE",
+      "STALE",
+      "OFFLINE",
+      "AUTH_REQUIRED",
+      "RATE_LIMITED",
+      "BLOCKED",
+      "ERROR",
+      "PENDING",
+      "SCHEDULED",
+      "UNKNOWN"
+    ],
+    "rule": "Only fresh usable observations can establish PRESENT/ABSENT; missing/unavailable/stale/auth/rate-limit states never become zero or absence."
+  },
+  "agentNative": {
+    "capabilityRegistry": "trendhub-capability-registry-v2",
+    "releaseOperatingSemantics": "RELEASED and OPERATING are separate evidence states"
   }
 }
