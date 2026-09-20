@@ -6,24 +6,24 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.5.0, 21 MCP tools, 129 layered sources**
+- Stable tool contract: **TrendHub v1.5.2, 21 MCP tools, 51 runtime source adapters, 129 catalogued sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
 
 ## Public distribution status
 
-Last evidence check: **2026-09-17**.
+Last evidence check: **2026-09-20**.
 
 | Channel | State | Public identifier / link | What is verified |
 | --- | --- | --- | --- |
 | GitHub source | **LIVE** | `https://github.com/Zachary-1012/Zachary-Skill` | Public clone; Node-free bootstrap; local stdio install contract |
-| Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | the latest published release is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint |
-| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed, `Healthy`, Streamable HTTP remote detected, 21 tools detected |
+| Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | latest is **v1.5.2**, `active`, `isLatest=true`, remote URL points to the production Streamable HTTP endpoint |
+| Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed and **Healthy**; Streamable HTTP remote detected; 21 tools detected |
 | Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | `mcp.json` / Cursor MCP install link in README | Cursor supports direct MCP install now. Public Cursor Marketplace publication requires repository submission and Cursor manual review; current public Marketplace search must not be represented as listed until approved. |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | production `/mcp` URL | The public Streamable HTTP endpoint satisfies Smithery URL-publishing requirements. Publishing requires an authenticated Smithery publisher namespace/API key or web publishing session. |
-| OpenAI Plugins Directory (ChatGPT / Codex) | **READY TO SUBMIT** | production `/mcp` + `/privacy` + `/terms` + [Submission Portal](https://platform.openai.com/apps) | OpenAI uses the Plugins Directory as the shared discovery surface for ChatGPT and Codex workflow capabilities. TrendHub is prepared for a `With MCP` submission; it has not yet been submitted, reviewed, or published. |
+| OpenAI Plugins Directory (ChatGPT / Codex) | **READY TO SUBMIT** | production `/mcp` + `/privacy` + `/terms` + [Submission Portal](https://platform.openai.com/apps) | TrendHub is prepared for a `With MCP` submission; it has not yet been submitted, reviewed, or published. |
 
 **Rule:** only channels in `PUBLISHED · SEARCHABLE` state may be described publicly as “上架 / listed / searchable”. Compatibility, direct-install support or submission readiness is not the same as marketplace publication.
 
@@ -33,9 +33,9 @@ Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub
 
 Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
 
-## v1.5.0 hosted Web behavior
+## v1.5.2 hosted Web behavior
 
-The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. The stable hosted contract is now 21 MCP tools with the layered source universe; the immutable v1.4.4 release remains the rollback target.
+The hosted Web Console reads the latest successful persisted snapshots for its initial view. Explicit live refreshes still query upstream sources, but transient missing/empty source responses fall back to the most recent successful snapshot. v1.5.2 keeps the 21-tool production contract, exposes 51 runtime source adapters within the 129-source catalog, restores a usable responsive phone navigation drawer, and applies versioned/no-store protection to hosted HTML/CSS/JS so stale frontend assets do not survive a production rollout. The immutable v1.4.4 release remains an available rollback reference.
 
 ## Direct-use paths
 
