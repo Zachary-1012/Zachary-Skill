@@ -29,6 +29,7 @@ const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
 const VERSION = "1.5.3";
 const TOOL_COUNT = 21;
+const OPENAI_APPS_CHALLENGE_TOKEN = String(process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
 
 function envBool(name, fallback = false) {
   const raw = String(process.env[name] ?? "").trim().toLowerCase();
@@ -316,6 +317,23 @@ const server = createServer(async (req, res) => {
       });
     }
 
+    if (url.pathname === "/.well-known/openai-apps-challenge") {
+      if (req.method !== "GET" && req.method !== "HEAD") {
+        return json(res, 405, { error: "method_not_allowed", allowed: ["GET", "HEAD"] });
+      }
+      if (!OPENAI_APPS_CHALLENGE_TOKEN) {
+        return json(res, 404, { error: "openai_apps_challenge_not_configured" });
+      }
+      res.writeHead(200, {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Length": String(Buffer.byteLength(OPENAI_APPS_CHALLENGE_TOKEN)),
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+      });
+      if (req.method === "HEAD") return res.end();
+      return res.end(OPENAI_APPS_CHALLENGE_TOKEN);
+    }
+
     if (url.pathname === "/privacy") return text(res, 200, privacyText);
     if (url.pathname === "/terms") return text(res, 200, termsText);
 
@@ -382,7 +400,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(PUBLIC_PORT, PUBLIC_HOST, () => {
   console.error(`[trendhub-remote] v${VERSION} listening on ${PUBLIC_HOST}:${PUBLIC_PORT} -> 127.0.0.1:${INTERNAL_PORT}/mcp`);
-  console.error("[trendhub-remote] public routes: / /mcp /health /privacy /terms /.well-known/mcp.json + safe GET /api/* allowlist");
+  console.error("[trendhub-remote] public routes: / /mcp /health /privacy /terms /.well-known/mcp.json /.well-known/openai-apps-challenge + safe GET /api/* allowlist");
   console.error("[trendhub-remote] local-only write routes remain private");
 });
 
