@@ -12,7 +12,7 @@ const jsonResource = (uri: string, value: unknown) => ({
   contents: [{ uri, mimeType: "application/json", text: JSON.stringify(value, null, 2) }],
 });
 const markdown = (uri: string, text: string) => ({ contents: [{ uri, mimeType: "text/markdown", text }] });
-const safe = (value: unknown) => typeof value === "string" && value.length > 0 && value.length <= 200 && !/[\\/?#]/.test(value);
+const safe = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 200 && !/[\\/?#]/.test(value);
 const one = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 
 export function registerAgentResources(server: McpServer): void {
