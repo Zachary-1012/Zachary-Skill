@@ -285,7 +285,7 @@ export async function buildEntityResearch(
     label: "TrendHub · Curated Editorial",
     family: "news-authority",
     dataQuality: curated.dataQuality ?? (curatedItems.length ? "ok" : "degraded"),
-    capturedAt: curated.capturedAt ?? generatedAt,
+    capturedAt: "capturedAt" in curated && typeof curated.capturedAt === "string" ? curated.capturedAt : generatedAt,
     query: keyword,
     itemCount: curatedItems.length,
     items: curatedItems,
