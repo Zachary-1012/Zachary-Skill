@@ -76,7 +76,7 @@ assert.match(viewsD, /交给 AI 的写作提示词/);
 assert.doesNotMatch(index, /data-view="brief"/);
 
 /* 资源版本随候选版本。 */
-assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
-assert.match(index, /app\.js\?v=1\.7\.3/);
+assert.match(index, /experience-v2\.css\?v=1\.7\.4/);
+assert.match(index, /app\.js\?v=1\.7\.4/);
 
 console.log("UI LANGUAGE TEST OK nav=user-tasks research=continuous evidence=on-demand no-internal-terms");
