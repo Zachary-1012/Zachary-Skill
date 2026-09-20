@@ -6,11 +6,11 @@ import { join } from "node:path";
 const root = new URL("..", import.meta.url).pathname;
 const web = (name) => readFile(join(root, "web", name), "utf8");
 
-const [index, app, viewsA, viewsE, styles, viewsD] = await Promise.all([
-  web("index.html"), web("app.js"), web("views-a.js"), web("views-e.js"), web("experience-v2.css"), web("views-d.js"),
+const [index, app, viewsA, viewsB, viewsE, styles, viewsD] = await Promise.all([
+  web("index.html"), web("app.js"), web("views-a.js"), web("views-b.js"),
+  web("views-e.js"), web("experience-v2.css"), web("views-d.js"),
 ]);
 
-/* 主用户路径（首页 / 研究结果页 / 外壳）不得出现任何内部系统语言或旧方法论视觉结构 */
 const banned = [
   "Intelligence Workspace", "SUBJECT FIELD", "SUBJECT CONTEXT", "RESEARCH AXIS",
   "PRODUCTION TRUTH", "EVIDENCE TRACE", "Subject Field", "Research Axis",
@@ -27,44 +27,56 @@ for (const [name, content] of [["index", index], ["app", app], ["views-a", views
   }
 }
 
-/* 外壳含统一研究入口（首页四区由 views-a 首屏同步渲染，在下面断言） */
-assert.match(index, /开始研究/);
-assert.match(index, /data-view="research"/);
+/* 顶层只保留用户任务，不平铺工具。 */
+for (const view of ["dashboard", "research", "discover", "settings"]) {
+  assert.match(index, new RegExp(`data-view="${view}"`));
+}
+for (const hiddenTool of ["xhs", "trending", "clusters", "overlap", "curve", "related", "signals", "events", "topic", "sources", "workspace", "ops"]) {
+  assert.doesNotMatch(index, new RegExp(`data-view="${hiddenTool}"`), `主导航泄漏工具入口：${hiddenTool}`);
+}
+assert.match(index, /sidebarRecents/);
+assert.match(app, /renderSidebarRecents/);
+
+/* 首页是工作入口，不是概念官网。 */
 assert.match(viewsA, /home-search/);
 assert.match(viewsA, /\/api\/trending\?mode=snapshot/);
-assert.match(viewsA, /startResearch/);
 assert.match(viewsA, /最近研究/);
-assert.match(viewsA, /正在关注/);
-assert.match(viewsA, /趋势发现/);
-/* 首页趋势发现走快照（毫秒级），不允许在首屏阻塞式拉 live 集群 */
-assert.match(viewsA, /loadHomeDiscover/);
+assert.match(viewsA, /关注/);
+assert.match(viewsA, /最近出现/);
+assert.doesNotMatch(viewsA, /研究一个主体，先看证据再下结论|你要理解什么正在变化/);
 
-/* 主体页八区由后端 /api/review ViewModel 驱动，前端不再自行拼结论 */
+/* 发现页围绕变化，而不是围绕工具。 */
+assert.match(viewsB, /VIEWS\.discover/);
+assert.match(viewsB, /\/api\/clusters/);
+assert.match(viewsB, /\/api\/changes/);
+assert.match(viewsB, /正在聚集/);
+assert.match(viewsB, /刚刚出现/);
+
+/* 研究页：连续阅读 + 来源抽屉，仍由后端 /api/review 驱动。 */
 assert.match(viewsE, /\/api\/review/);
-for (const kicker of ["当前结论", "趋势变化", "关键驱动", "平台表现", "证据", "机会与风险", "建议", "操作"]) {
-  assert.match(viewsE, new RegExp(kicker), `主体页缺少分区：${kicker}`);
+assert.match(viewsE, /depth: "quick"/);
+for (const label of ["发生了什么", "为什么值得注意", "哪些平台支持这个判断", "下一步"]) {
+  assert.match(viewsE, new RegExp(label), `主体页缺少用户工作流：${label}`);
 }
+assert.match(viewsE, /evidenceDrawer/);
+assert.match(viewsE, /openEvidenceDrawer/);
 assert.match(viewsE, /renderDecision/);
-assert.match(viewsE, /rv-skeleton|rvSkeleton/); // 渐进返回：先骨架、慢源补齐，不长时间整屏 spinner
+assert.match(viewsE, /rv-skeleton|rvSkeleton/);
 assert.doesNotMatch(viewsE, /changeSummary/);
 
-/* 样式：新任务→结果类存在，旧 field/axis/trace 类移除 */
-assert.match(styles, /\.rv-section/);
+/* 内容面而不是八区块报表/KPI墙。 */
+assert.match(styles, /\.research-summary/);
+assert.match(styles, /\.evidence-drawer/);
+assert.match(styles, /\.sidebar-recents/);
 assert.match(styles, /\.home-search/);
-assert.match(styles, /\.rv-conclusion/);
-assert.doesNotMatch(styles, /subject-aperture|question-axis|trace-stage|interpretation-strata/);
+assert.doesNotMatch(styles, /\.rv-section|subject-aperture|question-axis|trace-stage|interpretation-strata/);
 
-/* app 外壳与本机存储 */
-assert.match(app, /DOMContentLoaded/);
-assert.match(app, /TH_STORE/);
-assert.match(app, /startResearch/);
-
-/* 创作页：面向使用者的是“写作提示词”，productionPrompt 只能作为机器字段残留 */
+/* 创作仍是上下文动作，不进入顶层导航。 */
 assert.match(viewsD, /交给 AI 的写作提示词/);
-assert.doesNotMatch(viewsD, /的 productionPrompt/);
+assert.doesNotMatch(index, /data-view="brief"/);
 
-/* 资源版本随 1.7.3 */
+/* 资源版本随候选版本。 */
 assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
 assert.match(index, /app\.js\?v=1\.7\.3/);
 
-console.log("UI LANGUAGE TEST OK user-only-words home=4sections research=8sections renderer-only no-internal-terms");
+console.log("UI LANGUAGE TEST OK nav=user-tasks research=continuous evidence=on-demand no-internal-terms");
