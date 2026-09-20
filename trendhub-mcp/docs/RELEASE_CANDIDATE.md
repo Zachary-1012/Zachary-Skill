@@ -1,15 +1,15 @@
-# TrendHub v1.7.2 — Release Candidate
+# TrendHub v1.7.3 — Release Candidate
 
 Status: **release-ready; pending required CI, merge, stable release, production deployment verification and Registry publication**.
 
-Stable base / rollback: **v1.7.1**.
+Stable base / rollback: **v1.7.2**.
 
 ## Candidate scope
 
 - Entity-first Query Evidence Acquisition
 - Professional Intelligence v3
 - Task-first decision view Web: home = search / recent research / watched / trend discovery; research = current conclusion / trend change / key drivers / platform performance / evidence / opportunities-risks / suggestions / actions
-- Backend Decision ViewModel (`trendhub-decision-view-v1`) via read-only `GET /api/review`; browser is renderer-only
+- Backend Decision ViewModel (`trendhub-decision-view-v1`) via read-only `GET /api/review`; browser is renderer-only\n- Quick/full progressive Decision View with bounded source waits\n- Missing-not-zero forecast guard, driver-noise filtering, and subject-relevant upcoming nodes
 - Progressive research results (instant snapshot quick layer + section skeletons, full decision view on the slow layer; missing trend values are null, never zero)
 - Deterministic Professional deep-link initialization (retained from v1.7.1)
 - Shared desktop/tablet/phone reading alignment axis and on-demand mobile navigation drawer
