@@ -70,7 +70,7 @@ export function buildPromotionPlan(version, { dryRun = true } = {}) {
   if (manifest.tools.length !== expectedTools) throw new Error(`PROMOTION FAILED: manifest would declare ${manifest.tools.length} tools, expected ${expectedTools}`);
   writeJson(manifestPath, manifest, dryRun);
 
-  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Entity-first evidence intelligence with 21 MCP tools, Resources and Decision-first Web."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
+  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Entity-first trend intelligence: 21 MCP tools, Resources, evidence and Decision-first Web."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
   const plugin = readJson(pluginPath); plugin.version = version; plugin.description = "Entity-first Professional Intelligence v3 with 21 MCP tools, Resources, decision briefs and local-first workspaces."; writeJson(pluginPath, plugin, dryRun);
 
   updateTextFile(gatewayPath, (text) => replaceRequired(text, /const VERSION = "\d+\.\d+\.\d+";/, `const VERSION = "${version}";`, "remote gateway version"), dryRun);
