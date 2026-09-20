@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · 全网热点趋势专家",
-  "version": "1.5.3",
-  "description": "专业级全网趋势情报 MCP Skill：21 个 MCP 工具、51 个运行时来源适配器与 129 个分层专业信源目录；v1.5.3 增加显式 Evidence Truth State、Capability Registry v2、工具路由消歧、证据化运行建议以及 RELEASED/OPERATING 分离。BYO-AI、零模型 Key、本地优先。",
+  "version": "1.6.0",
+  "description": "专业级 Agent-native 趋势情报 MCP：21 个稳定工具 + MCP Resources、统一 Evidence Contract v1、canonical namespace、Skill 2.0、51 个运行时适配器与 129 个分层信源；BYO-AI、本地优先。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -120,6 +120,22 @@
       "accountRequired": false,
       "modelApiKeyRequired": false,
       "note": "Public distribution adapter. The hosted gateway exposes Remote MCP plus the responsive read/query TrendHub web console. Local-only mutating routes such as /api/snapshot remain private. No visitor XHS_COOKIE is used."
+    },
+    "resources": {
+      "static": [
+        "trendhub://methodology",
+        "trendhub://sources",
+        "trendhub://capabilities",
+        "trendhub://reliability",
+        "trendhub://namespace",
+        "trendhub://contracts/evidence",
+        "trendhub://skill/trendhub"
+      ],
+      "templates": [
+        "trendhub://platform/{platform}/history",
+        "trendhub://capability/{capability}",
+        "trendhub://source/{source}"
+      ]
     }
   },
   "intelligence": {
@@ -362,6 +378,10 @@
   },
   "agentNative": {
     "capabilityRegistry": "trendhub-capability-registry-v2",
-    "releaseOperatingSemantics": "RELEASED and OPERATING are separate evidence states"
+    "releaseOperatingSemantics": "RELEASED and OPERATING are separate evidence states",
+    "namespace": "trendhub-namespace-v1",
+    "evidenceContract": "trendhub-evidence-contract-v1",
+    "skillContract": "trendhub-skill-v2",
+    "resourceFoundation": "released"
   }
 }

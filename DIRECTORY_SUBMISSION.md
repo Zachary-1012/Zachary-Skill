@@ -1,6 +1,6 @@
 # TrendHub Directory Submission Playbook
 
-Verified baseline: TrendHub v1.5.3, 21 MCP tools, 51 runtime source adapters, 129 catalogued sources.
+Verified release candidate baseline: TrendHub v1.6.0, 21 stable MCP tools, protocol-native MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 catalogued sources.
 
 Canonical URLs:
 
@@ -21,15 +21,15 @@ TrendHub
 
 **English short description**
 
-Agent-native, evidence-first trend intelligence with 21 MCP tools, 51 runtime source adapters, Professional Intelligence v2, Source Reliability, brand/entity context, forecasting, and a responsive Web Console.
+Agent-native, evidence-first trend intelligence with 21 stable MCP tools, protocol-native Resources, Unified Evidence Contract v1, Professional Intelligence v2, 51 runtime source adapters, and a responsive Web Console.
 
 **Chinese short description**
 
-Agent 原生、证据优先的专业趋势情报平台，提供 21 个 MCP 工具、51 个运行时信源适配器、Professional Intelligence v2、信源可靠性、品牌/实体分析、趋势预测与响应式 Web 控制台。
+Agent 原生、证据优先的专业趋势情报平台，提供 21 个稳定 MCP 工具、协议原生 Resources、Unified Evidence Contract v1、Professional Intelligence v2、51 个运行时信源适配器与响应式 Web 控制台。
 
 **English long description**
 
-TrendHub is an agent-native, evidence-first trend intelligence layer for researching emerging topics, brands, companies, media narratives and cross-platform signals. It combines 21 MCP tools with a layered Source Universe spanning social, video, search, news, podcast, web, technology and commerce evidence.
+TrendHub is an agent-native, evidence-first trend intelligence layer for researching emerging topics, brands, companies, media narratives and cross-platform signals. v1.6 keeps the stable 21-tool compatibility facade and adds protocol-native MCP Resources, a canonical namespace, Unified Evidence Contract v1 and Skill 2.0. Its layered Source Universe spans social, video, search, news, podcast, web, technology and commerce evidence.
 
 Professional Intelligence v2 provides lifecycle, velocity, persistence, diffusion, source reliability, anomaly detection, explainable 6/24/48/72h directional forecasting, brand/entity resolution, public creator/audience proxies, media evidence, alerts and executive reporting. TrendHub keeps missing, stale, unavailable, auth-required and rate-limited evidence explicit instead of silently fabricating values.
 
@@ -37,7 +37,7 @@ The hosted Remote MCP requires no TrendHub account and no model API key. It uses
 
 **Chinese long description**
 
-TrendHub 是面向 AI Agent 的 Evidence-first 趋势情报层，用于研究新兴趋势、品牌与公司实体、媒体议题以及跨平台信号。平台提供 21 个 MCP 工具，并以统一 Source Universe 组织社交、视频、搜索、新闻、播客、Web、科技与商业等多类证据。
+TrendHub 是面向 AI Agent 的 Evidence-first 趋势情报层，用于研究新兴趋势、品牌与公司实体、媒体议题以及跨平台信号。v1.6 保持 21 个稳定 Tool 的兼容面，同时正式提供协议原生 MCP Resources、canonical namespace、Unified Evidence Contract v1 与 Skill 2.0，并以统一 Source Universe 组织社交、视频、搜索、新闻、播客、Web、科技与商业等多类证据。
 
 Professional Intelligence v2 提供趋势生命周期、速度、持续性、扩散、Source Reliability、鲁棒异常检测、可解释的 6/24/48/72 小时方向性预测、品牌/实体解析、公开创作者与受众代理信号、媒体证据、告警和高管报告。对于缺失、过期、不可用、需要授权或被限流的数据，TrendHub 会显式标记状态，不用虚构值填补。
 

@@ -11,16 +11,16 @@ const REPO = path.join(ROOT, "..");
 const professional = JSON.parse(fs.readFileSync(path.join(ROOT, "professional-manifest.json"), "utf8"));
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 assert.ok(["release-candidate-ready", "release-ready"].includes(professional.releaseStatus));
-assert.equal(professional.stableBase, "1.5.2");
-assert.equal(professional.targetStableVersion, "1.5.3");
+assert.equal(professional.stableBase, "1.5.3");
+assert.equal(professional.targetStableVersion, "1.6.0");
 assert.equal(professional.expectedToolCount, 21);
-assert.equal(professional.candidateVersion, "1.5.3");
-assert.equal(pkg.version, "1.5.3");
+assert.equal(professional.candidateVersion, "1.6.0");
+assert.equal(pkg.version, "1.6.0");
 assert.notEqual(professional.targetStableVersion, "1.4.5");
-const dry = buildPromotionPlan("1.5.3", { dryRun: true });
+const dry = buildPromotionPlan("1.6.0", { dryRun: true });
 assert.equal(dry.ok, true); assert.equal(dry.expectedTools, 21); assert.equal(dry.dryRun, true); assert.equal(dry.files.length, 8);
 assert.throws(() => buildPromotionPlan("1.4.5", { dryRun: true }), /1\.4\.5 is forbidden/);
-for (const doc of ["RELEASE_CANDIDATE.md", "V1_5_3_LUMENIS_CONVERGENCE.md"]) {
+for (const doc of ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md"]) {
   assert.ok(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
 }
 const releaseWorkflow = fs.readFileSync(path.join(REPO, ".github", "workflows", "release.yml"), "utf8");

@@ -1,0 +1,42 @@
+{
+  "schema": "trendhub-skill-v2",
+  "name": "trendhub",
+  "skillVersion": "2.0",
+  "productVersion": "1.6.0",
+  "description": "Progressively disclosed evidence-first trend intelligence skill backed by the stable 21-tool MCP compatibility facade and protocol-native Resources.",
+  "namespace": {
+    "capabilityPrefix": "trendhub.",
+    "resourceScheme": "trendhub://"
+  },
+  "resources": [
+    "trendhub://namespace",
+    "trendhub://contracts/evidence",
+    "trendhub://capabilities",
+    "trendhub://methodology",
+    "trendhub://sources"
+  ],
+  "workflows": [
+    "workflows/trend-discovery.md",
+    "workflows/brand-radar.md",
+    "workflows/campaign-research.md",
+    "workflows/content-research.md",
+    "workflows/trend-validation.md"
+  ],
+  "policies": [
+    "policies/evidence.md",
+    "policies/confidence.md",
+    "policies/reliability.md",
+    "policies/forecasting.md"
+  ],
+  "compatibility": {
+    "toolCount": 21,
+    "toolNames": "stable-unprefixed",
+    "breakingRename": false
+  },
+  "invariants": [
+    "missing-is-not-zero",
+    "released-is-not-operating",
+    "adapters-do-not-own-truth",
+    "evidence-state-is-explicit"
+  ]
+}

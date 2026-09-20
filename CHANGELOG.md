@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.6.0 — Agent-native protocol foundation
+
+- Promote MCP Resources from incubated capability to a first-class public contract without changing the stable 21-tool compatibility facade.
+- Add canonical namespaces: capability IDs use `trendhub.*`; Resources use `trendhub://*`; legacy tool names remain stable for existing clients.
+- Publish Unified Evidence Contract v1 with explicit `data / evidence / source / timestamp / reliability / confidence / limitations / trace` plus compatible truth/lineage fields.
+- Publish TrendHub Skill 2.0 as a progressive-disclosure contract with machine-readable workflows, policies, resources and compatibility boundaries.
+- Add static Resources for namespace, evidence contract and Skill 2.0, plus templates for platform history, capability descriptors and source access/provenance contracts.
+- Upgrade production Remote MCP publication smoke so Official MCP Registry publication requires real `resources/list`, Resource Templates and critical resource reads against the deployed endpoint.
+- Adopt current LUMENIS cross-product truth disciplines only: production/runtime evidence outranks documentation, `missing != 0`, release/operating states are separate, and acquisition adapters never become truth owners. LUMENIS business/domain truth is not imported.
+- Keep v1.5.3 immutable as the rollback release; MCP Apps and durable async Tasks remain later-stage capabilities and are not represented as operating in v1.6.0.
+
+
 ## v1.5.3 — Evidence truth and capability convergence
 
 - Transfer current LUMENIS evidence/truth principles without importing LUMENIS business truth: explicit NOT_COLLECTED/UNAVAILABLE/STALE/OFFLINE/AUTH_REQUIRED/RATE_LIMITED states never become zero or observed absence.
