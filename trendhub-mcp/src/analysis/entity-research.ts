@@ -5,7 +5,7 @@
  * subject-specific public evidence. Generic hotlists are retained only as one
  * secondary signal for "is this also a broad trending topic?".
  */
-import { collectPublicQueryEvidence, type QueryEvidenceChannel, type QueryEvidenceItem } from "../sources/query-evidence.js";
+import { collectFastQueryEvidence, collectPublicQueryEvidence, type QueryEvidenceChannel, type QueryEvidenceItem } from "../sources/query-evidence.js";
 import { resolveBrandEntity, entityQueryTerms } from "../entities/brand-catalog.js";
 import { interestOverTime, relatedQueries } from "../sources/googleTrends.js";
 import { futureSignals } from "../sources/rss.js";
@@ -121,6 +121,21 @@ function qualityRank(q: "ok" | "degraded" | "missing"): number {
   return q === "ok" ? 2 : q === "degraded" ? 1 : 0;
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: NodeJS.Timeout | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), ms);
+        timer.unref?.();
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function searchDirection(points: Array<{ value: number | null }>): {
   direction: "rising" | "flat" | "declining" | "unknown";
   changePct: number | null;
@@ -178,10 +193,12 @@ function topEvidence(channels: QueryEvidenceChannel[], family?: string, max = 8)
 }
 
 function tokenCandidates(text: string): string[] {
+  // Google News titles often append the publisher after " - ". Strip that
+  // before theme extraction so a publisher name never becomes a "driver".
+  const cleaned = text.replace(/\s[-–—|]\s[^-–—|]{2,48}$/u, " ").trim();
   const raw = [
-    ...(text.match(/#[^#\s，。！？、；;:：]{2,24}/g) ?? []),
-    ...(text.toLowerCase().match(/[a-z][a-z0-9+#.\-]{2,30}/g) ?? []),
-    ...(text.match(/[\u4e00-\u9fff]{2,8}/g) ?? []),
+    ...(cleaned.match(/#[^#\s，。！？、；;:：]{2,24}/g) ?? []),
+    ...(cleaned.match(/[\u4e00-\u9fff]{2,8}/g) ?? []),
   ];
   return raw.map((x) => x.replace(/^#/, "").trim()).filter(Boolean);
 }
@@ -206,9 +223,33 @@ function recurringThemes(items: QueryEvidenceItem[], queryTerms: string[]): Arra
     .slice(0, 8);
 }
 
+function relevantUpcomingEvents(
+  rows: any[],
+  keyword: string,
+  sector: string | undefined,
+  geo: string,
+): any[] {
+  const subject = `${keyword} ${sector ?? ""}`.toLowerCase();
+  const isConsumer = /太古汇|商场|购物中心|mall|retail|luxury|fashion|beauty|消费|零售|品牌|餐饮|商业体/.test(subject);
+  const isTech = /tech|technology|科技|ai|人工智能|手机|芯片|汽车|automotive/.test(subject);
+  const isFinance = /finance|market|金融|证券|基金|投资|股票|财报/.test(subject);
+
+  return rows.filter((event) => {
+    const category = String(event.category ?? "");
+    const region = String(event.region ?? "");
+    if (geo === "CN" && region && !/CN|中国|全球/.test(region)) {
+      if (!(isTech && category === "tech-event")) return false;
+    }
+    if (isConsumer) return ["holiday-cn", "holiday-global", "ecommerce", "seasonal"].includes(category);
+    if (isTech) return ["tech-event", "ecommerce", "seasonal", "holiday-global"].includes(category);
+    if (isFinance) return ["earnings", "policy"].includes(category);
+    return category !== "policy" && category !== "earnings";
+  });
+}
+
 export async function buildEntityResearch(
   keyword: string,
-  options: { geo?: string; timeframe?: string; daysAhead?: number } = {},
+  options: { geo?: string; timeframe?: string; daysAhead?: number; mode?: "quick" | "full" } = {},
 ): Promise<EntityResearchPack> {
   const generatedAt = new Date().toISOString();
   const entity = resolveBrandEntity(keyword);
@@ -218,6 +259,7 @@ export async function buildEntityResearch(
   const geo = options.geo ?? "CN";
   const timeframe = options.timeframe ?? "today 3-m";
   const daysAhead = options.daysAhead ?? 60;
+  const quick = options.mode === "quick";
 
   const [
     publicChannels,
@@ -228,13 +270,33 @@ export async function buildEntityResearch(
     events,
     xhsFeed,
   ] = await Promise.all([
-    collectPublicQueryEvidence(canonicalName, aliases, 16),
+    quick
+      ? withTimeout(collectFastQueryEvidence(canonicalName, aliases, 10), 6_000, [])
+      : withTimeout(collectPublicQueryEvidence(canonicalName, aliases, 16), 9_000, []),
     crossPlatformOverlap(keyword).catch((error) => ({ error: (error as Error).message })),
-    interestOverTime([keyword], geo, timeframe).catch((error) => ({ dataQuality: "missing" as const, points: [], note: (error as Error).message })),
-    relatedQueries(keyword, geo).catch((error) => ({ dataQuality: "missing" as const, top: [], rising: [], note: (error as Error).message })),
-    futureSignals({ keyword, limit: 20, perSource: 5 }).catch((error) => ({ dataQuality: "missing" as const, total: 0, articles: [], sourceStatus: [], note: (error as Error).message })),
+    quick
+      ? Promise.resolve({ dataQuality: "missing" as const, points: [], note: "快速结果暂不等待搜索趋势。" })
+      : withTimeout(
+          interestOverTime([keyword], geo, timeframe)
+            .catch((error) => ({ dataQuality: "missing" as const, points: [], note: (error as Error).message })),
+          8_000,
+          { dataQuality: "missing" as const, points: [], note: "搜索趋势响应超时，本次不阻塞研究结果。" },
+        ),
+    quick
+      ? Promise.resolve({ dataQuality: "missing" as const, top: [], rising: [], note: "快速结果暂不等待相关搜索词。" })
+      : withTimeout(
+          relatedQueries(keyword, geo)
+            .catch((error) => ({ dataQuality: "missing" as const, top: [], rising: [], note: (error as Error).message })),
+          8_000,
+          { dataQuality: "missing" as const, top: [], rising: [], note: "相关搜索词响应超时，本次不阻塞研究结果。" },
+        ),
+    quick
+      ? Promise.resolve({ dataQuality: "degraded" as const, total: 0, articles: [], sourceStatus: [], note: "快速结果不等待行业 RSS。" })
+      : Promise.resolve({ dataQuality: "degraded" as const, total: 0, articles: [], sourceStatus: [], note: "交互研究不阻塞等待行业 RSS；由后台快照与公开查询证据补充。" }),
     Promise.resolve(upcomingEvents({ daysAhead })).catch(() => ({ total: 0, events: [] })),
-    fetchXiaohongshu(40).catch(() => null),
+    quick
+      ? Promise.resolve(null)
+      : withTimeout(fetchXiaohongshu(40).catch(() => null), 7_000, null),
   ]);
 
   const keywordLower = queryTerms.map((x) => x.toLowerCase());
@@ -243,8 +305,8 @@ export async function buildEntityResearch(
     return keywordLower.some((term) => haystack.includes(term));
   }).slice(0, 15);
   const loggedIn = xhsClient.hasLoginCookie();
-  const xhsKeywordRows = loggedIn
-    ? await searchXhsNotes(keyword, 20, "popularity_descending").catch(() => null)
+  const xhsKeywordRows = loggedIn && !quick
+    ? await withTimeout(searchXhsNotes(keyword, 20, "popularity_descending").catch(() => null), 7_000, null)
     : null;
 
   const xhsFeedEvidence = xhsItems(xhsFeedRows, "feed");
@@ -292,7 +354,7 @@ export async function buildEntityResearch(
     note: "TrendHub 高质量商业/营销/科技 RSS 中的关键词命中；未命中不等于全网没有报道。",
   };
 
-  const allChannels = [...publicChannels, xhsChannel, curatedChannel];
+  const allChannels = quick ? [...publicChannels] : [...publicChannels, xhsChannel, curatedChannel];
   const observedChannels = allChannels.filter((c) => c.dataQuality !== "missing").length;
   const positiveChannels = allChannels.filter((c) => c.itemCount > 0).length;
   const totalEvidenceItems = allChannels.reduce((sum, c) => sum + c.itemCount, 0);
@@ -407,7 +469,7 @@ export async function buildEntityResearch(
       evidenceRefs: [],
     });
   }
-  if (!loggedIn) {
+  if (!quick && !loggedIn) {
     risks.push({
       id: "xhs-auth-gap",
       title: "小红书关键词深搜缺失",
@@ -425,13 +487,13 @@ export async function buildEntityResearch(
   }
 
   const evidenceGaps: EntityResearchPack["evidenceGaps"] = [];
-  if (!loggedIn) evidenceGaps.push({
+  if (!quick && !loggedIn) evidenceGaps.push({
     id: "xiaohongshu-keyword-auth",
     title: "小红书关键词搜索未观测",
     reason: "该能力需要使用者自己的本地登录态；公网托管端按安全边界不接收私人 Cookie。",
     nextStep: "需要该证据时，在使用者自己的本地 TrendHub 配置 XHS_COOKIE；否则保持 AUTH_REQUIRED，不阻断其他研究。",
   });
-  if (searchQuality !== "ok") evidenceGaps.push({
+  if (!quick && searchQuality !== "ok") evidenceGaps.push({
     id: "search-intent-quality",
     title: "搜索意图证据不完整",
     reason: searchConclusion,
@@ -465,7 +527,7 @@ export async function buildEntityResearch(
     reason: "主体已经进入至少一个热榜，后续重点是判断是否扩散、加速或衰退。",
     priority: "now",
   });
-  if (!loggedIn) actions.push({
+  if (!quick && !loggedIn) actions.push({
     id: "xhs-local-only",
     action: "需要小红书关键词深搜时改用本地授权，不上传公网凭证",
     reason: "保持公共 Remote MCP 的共享安全边界，同时允许个人/团队本地增强。",
@@ -486,6 +548,7 @@ export async function buildEntityResearch(
     }));
 
   const eventRows: any[] = Array.isArray((events as any).events) ? (events as any).events : [];
+  const relevantEvents = relevantUpcomingEvents(eventRows, canonicalName, entity?.sector, geo);
   return {
     methodologyVersion: "entity-first-research-v1",
     generatedAt,
@@ -525,7 +588,7 @@ export async function buildEntityResearch(
     risks,
     evidenceGaps,
     recommendedActions: actions,
-    upcomingNodes: eventRows.slice(0, 12).map((event) => ({
+    upcomingNodes: relevantEvents.slice(0, 12).map((event) => ({
       name: event.name,
       category: event.category,
       startDate: event.startDate,
