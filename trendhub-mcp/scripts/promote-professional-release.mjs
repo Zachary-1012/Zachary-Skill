@@ -57,16 +57,16 @@ export function buildPromotionPlan(version, { dryRun = true } = {}) {
   const gatewayPath = path.join(ROOT, "scripts", "remote-gateway.mjs");
   const serverTsPath = path.join(ROOT, "src", "server.ts");
 
-  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — 多平台热点趋势采集与证据优先的研究分析（${version}）：普通人可读的研究结果视图、趋势曲线、未来信号、节点日历、小红书专区与创作简报，21 个稳定 MCP 工具。`; writeJson(pkgPath, pkg, dryRun);
+  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — ${version}；用户任务式趋势研究、渐进结果、按需来源与 21 个稳定 MCP 工具。`; writeJson(pkgPath, pkg, dryRun);
   const lock = readJson(lockPath); lock.version = version; if (lock.packages?.[""]) lock.packages[""].version = version; writeJson(lockPath, lock, dryRun);
 
   const manifest = readJson(manifestPath);
   manifest.version = version;
-  manifest.description = "专业级多平台趋势研究 MCP：21 个稳定工具，证据优先的主体研究与决策简报，普通人打开搜索即可得到当前结论、趋势变化、关键驱动、平台表现、证据、机会风险与建议，含来源可靠性与小红书专区。";
+  manifest.description = "专业级多平台趋势研究 MCP：21 个稳定工具；用户从研究任务进入，后端生成判断，来源按需展开，复杂能力不暴露为工具目录。";
   manifest.aiInstall ||= {}; manifest.aiInstall.successMarker = `SMOKE OK tools=${expectedTools}`;
   ensureTool(manifest, { name: "professional_intelligence", group: "analysis", summary: "Professional Intelligence v3：品牌/公司/商业体/产品/Campaign 的 Entity-first 主动取证、决策简报、历史趋势/预测/受众/媒体/风险机会" });
   ensureTool(manifest, { name: "workspace_manage", group: "collaboration", summary: "本地工作区：RBAC、watchlist、saved query、alert rule 与 audit log；不上传中央服务" });
-  manifest.professionalIntelligence = { ...manifest.professionalIntelligence, methodologyVersion: "professional-intelligence-v3", compatibilityBase: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, entityFirstResearch: "query-evidence-acquisition-before-hotlist-interpretation", executiveReport: "trendhub-executive-report-v2-decision-brief", webExperience: "task-first-decision-view", deepLinkRouting: "deferred-view-registration-safe", primaryComposition: "task-content-result-action-user-only-language", progressiveResearch: "quick-decision-view-then-full-evidence", reviewQuality: "missing-not-zero-driver-noise-filtered-subject-relevant-events", externalConstraints: professional.externalConstraints };
+  manifest.professionalIntelligence = { ...manifest.professionalIntelligence, methodologyVersion: "professional-intelligence-v3", compatibilityBase: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, entityFirstResearch: "query-evidence-acquisition-before-hotlist-interpretation", executiveReport: "trendhub-executive-report-v2-decision-brief", webExperience: "user-task-research-workspace", deepLinkRouting: "deferred-view-registration-safe", primaryComposition: "research-summary-change-support-next", evidenceInteraction: "on-demand-source-drawer", primaryNavigation: ["home","research","discover","settings"], progressiveResearch: "quick-decision-view-then-full-evidence", reviewQuality: "missing-not-zero-driver-noise-filtered-subject-relevant-events", externalConstraints: professional.externalConstraints };
   if (manifest.tools.length !== expectedTools) throw new Error(`PROMOTION FAILED: manifest would declare ${manifest.tools.length} tools, expected ${expectedTools}`);
   writeJson(manifestPath, manifest, dryRun);
 
