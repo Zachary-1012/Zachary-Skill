@@ -116,6 +116,8 @@ assert.doesNotMatch(home, /subject-aperture|question-axis|你要理解什么正�
 const researchBlock = professional.slice(professional.indexOf("VIEWS.research ="), professional.indexOf("VIEWS.sources ="));
 assert.ok(researchBlock.includes("VIEWS.research ="), "research view block must exist");
 assert.match(researchBlock, /\/api\/review/);
+assert.match(researchBlock, /depth: "quick"/);
+assert.match(researchBlock, /正在补充更多平台和趋势数据/);
 for (const section of ["当前结论", "趋势变化", "关键驱动", "平台表现", "证据", "机会与风险", "建议", "操作"]) {
   assert.match(researchBlock, new RegExp(section), `research view missing section ${section}`);
 }
