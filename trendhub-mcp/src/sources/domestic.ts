@@ -1,28 +1,43 @@
 /**
- * 国内 / 中文平台热榜采集
- * 直接在进程内调用开源 MIT 项目 dailyhot-api 的 Hono app（app.fetch），不起额外端口、不发外部 HTTP。
- * 上游为各平台公开页面/接口的聚合抓取；任一平台失效只影响该平台，绝不影响整体。
+ * 国内 / 中文平台热榜采集。
+ *
+ * TrendHub 只按需加载 dailyhot-api 的具体 route handler，不再导入其整套 Hono app。
+ * 这样避免上游 app 在嵌入式运行时尝试挂载自己的 ./public 静态目录，也让第三方
+ * Web 壳与 TrendHub 的 Source Adapter 边界保持分离。
  */
 import type { HotItem, HotResult } from "../util/schema.js";
 import { missingResult, nowIso } from "../util/schema.js";
 import { TtlCache } from "../util/http.js";
 import { config } from "../config.js";
 
-/**
- * dailyhot-api 聚合库体积较大，改为首次真正抓取国内聚合源时才动态加载，
- * 避免在 MCP 冷启动 / tools-list 握手阶段就加载整个聚合库，显著加快接入速度。
- * 类型见 src/types/dailyhot-api.d.ts。
- */
-type DailyHotApp = { fetch: (request: Request, ...rest: unknown[]) => Promise<Response> };
-let dailyHotAppPromise: Promise<DailyHotApp> | null = null;
-function loadDailyHotApp(): Promise<DailyHotApp> {
-  if (!dailyHotAppPromise) {
-    dailyHotAppPromise = import("dailyhot-api/dist/app.js").then((m) => {
-      const mod = m as { default?: DailyHotApp } & Partial<DailyHotApp>;
-      return mod.default ?? (mod as DailyHotApp);
-    });
+type DailyHotRouteContext = {
+  req: {
+    query: (key: string) => string | undefined;
+  };
+};
+
+type DailyHotRouteModule = {
+  handleRoute: (context: DailyHotRouteContext, noCache: boolean) => Promise<Record<string, unknown>>;
+};
+
+const routePromises = new Map<string, Promise<DailyHotRouteModule>>();
+
+function routeContext(): DailyHotRouteContext {
+  return { req: { query: () => undefined } };
+}
+
+function loadDailyHotRoute(name: string): Promise<DailyHotRouteModule> {
+  if (!/^[a-z0-9-]+$/i.test(name)) {
+    return Promise.reject(new Error("invalid dailyhot route name"));
   }
-  return dailyHotAppPromise;
+  const existing = routePromises.get(name);
+  if (existing) return existing;
+  const promise = import(`dailyhot-api/dist/routes/${name}.js`).then((mod) => {
+    if (typeof mod.handleRoute !== "function") throw new Error(`dailyhot route ${name} has no handleRoute`);
+    return mod as DailyHotRouteModule;
+  });
+  routePromises.set(name, promise);
+  return promise;
 }
 
 export interface PlatformMeta {
@@ -31,7 +46,6 @@ export interface PlatformMeta {
   category: string;
 }
 
-/** 精选常用平台元数据（dailyhot 还支持更多，可用 list_platforms 的 all 模式查看） */
 export const DOMESTIC_PLATFORMS: PlatformMeta[] = [
   { name: "weibo", label: "微博热搜", category: "social" },
   { name: "zhihu", label: "知乎热榜", category: "social" },
@@ -62,10 +76,8 @@ export const DOMESTIC_PLATFORMS: PlatformMeta[] = [
 ];
 
 const metaByName = new Map(DOMESTIC_PLATFORMS.map((p) => [p.name, p]));
-
 const cache = new TtlCache<HotResult>(config.cacheTtlSec);
 
-/** 各平台热度字段名不统一，按候选键提取数值 */
 function extractHot(item: Record<string, unknown>): { hot: number | null; hotText: string | null } {
   const numKeys = ["hot", "hotScore", "hot_score", "heat", "number", "view_count", "diggCount", "playCount", "score", "index"];
   for (const k of numKeys) {
@@ -73,7 +85,7 @@ function extractHot(item: Record<string, unknown>): { hot: number | null; hotTex
     if (typeof v === "number" && Number.isFinite(v)) return { hot: v, hotText: String(v) };
     if (typeof v === "string" && v.trim() !== "") {
       const n = Number(v.replace(/[^\d.]/g, ""));
-      if (Number.isFinite(n) && v.trim() !== "") return { hot: n, hotText: v };
+      if (Number.isFinite(n)) return { hot: n, hotText: v };
     }
   }
   const strKeys = ["hotScoreStr", "hot_str", "label", "tag"];
@@ -100,41 +112,38 @@ function mapItem(raw: Record<string, unknown>, rank: number): HotItem {
 }
 
 export function isDomestic(name: string): boolean {
-  return metaByName.has(name) || true; // dailyhot 任意路由名都可尝试
+  return metaByName.has(name);
 }
 
-/** 拉取单个国内平台热榜 */
 export async function fetchDomestic(name: string, limit = 50): Promise<HotResult> {
   const meta = metaByName.get(name);
   const label = meta?.label ?? name;
   const category = meta?.category ?? "domestic";
+  if (!meta) return missingResult(name, label, category, "未注册的国内聚合源");
+
   const cacheKey = `dom:${name}:${limit}`;
   const hit = cache.get(cacheKey);
   if (hit) return hit;
 
   try {
-    const req = new Request(`http://127.0.0.1/${encodeURIComponent(name)}?limit=${limit}&cache=false`);
-    const dailyHotApp = await loadDailyHotApp();
-    const res = await dailyHotApp.fetch(req);
-    const ct = res.headers.get("content-type") ?? "";
-    if (!ct.includes("json")) {
-      const r = missingResult(name, label, category, `上游返回非 JSON（HTTP ${res.status}），该平台可能暂时失效`);
-      return r;
-    }
-    const json = (await res.json()) as Record<string, unknown>;
-    if (json.code !== 200 || !Array.isArray(json.data)) {
-      return missingResult(name, label, category, `上游返回异常 code=${String(json.code)} ${(json.message as string) ?? ""}`.trim());
-    }
-    const items = (json.data as Record<string, unknown>[]).map((raw, i) => mapItem(raw, i + 1)).filter((x) => x.title);
+    const route = await loadDailyHotRoute(name);
+    const payload = await route.handleRoute(routeContext(), true);
+    const rows = Array.isArray(payload.data) ? payload.data as Record<string, unknown>[] : [];
+    const items = rows.map((raw, i) => mapItem(raw, i + 1)).filter((x) => x.title).slice(0, limit);
+    const sourceUpdatedAt =
+      typeof payload.updateTime === "string" ? payload.updateTime :
+      typeof payload.update_time === "string" ? payload.update_time :
+      typeof payload.timestamp === "string" ? payload.timestamp :
+      null;
     const result: HotResult = {
       platform: name,
       label,
       category,
       capturedAt: nowIso(),
-      sourceUpdatedAt: (json.update_time as string) ?? (json.timestamp as string) ?? null,
+      sourceUpdatedAt,
       dataQuality: items.length ? "ok" : "degraded",
-      items: items.slice(0, limit),
-      note: items.length ? undefined : "榜单为空，可能处于更新窗口",
+      items,
+      note: items.length ? undefined : "榜单为空，可能处于更新窗口或上游暂时不可用",
     };
     cache.set(cacheKey, result);
     return result;
