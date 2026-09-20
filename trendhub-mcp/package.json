@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.7.3",
-  "description": "TrendHub MCP — v1.7.3；快速渐进研究、Decision View、Entity-first Professional Intelligence v3、21 stable tools。",
+  "version": "1.7.4",
+  "description": "TrendHub MCP — v1.7.4；用户任务式趋势研究、渐进结果、按需来源与 21 stable tools。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"
