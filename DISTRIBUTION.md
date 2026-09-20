@@ -18,12 +18,12 @@ Last evidence check: **2026-09-20**.
 | Channel | State | Public identifier / link | What is verified |
 | --- | --- | --- | --- |
 | GitHub source | **LIVE** | `https://github.com/Zachary-1012/Zachary-Skill` | Public clone; Node-free bootstrap; local stdio install contract |
-| Official MCP Registry | **PUBLISHED · SEARCHABLE** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | the latest published release is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint |
+| Official MCP Registry | **PUBLISHED · SEARCHABLE · v1.5.3** | `io.github.Zachary-1012/trendhub` · `https://registry.modelcontextprotocol.io/?q=trendhub` | `v1.5.3` is `active`, `isLatest=true`, and the remote URL points to the production Streamable HTTP endpoint |
 | Glama MCP Directory | **PUBLISHED · SEARCHABLE** | `https://glama.ai/mcp/connectors/io.github.Zachary-1012/trendhub` | Connector indexed, `Healthy`, Streamable HTTP remote detected, 21 tools detected |
 | Agent Plugins standard | **READY · DIRECT INSTALL** | root `plugin.json` + `mcp.json` | Portable Agent Plugin metadata and remote MCP configuration are version-locked to the current Stable Release |
 | Cursor | **NOT LISTED · DIRECT MCP READY** | `mcp.json` / Cursor MCP install link in README | Cursor supports direct MCP install now. Public Cursor Marketplace publication requires repository submission and Cursor manual review; current public Marketplace search must not be represented as listed until approved. |
 | Smithery | **NOT LISTED · URL PUBLISH READY** | production `/mcp` URL | The public Streamable HTTP endpoint satisfies Smithery URL-publishing requirements. Publishing requires an authenticated Smithery publisher namespace/API key or web publishing session. |
-| OpenAI Plugins Directory (ChatGPT / Codex) | **READY TO SUBMIT** | production `/mcp` + `/privacy` + `/terms` + [Submission Portal](https://platform.openai.com/apps) | OpenAI uses the Plugins Directory as the shared discovery surface for ChatGPT and Codex workflow capabilities. TrendHub is prepared for a `With MCP` submission; it has not yet been submitted, reviewed, or published. |
+| OpenAI Plugins Directory (ChatGPT / Codex) | **READY TO SUBMIT** | production `/mcp` + `/privacy` + `/terms` + `/.well-known/openai-apps-challenge` + [Submission Portal](https://platform.openai.com/apps) | TrendHub is prepared for a `With MCP` submission. The domain-verification endpoint is prewired and returns the portal challenge verbatim only when `OPENAI_APPS_CHALLENGE_TOKEN` is configured. It has not yet been submitted, reviewed, or published. |
 
 **Rule:** only channels in `PUBLISHED · SEARCHABLE` state may be described publicly as “上架 / listed / searchable”. Compatibility, direct-install support or submission readiness is not the same as marketplace publication.
 
