@@ -10,7 +10,7 @@ const root = new URL("..", import.meta.url).pathname;
 const repoRoot = join(root, "..");
 
 const skill = skillContract();
-assert.equal(skill.productVersion, "1.7.3");
+assert.equal(skill.productVersion, "1.7.4");
 assert.equal(skill.compatibilityTools, 21);
 assert.equal(skill.routing.entityFirst.tool, "professional_intelligence");
 assert.equal(skill.routing.topicFirst.tool, "analyze_topic");
@@ -97,7 +97,7 @@ const queryEvidence = await readFile(join(root, "src", "sources", "query-evidenc
 
 /* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
 assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
-assert.match(index, /experience-v2\.css\?v=1\.7\.3/);
+assert.match(index, /experience-v2\.css\?v=1\\.7\\.4/);
 for (const view of ["dashboard", "research", "discover", "settings"]) {
   assert.match(index, new RegExp(`data-view="${view}"`));
 }
@@ -156,7 +156,7 @@ for (const channel of ["google-news-cn", "google-news-global", "gdelt-query", "b
 }
 
 const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
-assert.equal(manifest.version, "1.7.3");
+assert.equal(manifest.version, "1.7.4");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
 assert.equal(manifest.professionalIntelligence.webExperience, "user-task-research-workspace");
 assert.equal(manifest.professionalIntelligence.primaryComposition, "research-summary-change-support-next");
