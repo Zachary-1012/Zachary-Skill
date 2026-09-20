@@ -1,42 +1,52 @@
 VIEWS.dashboard = async function (content) {
-  const examples = ["广州太古汇", "Louis Vuitton", "小米汽车"];
   const recents = TH_STORE.recents();
   const watching = TH_STORE.watching();
+
   content.innerHTML = `
-  <div class="home-page">
-  <section class="home-hero">
-    <h1 class="home-title">研究一个主体，先看证据再下结论</h1>
-    <p class="home-sub">输入品牌、商场、产品、人物或话题，立即得到当前结论、趋势变化、平台表现、机会风险和可执行建议。</p>
-    <form class="home-search" id="homeSearch">
-      <input class="home-keyword" id="homeKeyword" type="search" autocomplete="off" aria-label="研究对象" placeholder="例如：广州太古汇">
-      <button class="btn primary lg" type="submit">开始研究</button>
-    </form>
-    <div class="home-examples"><span>试试</span>${examples
-      .map((x) => `<button type="button" class="example-chip" data-example="${esc(x)}">${esc(x)}</button>`)
-      .join("")}</div>
-  </section>
+    <div class="home-page">
+      <section class="home-command">
+        <form class="home-search" id="homeSearch">
+          <input class="home-keyword" id="homeKeyword" type="search" autocomplete="off"
+            aria-label="研究对象" placeholder="研究品牌、公司、产品、行业或话题">
+          <button class="btn primary lg" type="submit">研究</button>
+        </form>
+        <div class="home-examples">
+          <span>例如</span>
+          <button type="button" class="example-chip" data-example="广州太古汇">广州太古汇</button>
+          <button type="button" class="example-chip" data-example="Louis Vuitton">Louis Vuitton</button>
+          <button type="button" class="example-chip" data-example="AI 眼镜">AI 眼镜</button>
+        </div>
+      </section>
 
-  <div class="home-columns">
-    <section class="home-col">
-      <div class="home-col-head"><h2>最近研究</h2><a class="home-link" href="#/research">＋ 新研究</a></div>
-      <div id="homeRecent">${recents.length ? recents.map(homeRecentRow).join("") : homeEmpty("还没有研究记录，搜一个主体试试")}</div>
-    </section>
-    <section class="home-col">
-      <div class="home-col-head"><h2>正在关注</h2><span class="home-hint">在研究结果页可一键加入</span></div>
-      <div id="homeWatching">${watching.length ? watching.map(homeWatchingRow).join("") : homeEmpty("加入关注后，会在这里快速回到这些主体")}</div>
-    </section>
-  </div>
+      <section class="home-work">
+        <div class="home-section-head">
+          <h2>最近研究</h2>
+        </div>
+        <div id="homeRecent">
+          ${recents.length ? recents.map(homeRecentRow).join("") : homeEmpty("还没有研究记录")}
+        </div>
+      </section>
 
-  <section class="home-discover">
-    <div class="home-col-head"><h2>趋势发现</h2><a class="home-link" href="#/clusters">发现跨平台话题 →</a></div>
-    <p class="home-hint">来自各平台最近一次成功采集的公开热点（小红书优先），点任意一条即可作为研究对象。</p>
-    <div id="homeDiscover">${loading("正在读取最近热点…")}</div>
-  </section>
-  </div>`;
+      ${watching.length ? `
+        <section class="home-work">
+          <div class="home-section-head">
+            <h2>关注</h2>
+          </div>
+          <div id="homeWatching">${watching.map(homeWatchingRow).join("")}</div>
+        </section>` : ""}
+
+      <section class="home-work">
+        <div class="home-section-head">
+          <h2>最近出现</h2>
+          <a class="home-link" href="#/discover">去发现</a>
+        </div>
+        <div id="homeDiscover">${loading("正在读取最近数据…")}</div>
+      </section>
+    </div>`;
 
   const keywordInput = $("#homeKeyword", content);
-  $("#homeSearch", content).addEventListener("submit", (e) => {
-    e.preventDefault();
+  $("#homeSearch", content).addEventListener("submit", (event) => {
+    event.preventDefault();
     startResearch(keywordInput.value);
   });
   content.querySelectorAll("[data-example]").forEach((button) => {
@@ -46,78 +56,68 @@ VIEWS.dashboard = async function (content) {
   loadHomeDiscover(content);
 };
 
-function homeEmpty(msg) {
-  return `<div class="home-empty">${esc(msg)}</div>`;
+function homeEmpty(message) {
+  return `<div class="home-empty">${esc(message)}</div>`;
 }
+
 function homeRecentRow(keyword) {
   return `<div class="home-row">
     <a class="home-row-main" href="#/research?keyword=${encodeURIComponent(keyword)}">${esc(keyword)}</a>
-    <button type="button" class="home-row-action" data-del-recent="${esc(keyword)}" aria-label="删除该记录">删除</button>
+    <button type="button" class="home-row-action" data-del-recent="${esc(keyword)}" aria-label="删除该记录">移除</button>
   </div>`;
 }
+
 function homeWatchingRow(keyword) {
   return `<div class="home-row">
     <a class="home-row-main" href="#/research?keyword=${encodeURIComponent(keyword)}">${esc(keyword)}</a>
     <button type="button" class="home-row-action" data-unwatch="${esc(keyword)}">取消关注</button>
   </div>`;
 }
+
 function bindHomeRows(root) {
-  root.querySelectorAll("[data-del-recent]").forEach((b) =>
-    b.addEventListener("click", () => {
-      TH_STORE.removeRecent(b.dataset.delRecent);
-      b.closest(".home-row")?.remove();
+  root.querySelectorAll("[data-del-recent]").forEach((button) =>
+    button.addEventListener("click", () => {
+      TH_STORE.removeRecent(button.dataset.delRecent);
+      button.closest(".home-row")?.remove();
+      renderSidebarRecents?.();
     })
   );
-  root.querySelectorAll("[data-unwatch]").forEach((b) =>
-    b.addEventListener("click", () => {
-      TH_STORE.toggleWatching(b.dataset.unwatch);
-      b.closest(".home-row")?.remove();
+  root.querySelectorAll("[data-unwatch]").forEach((button) =>
+    button.addEventListener("click", () => {
+      TH_STORE.toggleWatching(button.dataset.unwatch);
+      button.closest(".home-row")?.remove();
     })
   );
 }
+
 async function loadHomeDiscover(root) {
   const box = $("#homeDiscover", root);
   try {
-    const d = await api("/api/trending?mode=snapshot&limit=12");
-    const results = (d.results || []).filter((r) => Array.isArray(r.items) && r.items.length);
-    if (!results.length) {
-      box.innerHTML = homeEmpty("暂时没有成功采集的热点快照，可到“热点榜”页实时刷新。");
-      return;
-    }
-    const ordered = [...results].sort((a, b) => (a.platform === "xiaohongshu" ? -1 : b.platform === "xiaohongshu" ? 1 : 0));
+    const d = await api("/api/trending?mode=snapshot&limit=6");
     const rows = [];
-    for (const r of ordered) {
-      for (const item of r.items.slice(0, 3)) {
-        rows.push({ platform: r.label, title: item.title, rank: item.rank });
-        if (rows.length >= 12) break;
+    for (const platform of (d.results || [])) {
+      if (!Array.isArray(platform.items)) continue;
+      for (const item of platform.items.slice(0, 2)) {
+        rows.push({ platform: platform.label, title: item.title });
+        if (rows.length >= 8) break;
       }
-      if (rows.length >= 12) break;
+      if (rows.length >= 8) break;
     }
     if (!rows.length) {
-      box.innerHTML = homeEmpty("最近快照里还没有可展示的热点条目。");
+      box.innerHTML = homeEmpty("暂时没有可用的最近数据");
       return;
     }
-    box.innerHTML = rows
-      .map(
-        (x) => `<div class="discover-row">
-          <button type="button" class="discover-title" data-keyword="${esc(x.title)}">${esc(x.title)}</button>
-          <span class="discover-platform">${esc(x.platform)}${x.rank ? ` · #${esc(x.rank)}` : ""}</span>
-        </div>`
-      )
-      .join("");
-    box.querySelectorAll("[data-keyword]").forEach((b) =>
-      b.addEventListener("click", () => startResearch(b.dataset.keyword))
-    );
-  } catch (e) {
-    box.innerHTML = note("warn", `热点暂时读取不到：${esc(e.message)}`);
+    box.innerHTML = rows.map((row) => `
+      <div class="discover-row">
+        <button type="button" class="discover-title" data-keyword="${esc(row.title)}">${esc(row.title)}</button>
+        <span class="discover-platform">${esc(row.platform)}</span>
+      </div>`).join("");
+    box.querySelectorAll("[data-keyword]").forEach((button) => {
+      button.addEventListener("click", () => startResearch(button.dataset.keyword));
+    });
+  } catch (error) {
+    box.innerHTML = homeEmpty("最近数据暂时不可用");
   }
-}
-
-function statCard(num, lbl) {
-  return `<div class="card stat"><span class="num">${esc(num)}</span><span class="lbl">${esc(lbl)}</span></div>`;
-}
-function quickCard(view, name, desc) {
-  return `<div class="card" data-quick="${view}" style="cursor:pointer"><h3>${esc(name)}</h3><p class="sub">${esc(desc)}</p></div>`;
 }
 
 /* 小红书主打专区 */
