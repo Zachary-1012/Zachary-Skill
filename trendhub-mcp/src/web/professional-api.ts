@@ -207,12 +207,14 @@ export async function handleProfessionalApi(pathname: string, url: URL, method: 
       return { status: 200, data: collectMediaEvidence(keyword, platforms) };
     }
 
+    const reviewMode = pathname === "/api/review" && url.searchParams.get("depth") === "quick" ? "quick" : "full";
     const research = url.searchParams.get("research") === "0"
       ? null
       : await buildEntityResearch(keyword, {
           geo: url.searchParams.get("geo")?.trim() || "CN",
           timeframe: url.searchParams.get("timeframe")?.trim() || "today 3-m",
           daysAhead: Number(url.searchParams.get("days_ahead") || 60),
+          mode: reviewMode,
         });
     const intelligence = buildProfessionalIntelligence(keyword, platforms, new Date(), research);
     if (pathname === "/api/professional") return { status: 200, data: intelligence };
