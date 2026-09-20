@@ -10,7 +10,7 @@ const root = new URL("..", import.meta.url).pathname;
 const repoRoot = join(root, "..");
 
 const skill = skillContract();
-assert.equal(skill.productVersion, "1.7.1");
+assert.equal(skill.productVersion, "1.7.2");
 assert.equal(skill.compatibilityTools, 21);
 assert.equal(skill.routing.entityFirst.tool, "professional_intelligence");
 assert.equal(skill.routing.topicFirst.tool, "analyze_topic");
@@ -95,34 +95,57 @@ const app = await readFile(join(root, "web", "app.js"), "utf8");
 const viewsD = await readFile(join(root, "web", "views-d.js"), "utf8");
 const queryEvidence = await readFile(join(root, "src", "sources", "query-evidence.ts"), "utf8");
 
-assert.match(index, /Intelligence Workspace/);
-assert.match(index, /experience-v2\.css\?v=1\.7\.1/);
-const dashboardBlock = home.slice(home.indexOf("VIEWS.dashboard ="), home.indexOf("function statCard"));
-const professionalBlock = professional.slice(professional.indexOf("VIEWS.professional ="), professional.indexOf("VIEWS.sources ="));
+/* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
+assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
+assert.match(index, /experience-v2\.css\?v=1\.7\.2/);
+assert.match(index, /data-view="research"/);
+assert.match(index, /开始研究/);
+assert.match(index, /data-view="research"/);
 assert.match(index, /navigationSheet/);
 assert.match(index, /topbar-inner/);
 assert.match(index, /navBackdrop/);
-assert.match(home, /subject-aperture/);
-assert.match(home, /question-axis/);
-assert.match(home, /你要理解什么正在变化/);
-assert.doesNotMatch(dashboardBlock, /stats-grid|card stat|home-paths|workspace-principles/);
-for (const marker of ["subject-field","trace-flow","trace-change","trace-interpret","trace-evidence","trace-action"]) assert.match(professionalBlock, new RegExp(marker));
-assert.doesNotMatch(professionalBlock, /decision-workspace|decision-panel|stats-grid intelligence-stats/);
-assert.match(styles, /Subject Field -> Change Axis/);
-assert.match(styles, /\.trace-stage/);
+
+/* 首页：单一搜索入口 + 最近研究/正在关注/趋势发现，发现走快照保证首屏秒开 */
+assert.match(home, /home-search/);
+assert.match(home, /\/api\/trending\?mode=snapshot/);
+assert.match(home, /startResearch/);
+for (const label of ["最近研究", "正在关注", "趋势发现"]) assert.match(home, new RegExp(label));
+assert.doesNotMatch(home, /subject-aperture|question-axis|你要理解什么正在变化/);
+
+/* 主体页：八区由后端 /api/review ViewModel 驱动，前端只渲染；渐进返回，不长时间整屏 spinner */
+const researchBlock = professional.slice(professional.indexOf("VIEWS.research ="), professional.indexOf("VIEWS.sources ="));
+assert.ok(researchBlock.includes("VIEWS.research ="), "research view block must exist");
+assert.match(researchBlock, /\/api\/review/);
+for (const section of ["当前结论", "趋势变化", "关键驱动", "平台表现", "证据", "机会与风险", "建议", "操作"]) {
+  assert.match(researchBlock, new RegExp(section), `research view missing section ${section}`);
+}
+assert.match(researchBlock, /renderDecision/);
+assert.match(researchBlock, /rv-skeleton|rvSkeleton/);
+assert.doesNotMatch(researchBlock, /subject-field|trace-flow|trace-change|trace-interpret|trace-evidence|trace-action|trace-stage|changeSummary|SUBJECT CONTEXT|EVIDENCE TRACE/);
+/* 机器合同 /api/professional 与深链别名保留给 MCP/报告/高级使用者 */
+assert.match(professional, /\/api\/professional/);
+assert.match(professional, /VIEWS\.professional/);
+
+/* 样式：任务→结果编辑式分区，旧 field/axis/trace 视觉全部移除，外壳对齐轴保留 */
+assert.match(styles, /\.rv-section/);
+assert.match(styles, /\.home-search/);
 assert.match(styles, /\.topbar-inner,/);
-assert.match(styles, /--th-field-max/);
-assert.doesNotMatch(styles, /decision-workspace/);
+assert.doesNotMatch(styles, /Subject Field -> Change Axis|\.trace-stage|--th-field-max|subject-aperture|question-axis/);
+
 assert.match(app, /DOMContentLoaded/);
+assert.match(app, /TH_STORE/);
+assert.match(app, /startResearch/);
 assert.doesNotMatch(viewsD, /\nroute\(\);\s*$/);
+assert.match(viewsD, /交给 AI 的写作提示词/);
 for (const channel of ["google-news-cn", "google-news-global", "gdelt-query", "bluesky-query", "apple-podcasts-query"]) {
   assert.match(queryEvidence, new RegExp(channel));
 }
 
 const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
-assert.equal(manifest.version, "1.7.1");
+assert.equal(manifest.version, "1.7.2");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
-assert.equal(manifest.professionalIntelligence.webExperience, "field-axis-trace-intelligence-workspace");
+assert.equal(manifest.professionalIntelligence.webExperience, "task-first-decision-view");
+assert.equal(manifest.professionalIntelligence.primaryComposition, "task-content-result-action-user-only-language");
 assert.equal(manifest.tools.length, 21);
 
-console.log("V1.7 EXPERIENCE AUTHORITY OK entity-first=v1 professional=v3 report=v2 tools=21 web=field-axis-trace deep-link=deterministic");
+console.log("V1.7 TASK-RESULT AUTHORITY OK entity-first=v1 professional=v3 report=v2 tools=21 web=task-first-decision-view home=4 sections research=8 sections renderer-only deep-link=deterministic");

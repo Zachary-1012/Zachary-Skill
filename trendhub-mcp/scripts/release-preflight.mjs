@@ -73,7 +73,7 @@ must(manifest.tools?.length === expected, `manifest tools=${manifest.tools?.leng
 must(manifest.professionalIntelligence?.methodologyVersion === "professional-intelligence-v3", "v1.7 Professional Intelligence v3 contract missing");
 must(manifest.agentNative?.entityFirstResearch === "released", "v1.7 Entity-first research contract missing");
 must(manifest.agentNative?.decisionFirstWeb === "released", "v1.7 Decision-first Web contract missing");
-must(fs.existsSync(path.join(ROOT, "web", "experience-v2.css")), "v1.7.1 semantic Experience stylesheet missing");
+must(fs.existsSync(path.join(ROOT, "web", "experience-v2.css")), "v1.7.2 task-first decision view stylesheet missing");
 must(!fs.existsSync(path.join(ROOT, "web", "intelligence-v1.css")), "superseded dashboard-style experience layer must stay retired");
 const indexHtml = read(path.join(ROOT, "web", "index.html"));
 const appJs = read(path.join(ROOT, "web", "app.js"));

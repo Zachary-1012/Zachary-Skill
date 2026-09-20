@@ -8,6 +8,7 @@ import path from "node:path";
 import { config } from "../config.js";
 import type { HotResult } from "../util/schema.js";
 import { getMany, PLATFORMS } from "../sources/index.js";
+import { fetchXiaohongshu } from "../sources/xiaohongshu.js";
 import { appendHistory } from "./history.js";
 
 interface SnapFile {
@@ -37,9 +38,26 @@ function writeSnap(platform: string, snap: SnapFile): void {
 
 /** 对给定平台（默认全部核心平台）落一次快照 */
 export async function takeSnapshots(platforms?: string[]): Promise<{ platform: string; ok: boolean; items: number }[]> {
-  const names = platforms && platforms.length
-    ? platforms
+  const explicit = Boolean(platforms && platforms.length);
+  const names = explicit
+    ? platforms!
     : PLATFORMS.filter((p) => ["social", "video", "news", "tech", "dev"].includes(p.category)).map((p) => p.platform);
+
+  // 小红书游客热门流走专用客户端、不在公共热榜清单内：默认全量采集时并行 best-effort 抓取，
+  // 带超时保护；异地 IP / 限流 / 无会话时静默降级，绝不影响其他平台快照与定时任务退出码。
+  const xhsTimeout = new Promise<null>((resolve) => {
+    const t = setTimeout(() => resolve(null), 15_000);
+    t.unref?.();
+  });
+  const xhsPromise = explicit
+    ? Promise.resolve(null)
+    : Promise.race([
+        fetchXiaohongshu(30)
+          .then((r) => r)
+          .catch(() => null),
+        xhsTimeout,
+      ]);
+
   const results = await getMany(names, 50);
   const report: { platform: string; ok: boolean; items: number }[] = [];
   for (const r of results) {
@@ -50,6 +68,20 @@ export async function takeSnapshots(platforms?: string[]): Promise<{ platform: s
     snap.latest = r;
     writeSnap(r.platform, snap);
     appendHistory(r);
+  }
+
+  if (!explicit) {
+    const x = await xhsPromise;
+    if (x && x.dataQuality !== "missing" && x.items.length) {
+      const snap = readSnap(x.platform);
+      snap.previous = snap.latest;
+      snap.latest = x;
+      writeSnap(x.platform, snap);
+      appendHistory(x);
+      report.push({ platform: x.platform, ok: x.dataQuality === "ok", items: x.items.length });
+    } else {
+      report.push({ platform: "xiaohongshu", ok: false, items: 0 });
+    }
   }
   return report;
 }

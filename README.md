@@ -1,6 +1,6 @@
 # Zachary-Skill · 公司 AI 技能库
 
-全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.7.1** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v3、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.7.1 修正 Web Experience：主体研究采用 Subject Field → Change Axis → Interpretation Strata → Evidence Trace → Action Return 的连续研究轨迹，主研究面退役 KPI 墙、卡片堆叠和固定后台侧栏；同时修复 Professional 深链初始化竞态并统一桌面/移动对齐轴。v1.7.0 的 Entity-first Professional Intelligence v3 与 21-tool 合同保持不变**；**v1.5.3 起明确区分 AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED 等 Evidence Truth State，并将 RELEASED 与 OPERATING 分开报告**；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
+全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub v1.7.2** 是 Evidence-first 的专业趋势情报 Skill：覆盖国内、亚太与全球 **129 个分层信源**，提供 **21 个 MCP 工具**，具备 Professional Intelligence v3、Agent-native 能力层、Source Reliability、品牌/实体、跨信号确认、趋势生命周期/速度/持续性/跨平台扩散/置信度与 6h/24h/48h/72h 预测；**v1.7.2 把网页重做为任务优先的研究台：首页只保留“搜索 / 最近研究 / 正在关注 / 趋势发现”，研究页直接给“当前结论 / 趋势变化 / 关键驱动 / 平台表现 / 证据 / 机会与风险 / 建议 / 操作”；判断全部由后端统一生成、页面只负责呈现，结果渐进返回、不长时间空转，桌面与手机共用同一阅读对齐轴；趋势数据缺失时显式标注、不显示为 0。底层 Entity-first、Professional Intelligence v3、Evidence Contract、Skill 2.0 与 21-tool 合同保持不变，v1.7.1 的深链修复继续保留**；**v1.5.3 起明确区分 AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED 等 Evidence Truth State，并将 RELEASED 与 OPERATING 分开报告**；**v1.5.2 起公网 Web Console 的手机导航采用默认关闭的响应式抽屉，并对 HTML/CSS/JS 做版本化与 no-store 缓存保护**；**v1.4.2 起托管端内置定时趋势快照，按小时自动采集并持久化有界趋势历史**（本地可用 cron / Windows 任务计划程序）；**v1.4.4 起公网 Web Console 默认展示最近成功快照，实时刷新失败自动回退到持久化数据，避免第三方源瞬时不可用时出现空白。**
 
 每个技能与具体大模型解耦：ChatGPT、Claude、豆包、DeepSeek、Gemini、Cursor 或其他支持标准 MCP（Model Context Protocol）的 AI 均可挂载；**算力走使用者自己的 AI，Skill 本身不内置、也不索要任何模型 API Key。**
 
@@ -43,9 +43,9 @@ cursor://anysphere.cursor-deeplink/mcp/install?name=trendhub&config=eyJ1cmwiOiJo
 
 如果客户端不接受 deeplink，直接使用仓库根目录 `mcp.json` 或上面的通用 Streamable HTTP 配置即可。
 
-### 浏览器 Intelligence Workspace
+### 浏览器里直接研究
 
-不写配置、只想用浏览器研究时，打开托管的响应式 Intelligence Workspace。默认入口不是新闻流，而是主体研究：输入品牌、公司、商业体、产品或 Campaign 后直接得到结构化 Intelligence 结果。
+不写配置、只想用浏览器研究时，打开托管的响应式网页即可。首页只有一个搜索框，以及最近研究、正在关注和趋势发现；输入品牌、公司、商业体、产品或话题后，直接得到当前结论、趋势变化、平台表现、可回溯证据、机会风险和可执行建议。结果会渐进呈现，先给已采集到的信号，慢源在后台补齐，不会长时间空白。
 
 ```text
 https://trendhub-remote-production.up.railway.app/
@@ -114,7 +114,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 机器可读的同一安装合同位于 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json) 的 `aiInstall` 字段。
 
-## TrendHub v1.7.1 能力
+## TrendHub v1.7.2 能力
 
 | 能力层 | 当前能力 |
 | --- | --- |
@@ -130,7 +130,7 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 | 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
 | 内容生产 | 脚本/文案/方案模板 + Evidence-first 创作 Brief |
 | 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |\n| **Entity-first Intelligence · v1.7** | 品牌/公司/商业体/产品/Campaign → 主动 Query Evidence Acquisition → Professional Intelligence v3；热榜只作为次级“是否形成全网热点”信号 |
-| **Semantic Research Web · v1.7.1** | Subject Field → Change Axis → Evidence Trace → Action Return；原始 Feed/新闻留在 Evidence 层，主研究面不使用 KPI 墙/卡片墙作为页面骨架 |
+| **任务优先研究台 · v1.7.2** | 首页四区（搜索 / 最近研究 / 正在关注 / 趋势发现）+ 研究页八区（当前结论 / 趋势变化 / 关键驱动 / 平台表现 / 证据 / 机会与风险 / 建议 / 操作）；后端统一给结论、前端只负责呈现，结果渐进返回；不使用 KPI 墙 / 卡片墙骨架，原始 Feed/新闻只作为可回溯证据 |
 | **Agent-native Foundation · v1.6+** | MCP Resources + `trendhub.* / trendhub://` namespace + Unified Evidence Contract v1 + Skill 2.0；Tool 保持 21 个兼容名称 |
 
 完整的 21-tool 契约见 [`trendhub-mcp/manifest.json`](./trendhub-mcp/manifest.json)。指标公式和生命周期规则见 [`trendhub-mcp/docs/intelligence-methodology.md`](./trendhub-mcp/docs/intelligence-methodology.md)。

@@ -1,90 +1,117 @@
 VIEWS.dashboard = async function (content) {
-  content.innerHTML = loading();
-  const [health, universe] = await Promise.all([
-    api("/api/health"),
-    api("/api/professional/sources?priority=P1"),
-    ensureMeta(),
-  ]);
-  const universeCounts = universe.counts || {};
-  const runtimeMode = health.runtime === "remote" ? "公网" : (window.TRENHUB_RUNTIME_MODE || "本地");
+  const examples = ["广州太古汇", "Louis Vuitton", "小米汽车"];
+  const recents = TH_STORE.recents();
+  const watching = TH_STORE.watching();
   content.innerHTML = `
-    <section class="subject-aperture" aria-labelledby="home-question">
-      <div class="field-index">01 · SUBJECT FIELD</div>
-      <div class="subject-aperture-copy">
-        <h2 id="home-question">你要理解什么正在变化？</h2>
-        <p>从一个品牌、公司、商业体、产品或 Campaign 出发。TrendHub 先取证，再把变化、原因、证据与行动连成一条可返回的研究轨迹。</p>
-      </div>
-      <div class="subject-query">
-        <label class="sr-only" for="homeResearchKeyword">研究主体</label>
-        <input id="homeResearchKeyword" autocomplete="off" placeholder="输入一个真实主体，例如：广州太古汇" />
-        <button class="query-submit" id="homeResearchRun">进入研究 <span aria-hidden="true">→</span></button>
-      </div>
-      <div class="subject-examples" aria-label="示例主体">
-        <span>试试</span>
-        <button data-example="广州太古汇">广州太古汇</button>
-        <button data-example="Louis Vuitton">Louis Vuitton</button>
-        <button data-example="小米汽车">小米汽车</button>
-      </div>
+  <div class="home-page">
+  <section class="home-hero">
+    <h1 class="home-title">研究一个主体，先看证据再下结论</h1>
+    <p class="home-sub">输入品牌、商场、产品、人物或话题，立即得到当前结论、趋势变化、平台表现、机会风险和可执行建议。</p>
+    <form class="home-search" id="homeSearch">
+      <input class="home-keyword" id="homeKeyword" type="search" autocomplete="off" aria-label="研究对象" placeholder="例如：广州太古汇">
+      <button class="btn primary lg" type="submit">开始研究</button>
+    </form>
+    <div class="home-examples"><span>试试</span>${examples
+      .map((x) => `<button type="button" class="example-chip" data-example="${esc(x)}">${esc(x)}</button>`)
+      .join("")}</div>
+  </section>
+
+  <div class="home-columns">
+    <section class="home-col">
+      <div class="home-col-head"><h2>最近研究</h2><a class="home-link" href="#/research">＋ 新研究</a></div>
+      <div id="homeRecent">${recents.length ? recents.map(homeRecentRow).join("") : homeEmpty("还没有研究记录，搜一个主体试试")}</div>
     </section>
-
-    <section class="question-axis" aria-labelledby="question-axis-title">
-      <div class="axis-heading">
-        <div class="field-index">02 · RESEARCH AXIS</div>
-        <h2 id="question-axis-title">一次研究沿着四个问题推进</h2>
-      </div>
-      <div class="axis-track">
-        <div class="axis-step"><span>01</span><strong>发生了什么变化</strong><p>先辨认真实变化，不用热榜替代主体事实。</p></div>
-        <div class="axis-step"><span>02</span><strong>为什么值得注意</strong><p>把重复主题、搜索变化与跨源信号放回上下文。</p></div>
-        <div class="axis-step"><span>03</span><strong>什么证据支持它</strong><p>结论可以沿 Trace 回到来源、时间与限制。</p></div>
-        <div class="axis-step"><span>04</span><strong>接下来能做什么</strong><p>机会、风险与行动必须保留证据边界。</p></div>
-      </div>
+    <section class="home-col">
+      <div class="home-col-head"><h2>正在关注</h2><span class="home-hint">在研究结果页可一键加入</span></div>
+      <div id="homeWatching">${watching.length ? watching.map(homeWatchingRow).join("") : homeEmpty("加入关注后，会在这里快速回到这些主体")}</div>
     </section>
+  </div>
 
-    <section class="home-trace" aria-labelledby="home-trace-title">
-      <div class="trace-heading">
-        <div>
-          <div class="field-index">03 · PRODUCTION TRUTH</div>
-          <h2 id="home-trace-title">当前可工作的真实边界</h2>
-        </div>
-        <p>数字只说明系统覆盖，不替代研究结论。</p>
-      </div>
-      <dl class="truth-line">
-        <div><dt>运行时平台</dt><dd>${esc(health.platformCount)}</dd></div>
-        <div><dt>分层专业信源</dt><dd>${esc(universeCounts.total ?? 0)}</dd></div>
-        <div><dt>稳定 MCP Tools</dt><dd>${esc(health.tools || 21)}</dd></div>
-        <div><dt>运行模式</dt><dd>${esc(runtimeMode)}</dd></div>
-      </dl>
-      <div class="path-index" aria-label="研究路径">
-        <button data-quick="professional"><span>01</span><strong>主体研究</strong><em>Entity-first Intelligence</em><b aria-hidden="true">→</b></button>
-        <button data-quick="clusters"><span>02</span><strong>趋势发现</strong><em>寻找多平台正在形成的共振</em><b aria-hidden="true">→</b></button>
-        <button data-quick="xhs"><span>03</span><strong>小红书证据</strong><em>查看可用内容与本地授权增强</em><b aria-hidden="true">→</b></button>
-        <button data-quick="sources"><span>04</span><strong>证据覆盖</strong><em>确认信源状态、授权与缺口</em><b aria-hidden="true">→</b></button>
-      </div>
-    </section>
+  <section class="home-discover">
+    <div class="home-col-head"><h2>趋势发现</h2><a class="home-link" href="#/clusters">发现跨平台话题 →</a></div>
+    <p class="home-hint">来自各平台最近一次成功采集的公开热点（小红书优先），点任意一条即可作为研究对象。</p>
+    <div id="homeDiscover">${loading("正在读取最近热点…")}</div>
+  </section>
+  </div>`;
 
-    <section class="boundary-notes" aria-label="研究边界">
-      <div><span>BOUNDARY 01</span><strong>未上热榜 ≠ 没有讨论</strong><p>热榜只是一种可见性证据，不是市场全貌。</p></div>
-      <div><span>BOUNDARY 02</span><strong>公网不接私人 Cookie</strong><p>登录态增强只留在使用者自己的本地环境。</p></div>
-      <div><span>BOUNDARY 03</span><strong>预测不是概率</strong><p>历史不足时保持 insufficient_history，不装作确定。</p></div>
-    </section>`;
-
-  const run = () => {
-    const keyword = $("#homeResearchKeyword").value.trim();
-    if (!keyword) return toast("请输入研究主体");
-    location.hash = `#/professional?keyword=${encodeURIComponent(keyword)}`;
-  };
-  $("#homeResearchRun").onclick = run;
-  $("#homeResearchKeyword").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
-  content.querySelectorAll("[data-example]").forEach((button) => {
-    button.onclick = () => {
-      $("#homeResearchKeyword").value = button.dataset.example || "";
-      run();
-    };
+  const keywordInput = $("#homeKeyword", content);
+  $("#homeSearch", content).addEventListener("submit", (e) => {
+    e.preventDefault();
+    startResearch(keywordInput.value);
   });
-  content.querySelectorAll("[data-quick]").forEach((t) =>
-    t.addEventListener("click", () => (location.hash = `#/${t.dataset.quick}`))
-  );
+  content.querySelectorAll("[data-example]").forEach((button) => {
+    button.addEventListener("click", () => startResearch(button.dataset.example));
+  });
+  bindHomeRows(content);
+  loadHomeDiscover(content);
 };
+
+function homeEmpty(msg) {
+  return `<div class="home-empty">${esc(msg)}</div>`;
+}
+function homeRecentRow(keyword) {
+  return `<div class="home-row">
+    <a class="home-row-main" href="#/research?keyword=${encodeURIComponent(keyword)}">${esc(keyword)}</a>
+    <button type="button" class="home-row-action" data-del-recent="${esc(keyword)}" aria-label="删除该记录">删除</button>
+  </div>`;
+}
+function homeWatchingRow(keyword) {
+  return `<div class="home-row">
+    <a class="home-row-main" href="#/research?keyword=${encodeURIComponent(keyword)}">${esc(keyword)}</a>
+    <button type="button" class="home-row-action" data-unwatch="${esc(keyword)}">取消关注</button>
+  </div>`;
+}
+function bindHomeRows(root) {
+  root.querySelectorAll("[data-del-recent]").forEach((b) =>
+    b.addEventListener("click", () => {
+      TH_STORE.removeRecent(b.dataset.delRecent);
+      b.closest(".home-row")?.remove();
+    })
+  );
+  root.querySelectorAll("[data-unwatch]").forEach((b) =>
+    b.addEventListener("click", () => {
+      TH_STORE.toggleWatching(b.dataset.unwatch);
+      b.closest(".home-row")?.remove();
+    })
+  );
+}
+async function loadHomeDiscover(root) {
+  const box = $("#homeDiscover", root);
+  try {
+    const d = await api("/api/trending?mode=snapshot&limit=12");
+    const results = (d.results || []).filter((r) => Array.isArray(r.items) && r.items.length);
+    if (!results.length) {
+      box.innerHTML = homeEmpty("暂时没有成功采集的热点快照，可到“热点榜”页实时刷新。");
+      return;
+    }
+    const ordered = [...results].sort((a, b) => (a.platform === "xiaohongshu" ? -1 : b.platform === "xiaohongshu" ? 1 : 0));
+    const rows = [];
+    for (const r of ordered) {
+      for (const item of r.items.slice(0, 3)) {
+        rows.push({ platform: r.label, title: item.title, rank: item.rank });
+        if (rows.length >= 12) break;
+      }
+      if (rows.length >= 12) break;
+    }
+    if (!rows.length) {
+      box.innerHTML = homeEmpty("最近快照里还没有可展示的热点条目。");
+      return;
+    }
+    box.innerHTML = rows
+      .map(
+        (x) => `<div class="discover-row">
+          <button type="button" class="discover-title" data-keyword="${esc(x.title)}">${esc(x.title)}</button>
+          <span class="discover-platform">${esc(x.platform)}${x.rank ? ` · #${esc(x.rank)}` : ""}</span>
+        </div>`
+      )
+      .join("");
+    box.querySelectorAll("[data-keyword]").forEach((b) =>
+      b.addEventListener("click", () => startResearch(b.dataset.keyword))
+    );
+  } catch (e) {
+    box.innerHTML = note("warn", `热点暂时读取不到：${esc(e.message)}`);
+  }
+}
 
 function statCard(num, lbl) {
   return `<div class="card stat"><span class="num">${esc(num)}</span><span class="lbl">${esc(lbl)}</span></div>`;

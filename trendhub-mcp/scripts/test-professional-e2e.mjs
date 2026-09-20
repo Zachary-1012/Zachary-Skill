@@ -69,7 +69,7 @@ try {
 
   const shell = await (await fetch(`${base}/`)).text();
   assert.match(shell, /responsive-v2\.css/);
-  assert.match(shell, /data-view="professional"/);
+  assert.match(shell, /data-view="research"/);
   assert.match(shell, /data-view="sources"/);
 
   const responsive = await (await fetch(`${base}/responsive-v2.css`)).text();
