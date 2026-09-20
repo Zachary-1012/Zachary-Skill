@@ -6,6 +6,7 @@ import { defaultLivePlatformIds } from "../sources/access-plan.js";
 import type { SourceVertical } from "../sources/professional-catalog.js";
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
+import { buildEntityResearch } from "../analysis/entity-research.js";
 import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } from "../reports/executive.js";
 import {
   createWorkspace,
@@ -52,23 +53,27 @@ async function observed<T>(name: string, fn: () => T | Promise<T>): Promise<T> {
 export function registerProfessionalTools(server: McpServer): void {
   server.tool(
     "professional_intelligence",
-    "Professional Intelligence v2：品牌/话题统一决策入口，返回生命周期、Source Reliability、Evidence Truth State、异常、6/24/48/72h验证预测、品牌实体、媒体证据、告警与可选高管报告。只要当前榜单用 get_trending，只要生命周期用 trend_intelligence，只要研究包用 analyze_topic。",
+    "Professional Intelligence v3：品牌、公司、商业体、产品、Campaign 的 Entity-first 决策入口。先主动检索主体相关公开证据，再结合生命周期、Source Reliability、Evidence Truth State、异常、6/24/48/72h验证预测、媒体/受众、机会风险与高管报告。品牌/实体研究优先用本工具；纯话题趋势研究才用 analyze_topic；只看当前榜单才用 get_trending。",
     {
-      keyword: z.string().min(1).describe("要研究的话题、品牌、公司或关键词，例如 LV / 小米 / Tesla"),
+      keyword: z.string().min(1).describe("要研究的品牌、公司、商业体、产品、Campaign 或商业主体，例如 广州太古汇 / LV / 小米 / Tesla"),
       platforms: z.string().optional().describe("可选平台调用名，逗号分隔；留空时由专业 Source Planner 自动选择零配置核心源"),
       verticals: z.string().optional().describe("可选行业/场景，逗号分隔：fashion-luxury,beauty,business-corporate,technology,automotive,finance-markets,marketing-advertising,retail-commerce,culture-entertainment"),
       refresh: z.boolean().optional().describe("是否先刷新当前公开数据，默认 true"),
+      geo: z.string().optional().describe("Entity-first 搜索趋势地区，默认 CN；如 CN/HK/US"),
+      timeframe: z.string().optional().describe("Entity-first 搜索趋势时间窗，默认 today 3-m"),
+      days_ahead: z.number().min(7).max(365).optional().describe("未来节点窗口，默认60天"),
       report: z.enum(["none", "json", "markdown", "csv"]).optional().describe("附带高管报告格式，默认 json"),
     },
     WEB_STATE,
-    async ({ keyword, platforms, verticals, refresh, report }) => observed("professional_intelligence", async () => {
+    async ({ keyword, platforms, verticals, refresh, report, geo, timeframe, days_ahead }) => observed("professional_intelligence", async () => {
       const names = splitList(platforms);
       const selected = names.length ? names : defaultLivePlatformIds({ max: 12, verticals: splitVerticals(verticals) });
       if (refresh !== false) {
         const results = await getMany(selected, 30);
         updateFromResults(results);
       }
-      const intelligence = buildProfessionalIntelligence(keyword, selected);
+      const research = await buildEntityResearch(keyword, { geo: geo ?? "CN", timeframe: timeframe ?? "today 3-m", daysAhead: days_ahead ?? 60 });
+      const intelligence = buildProfessionalIntelligence(keyword, selected, new Date(), research);
       const mode = report ?? "json";
       if (mode === "none") return json({ intelligence });
       const executive = buildExecutiveReport(intelligence);

@@ -5,6 +5,7 @@ import { professionalSourceCatalog, sourceUserSetup, type SourceVertical } from 
 import { brandEntityCatalog, resolveBrandEntity } from "../entities/brand-catalog.js";
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
+import { buildEntityResearch } from "../analysis/entity-research.js";
 import { analyzeAudienceSignals } from "../analysis/audience.js";
 import { collectMediaEvidence } from "../analysis/media.js";
 import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } from "../reports/executive.js";
@@ -204,7 +205,14 @@ export async function handleProfessionalApi(pathname: string, url: URL, method: 
       return { status: 200, data: collectMediaEvidence(keyword, platforms) };
     }
 
-    const intelligence = buildProfessionalIntelligence(keyword, platforms);
+    const research = url.searchParams.get("research") === "0"
+      ? null
+      : await buildEntityResearch(keyword, {
+          geo: url.searchParams.get("geo")?.trim() || "CN",
+          timeframe: url.searchParams.get("timeframe")?.trim() || "today 3-m",
+          daysAhead: Number(url.searchParams.get("days_ahead") || 60),
+        });
+    const intelligence = buildProfessionalIntelligence(keyword, platforms, new Date(), research);
     if (pathname === "/api/professional") return { status: 200, data: intelligence };
 
     const report = buildExecutiveReport(intelligence);

@@ -131,7 +131,8 @@ try {
   assert.equal(med.multimodal.callerAiReady, true);
 
   const intel = professional.buildProfessionalIntelligence("Alpha trend", ["alpha", "beta"], now);
-  assert.equal(intel.methodologyVersion, "professional-intelligence-v2");
+  assert.equal(intel.methodologyVersion, "professional-intelligence-v3");
+  assert.equal(intel.compatibilityBase, "professional-intelligence-v2");
   assert.ok(Array.isArray(intel.alerts.triggered));
   assert.ok(intel.evidenceSummary.totalHistorySamples >= 96);
   assert.equal(intel.entityContext.matched, false);
@@ -173,10 +174,10 @@ try {
   assert.ok(obs.apiRoutes.some((row) => row.name === "/api/test"));
 
   // Professional HTTP API can render from stored evidence without a network refresh.
-  const apiUrl = new URL("http://127.0.0.1/api/professional?keyword=Alpha%20trend&platforms=alpha,beta&refresh=0");
+  const apiUrl = new URL("http://127.0.0.1/api/professional?keyword=Alpha%20trend&platforms=alpha,beta&refresh=0&research=0");
   const apiResult = await professionalApi.handleProfessionalApi("/api/professional", apiUrl, "GET", "");
   assert.equal(apiResult?.status, 200);
-  assert.equal(apiResult?.data?.methodologyVersion, "professional-intelligence-v2");
+  assert.equal(apiResult?.data?.methodologyVersion, "professional-intelligence-v3");
 
   const sourcesUrl = new URL("http://127.0.0.1/api/professional/sources?priority=P1&verticals=fashion-luxury");
   const sourcesResult = await professionalApi.handleProfessionalApi("/api/professional/sources", sourcesUrl, "GET", "");

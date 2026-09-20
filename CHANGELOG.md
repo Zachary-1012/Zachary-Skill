@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.0 — Entity-first Intelligence Workspace
+
+- Upgrade business-subject research from hotlist-first to **Entity-first Query Evidence Acquisition**.
+- Promote `professional_intelligence` to Professional Intelligence v3 for brands, companies, commercial places, products and campaigns.
+- Add active public query evidence from Google News (CN/Global), GDELT, Bluesky, Apple Podcasts, Xiaohongshu available evidence and curated editorial feeds.
+- Preserve generic hotlists as a secondary visibility signal; **hotlist absence is never subject absence**.
+- Promote executive reporting to `trendhub-executive-report-v2` with current state, change, drivers, opportunities, risks, evidence gaps and actions.
+- Rebuild the Web Console as a **Decision-first Intelligence Workspace**. Raw news/feed items move behind the evidence layer instead of dominating the product surface.
+- Add canonical Skill 2.0 routing: entity/business → `professional_intelligence`; topic/hotspot → `analyze_topic`; raw ranking → `get_trending`.
+- Keep the stable 21-tool MCP compatibility facade, MCP Resources, Namespace v1, Evidence Contract v1 and public-cookie security boundary unchanged.
+
+
 ## v1.6.1 — Runtime adapter noise hotfix
 
 - Isolate embedded `dailyhot-api` usage at the route-handler layer instead of importing its full Hono Web application, removing the unrelated `./public` static-directory warning from TrendHub production.

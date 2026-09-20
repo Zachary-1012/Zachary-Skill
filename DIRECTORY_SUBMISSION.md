@@ -1,6 +1,6 @@
 # TrendHub Directory Submission Playbook
 
-Verified release candidate baseline: TrendHub v1.6.1, 21 stable MCP tools, protocol-native MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 catalogued sources.
+Verified release candidate baseline: TrendHub v1.7.0, 21 stable MCP tools, protocol-native MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 catalogued sources.
 
 Canonical URLs:
 
@@ -21,7 +21,7 @@ TrendHub
 
 **English short description**
 
-Agent-native, evidence-first trend intelligence with 21 stable MCP tools, protocol-native Resources, Unified Evidence Contract v1, Professional Intelligence v2, 51 runtime source adapters, and a responsive Web Console.
+Agent-native, evidence-first trend intelligence with 21 stable MCP tools, protocol-native Resources, Unified Evidence Contract v1, Professional Intelligence v3, 51 runtime source adapters, and a responsive Web Console.
 
 **Chinese short description**
 

@@ -2,8 +2,8 @@
   "schema": "trendhub-skill-v2",
   "name": "trendhub",
   "skillVersion": "2.0",
-  "productVersion": "1.6.1",
-  "description": "Progressively disclosed evidence-first trend intelligence skill backed by the stable 21-tool MCP compatibility facade and protocol-native Resources.",
+  "productVersion": "1.7.0",
+  "description": "Progressively disclosed evidence-first trend intelligence skill with Entity-first business research, Decision-first Web, 21 stable MCP tools and protocol-native Resources.",
   "namespace": {
     "capabilityPrefix": "trendhub.",
     "resourceScheme": "trendhub://"
@@ -37,6 +37,41 @@
     "missing-is-not-zero",
     "released-is-not-operating",
     "adapters-do-not-own-truth",
-    "evidence-state-is-explicit"
-  ]
+    "evidence-state-is-explicit",
+    "entity-research-is-not-hotlist-only",
+    "raw-evidence-is-not-the-product-summary"
+  ],
+  "routing": {
+    "entityFirst": {
+      "intents": [
+        "brand",
+        "company",
+        "commercial-place",
+        "product",
+        "campaign",
+        "business-subject"
+      ],
+      "tool": "professional_intelligence",
+      "rule": "Actively acquire subject-specific public evidence first; generic hotlist absence is never treated as subject absence."
+    },
+    "topicFirst": {
+      "intents": [
+        "topic",
+        "hotspot",
+        "issue",
+        "meme",
+        "event-topic"
+      ],
+      "tool": "analyze_topic",
+      "rule": "Use for topic spread/meaning rather than business-entity research."
+    },
+    "rawTrending": {
+      "intents": [
+        "what-is-trending-now",
+        "current-ranking"
+      ],
+      "tool": "get_trending",
+      "rule": "Use only for current lists/rankings."
+    }
+  }
 }

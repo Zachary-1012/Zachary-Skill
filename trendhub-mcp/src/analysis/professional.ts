@@ -12,12 +12,15 @@ import { historyStoreInfo } from "../store/history.js";
 import { sourceFamilyCoverage, sourceSpec, sourceUserSetup } from "../sources/professional-catalog.js";
 import { entityQueryTerms, resolveBrandEntity, type BrandEntity } from "../entities/brand-catalog.js";
 import { buildProfessionalSignalPack, type ProfessionalSignalPack } from "./professional-signals.js";
+import type { EntityResearchPack } from "./entity-research.js";
 import { summarizeTruthState, truthStateFromTrajectory, type EvidenceTruthAssessment, type EvidenceTruthState } from "../agent-native/truth-state.js";
 
 export interface ProfessionalIntelligence {
-  methodologyVersion: "professional-intelligence-v2";
+  methodologyVersion: "professional-intelligence-v3";
+  compatibilityBase: "professional-intelligence-v2";
   keyword: string;
   generatedAt: string;
+  research: EntityResearchPack | null;
   entityContext: {
     matched: boolean;
     entity: BrandEntity | null;
@@ -31,6 +34,8 @@ export interface ProfessionalIntelligence {
     signalFamiliesCovered: number;
     riskFlags: string[];
     opportunityFlags: string[];
+    researchReady: boolean;
+    currentVisibility: string | null;
   };
   evidenceState: { overall: EvidenceTruthState; observedPresent: number; observedAbsent: number; undetermined: number; sources: EvidenceTruthAssessment[]; rule: string; };
   core: TrendIntelligence;
@@ -73,6 +78,7 @@ export function buildProfessionalIntelligence(
   keyword: string,
   platforms: string[],
   now = new Date(),
+  research: EntityResearchPack | null = null,
 ): ProfessionalIntelligence {
   const entity = resolveBrandEntity(keyword);
   const queryTerms = entityQueryTerms(keyword);
@@ -120,6 +126,9 @@ export function buildProfessionalIntelligence(
   if (familyCoverage.length >= 3) opportunityFlags.push("multi_signal_family_confirmation");
   if (forecast.anomaly.direction === "spike") opportunityFlags.push("positive_anomaly");
   if (entity) opportunityFlags.push("resolved_brand_entity");
+  if (research?.currentState.evidenceStrength === "strong") opportunityFlags.push("entity_research_strong");
+  if (research?.currentState.visibility === "active-subject-evidence") opportunityFlags.push("entity_evidence_without_hotlist_hype");
+  if (research?.evidenceGaps.length) riskFlags.push("entity_research_evidence_gaps");
   if (forecast.forecast.some((row) => row.horizonHours <= 48 && row.deltaFromNow >= 15) && forecast.validation.grade !== "weak") {
     opportunityFlags.push("validated_forward_momentum");
   }
@@ -127,8 +136,10 @@ export function buildProfessionalIntelligence(
   const evidenceReady = core.lifecycle !== "insufficient_history" && core.evidence.platformsObservableNow > 0;
   const forecastReady = forecast.status === "ok" && forecast.validation.grade !== "weak";
   return {
-    methodologyVersion: "professional-intelligence-v2",
+    methodologyVersion: "professional-intelligence-v3",
+    compatibilityBase: "professional-intelligence-v2",
     keyword,
+    research,
     generatedAt: now.toISOString(),
     entityContext: {
       matched: entity !== null,
@@ -143,6 +154,8 @@ export function buildProfessionalIntelligence(
       signalFamiliesCovered: familyCoverage.length,
       riskFlags,
       opportunityFlags,
+      researchReady: Boolean(research && research.currentState.evidenceStrength !== "insufficient"),
+      currentVisibility: research?.currentState.visibility ?? null,
     },
     evidenceState: { overall: overallTruthState, observedPresent: truthAssessments.filter((x) => x.presence === "PRESENT").length, observedAbsent: truthAssessments.filter((x) => x.presence === "ABSENT").length, undetermined: truthAssessments.filter((x) => x.presence === "UNDETERMINED").length, sources: truthAssessments, rule: "ABSENT is asserted only from fresh usable observations. Missing/unavailable states never become zero or topic absence." },
     core,
@@ -174,7 +187,8 @@ export function buildProfessionalIntelligence(
       ...media.caveats,
       "Cross-platform coverage is evaluated by signal family as well as source count; incomparable platform ranks, views, likes and search-index values are never silently treated as one unit.",
       "Brand/company entity aliases improve resolution but do not manufacture missing platform evidence; unavailable sources remain unavailable.",
-      "Professional Intelligence v2 is an evidence and decision-support layer. It does not substitute public adapters for licensed firehose data or proprietary demographic panels.",
+      "Professional Intelligence v3 uses Entity-first Query Evidence Acquisition before trend interpretation; generic hotlists are only one secondary signal and are never treated as the whole market conversation.",
+      "Professional Intelligence v3 is an evidence and decision-support layer. It does not substitute public adapters for licensed firehose data or proprietary demographic panels.",
     ],
   };
 }
