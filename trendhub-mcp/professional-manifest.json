@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.7.2",
-  "targetStableVersion": "1.7.3",
-  "candidateVersion": "1.7.3",
+  "stableBase": "1.7.3",
+  "targetStableVersion": "1.7.4",
+  "candidateVersion": "1.7.4",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -14,7 +14,7 @@
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
     "rule": "v1.7.3 improves user-facing research quality and latency: quick Decision View first, bounded slow sources, missing-not-zero forecasts, cleaner drivers, and subject-relevant upcoming nodes; 21-tool and Evidence contracts remain unchanged.",
-    "versionPolicy": "v1.7.2 remains immutable rollback; v1.7.3 is the next patch release.",
+    "versionPolicy": "v1.7.3 remains the rollback base; v1.7.4 is the user-product candidate.",
     "prepared": true
   },
   "capabilities": {
