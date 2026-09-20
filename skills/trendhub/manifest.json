@@ -2,7 +2,7 @@
   "schema": "trendhub-skill-v2",
   "name": "trendhub",
   "skillVersion": "2.0",
-  "productVersion": "1.6.0",
+  "productVersion": "1.6.1",
   "description": "Progressively disclosed evidence-first trend intelligence skill backed by the stable 21-tool MCP compatibility facade and protocol-native Resources.",
   "namespace": {
     "capabilityPrefix": "trendhub.",
