@@ -21,7 +21,9 @@ const viewsC = read("web/views-c.js");
 const styles = read("web/styles.css");
 const responsive = read("web/responsive-v2.css");
 const professional = JSON.parse(read("professional-manifest.json"));
+const pkg = JSON.parse(read("package.json"));
 const expectedTools = Number(professional.expectedToolCount);
+const webVersion = `?v=${pkg.version}`;
 
 if (!gateway.includes('import { serveStatic } from "../dist/src/web/static.js"')) fail("remote gateway must reuse the existing packaged web console");
 if (!gateway.includes('url.pathname === "/mcp"')) fail("Remote MCP endpoint was removed");
@@ -44,9 +46,9 @@ if (!gateway.includes("OPENAI_APPS_CHALLENGE_TOKEN") || !gateway.includes('url.p
 if (!gateway.includes('return res.end(OPENAI_APPS_CHALLENGE_TOKEN)') || !gateway.includes('"Cache-Control": "no-store"')) fail("OpenAI domain challenge must return only the configured token without caching");
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
-if (!index.includes('href="responsive-v2.css?v=1.5.3"') || !index.includes('src="app.js?v=1.5.3"')) fail("public shell assets must be versioned for a mobile hotfix");
-if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes('src="views-e.js?v=1.5.3"')) fail("professional/source-universe navigation missing");
-if (!index.includes('data-view="ops"') || !index.includes('src="views-f.js?v=1.5.3"')) fail("Creator Ops navigation missing");
+if (!index.includes(`href="responsive-v2.css${webVersion}"`) || !index.includes(`src="app.js${webVersion}"`)) fail("public shell assets must be versioned to the current product release");
+if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes(`src="views-e.js${webVersion}"`)) fail("professional/source-universe navigation missing");
+if (!index.includes('data-view="ops"') || !index.includes(`src="views-f.js${webVersion}"`)) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
 if (!responsive.includes("display: grid !important") || !responsive.includes("flex-direction: initial !important")) fail("mobile shell must override legacy horizontal navigation flex");
