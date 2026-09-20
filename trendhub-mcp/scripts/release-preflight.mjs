@@ -19,7 +19,7 @@ const registry = json(path.join(REPO, "server.json"));
 const plugin = json(path.join(REPO, "plugin.json"));
 const gateway = read(path.join(ROOT, "scripts", "remote-gateway.mjs"));
 const serverTs = read(path.join(ROOT, "src", "server.ts"));
-const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_5_2_RC.md"];
+const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_5_3_LUMENIS_CONVERGENCE.md"];
 for (const doc of requiredDocs) must(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
 
 const target = professional.targetStableVersion ?? professional.candidateVersion;
