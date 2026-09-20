@@ -49,7 +49,7 @@ VIEWS.professional = async function (root, params) {
   const initialVertical = params.vertical || "";
   root.innerHTML = `
     <div class="card">
-      <h2>Professional Intelligence v2 <span class="badge neutral">DEV</span></h2>
+      <h2>Professional Intelligence v2</h2>
       <p class="sub">Evidence-first：品牌/公司实体解析 + 多信号家族确认 + 生命周期 + 异常 + 可回测预测 + 受众/创作者代理 + 媒体证据 + 告警 + 高管报告。默认优先零配置可用信源，不为了“覆盖率”强迫用户先配 Cookie/API。</p>
       <div class="form-row">
         <input id="proKeyword" value="${esc(initial)}" placeholder="品牌 / 公司 / 话题，例如 LV、小米、Tesla" />
@@ -148,7 +148,7 @@ VIEWS.professional = async function (root, params) {
 VIEWS.sources = async function (root) {
   root.innerHTML = `
     <div class="card">
-      <h2>Professional Source Universe <span class="badge neutral">DEV</span></h2>
+      <h2>Professional Source Universe</h2>
       <p class="sub">这里把“已真实可取数”“零配置”“需要 API/OAuth”“只允许本地授权会话”“商业授权连接器”“适配开发中”严格分开。列入 Universe 不等于虚假宣称已上线。</p>
       <div class="form-row">
         <select id="srcVertical">${verticalOptions("")}</select>
