@@ -3,7 +3,7 @@ name: trendhub
 description: 专业级全网趋势情报 Skill，以小红书为深度主打。用于实时热榜、Source Reliability、跨平台共振、新晋/飙升/掉榜、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h 提前发现 Benchmark、话题深度分析，以及基于真实证据产出脚本/文案/方案创作简报。
 ---
 
-# TrendHub · 全网热点趋势专家 v1.5.2
+# TrendHub · 全网热点趋势专家 v1.5.3
 
 本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 **21 个工具**，覆盖实时趋势、话题雷达、品牌市场与专业信源宇宙。模型负责理解需求、调用工具、解释证据与成文；**数据、稳定性指标和确定性趋势分析由工具提供**。插件不内置模型 Key、不做第三方遥测、不把使用数据回传到 TrendHub 中央服务。
 
@@ -47,7 +47,7 @@ description: 专业级全网趋势情报 Skill，以小红书为深度主打。�
 
 当前状态包括：`UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED / UNKNOWN`。24h/7d/30d 分别提供 ok rate、usable rate、P50/P95 latency；7d reliability score 的透明权重为 `okRate 55% + usableRate 25% + averageQuality 20%`。
 
-**CI PASS 不等于第三方平台此刻全部在线。** Live source health 与 release gate 必须分开解释。
+**CI PASS 不等于第三方平台此刻全部在线。** Live source health 与 release gate 必须分开解释。v1.5.3 使用 `AVAILABLE / NOT_COLLECTED / UNAVAILABLE / STALE / OFFLINE / AUTH_REQUIRED / RATE_LIMITED` 等 Evidence Truth State；只有 fresh + usable 的真实观测才能判断话题 `PRESENT/ABSENT`，其余状态保持 `UNDETERMINED`。
 
 ## Trend Intelligence 口径
 
