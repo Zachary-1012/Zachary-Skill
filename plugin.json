@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.7.3",
-  "description": "TrendHub v1.7.3：快速渐进研究、普通人可读结果、21 MCP tools 与 Evidence-first 趋势情报。",
+  "version": "1.7.4",
+  "description": "TrendHub v1.7.4：用户任务式趋势研究、渐进结果、按需来源与 21 MCP tools。",
   "author": {
     "name": "Zachary",
     "url": "https://github.com/Zachary-1012"
