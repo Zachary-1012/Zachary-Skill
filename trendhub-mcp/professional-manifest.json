@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v2-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.5.1",
-  "targetStableVersion": "1.5.2",
-  "candidateVersion": "1.5.2",
+  "stableBase": "1.5.2",
+  "targetStableVersion": "1.5.3",
+  "candidateVersion": "1.5.3",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.5.2 fixes the public mobile shell; v1.5.1 and v1.5.0 remain immutable, and v1.4.5 remains forbidden.",
-    "versionPolicy": "v1.5.2 is a patch release above stable v1.5.1; never rewrite published assets or tags.",
+    "rule": "v1.5.3 converges LUMENIS evidence/truth/capability/release semantics without changing the 21-tool compatibility contract; v1.5.2 remains immutable rollback.",
+    "versionPolicy": "v1.5.3 is a patch release above stable v1.5.2; never rewrite published assets or tags.",
     "prepared": true
   },
   "capabilities": {
@@ -41,7 +41,11 @@
       "audit"
     ],
     "responsiveWeb": "desktop-tablet-phone-safe-area-touch-aware",
-    "observability": "local-otel-compatible-zero-export"
+    "observability": "local-otel-compatible-zero-export",
+    "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
+    "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
+    "toolRouting": "explicit-use-when-avoid-when-for-overlapping-intelligence-tools",
+    "releaseOperating": "separate-runtime-health-semantics"
   },
   "sourceAccessModes": [
     "live-public",
