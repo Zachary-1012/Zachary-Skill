@@ -1,14 +1,16 @@
-# TrendHub v1.7.0 — Release Candidate
+# TrendHub v1.7.1 — Release Candidate
 
 Status: **release-ready; pending required CI, merge, stable release, production deployment verification and Registry publication**.
 
-Stable base / rollback: **v1.6.1**.
+Stable base / rollback: **v1.7.0**.
 
 ## Candidate scope
 
 - Entity-first Query Evidence Acquisition
 - Professional Intelligence v3
-- Decision-first Intelligence Workspace
+- Semantic Subject Field / Change Axis / Evidence Trace / Action Return Experience
+- Deterministic Professional deep-link initialization
+- Shared desktop/mobile content alignment axis
 - Executive Report v2
 - canonical Skill 2.0 routing for entity vs topic vs raw trending
 - stable 21-tool facade preserved
@@ -30,4 +32,4 @@ The release is complete only after code → CI → GitHub Stable Release → Pub
 
 ## Rollback
 
-v1.6.1 remains immutable and must not be rewritten.
+v1.7.0 remains immutable and must not be rewritten.
