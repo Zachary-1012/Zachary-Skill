@@ -6,10 +6,24 @@
 import type { ProfessionalIntelligence } from "../analysis/professional.js";
 
 export interface ExecutiveReport {
-  schemaVersion: "trendhub-executive-report-v1";
+  schemaVersion: "trendhub-executive-report-v2";
   title: string;
   generatedAt: string;
   keyword: string;
+  subject: {
+    canonicalName: string;
+    resolved: boolean;
+    researchMode: string;
+  };
+  decisionBrief: {
+    currentState: string;
+    whatChanged: string;
+    drivers: Array<{ title: string; reason: string }>;
+    opportunities: Array<{ title: string; reason: string }>;
+    risks: Array<{ title: string; reason: string }>;
+    evidenceGaps: Array<{ title: string; reason: string; nextStep: string }>;
+    recommendedActions: Array<{ action: string; reason: string; priority: string }>;
+  };
   status: {
     lifecycle: string;
     confidence: number;
@@ -74,12 +88,52 @@ export function buildExecutiveReport(intel: ProfessionalIntelligence): Executive
   for (const item of intel.media.items.slice(0, 20)) evidenceAppendix.push({ type: "media_evidence", ...item });
   for (const creator of intel.audience.creatorSignals.slice(0, 20)) evidenceAppendix.push({ type: "creator_signal", ...creator });
   evidenceAppendix.push({ type: "professional_signal_pack", ...intel.professionalSignals });
+  if (intel.research) {
+    evidenceAppendix.push({
+      type: "entity_research_summary",
+      subject: intel.research.subject,
+      currentState: intel.research.currentState,
+      searchIntent: intel.research.searchIntent,
+      channelAnalysis: intel.research.channelAnalysis.map((channel) => ({
+        id: channel.id,
+        label: channel.label,
+        family: channel.family,
+        dataQuality: channel.dataQuality,
+        itemCount: channel.itemCount,
+        conclusion: channel.conclusion,
+        evidence: channel.evidence,
+      })),
+    });
+  }
+
+  const research = intel.research;
+  const whatChanged = research?.searchIntent.direction === "rising"
+    ? `搜索相对热度近期上升${research.searchIntent.changePct == null ? "" : `约 ${research.searchIntent.changePct}%`}；需结合主体证据判断驱动。`
+    : research?.searchIntent.direction === "declining"
+      ? `搜索相对热度近期下降${research.searchIntent.changePct == null ? "" : `约 ${Math.abs(research.searchIntent.changePct)}%`}；需结合主体证据判断原因。`
+      : intel.core.lifecycle !== "insufficient_history"
+        ? `历史趋势生命周期为 ${intel.core.lifecycle}；当前变化需结合 Query Evidence 与历史轨迹共同解释。`
+        : "历史不足以判断变化幅度；当前以主体相关公开证据为主。";
 
   const report: ExecutiveReport = {
-    schemaVersion: "trendhub-executive-report-v1",
+    schemaVersion: "trendhub-executive-report-v2",
     title: `TrendHub Executive Intelligence — ${intel.keyword}`,
     generatedAt: intel.generatedAt,
     keyword: intel.keyword,
+    subject: {
+      canonicalName: research?.subject.canonicalName ?? intel.entityContext.entity?.name ?? intel.keyword,
+      resolved: Boolean(research?.subject.resolved ?? intel.entityContext.matched),
+      researchMode: research?.subject.researchMode ?? "history-first-compatibility",
+    },
+    decisionBrief: {
+      currentState: research?.currentState.conclusion ?? "Entity-first research was not executed for this compatibility call.",
+      whatChanged,
+      drivers: (research?.drivers ?? []).map((x) => ({ title: x.title, reason: x.reason })),
+      opportunities: (research?.opportunities ?? []).map((x) => ({ title: x.title, reason: x.reason })),
+      risks: (research?.risks ?? []).map((x) => ({ title: x.title, reason: x.reason })),
+      evidenceGaps: (research?.evidenceGaps ?? []).map((x) => ({ title: x.title, reason: x.reason, nextStep: x.nextStep })),
+      recommendedActions: (research?.recommendedActions ?? []).map((x) => ({ action: x.action, reason: x.reason, priority: x.priority })),
+    },
     status: {
       lifecycle: core.lifecycle,
       confidence: core.confidence,
@@ -116,7 +170,7 @@ export function buildExecutiveReport(intel: ProfessionalIntelligence): Executive
     ],
     caveats: [...new Set(intel.caveats)],
     evidenceAppendix,
-    productionPrompt: "Using only the attached TrendHub report and evidence appendix, write an executive decision brief with: current state, what changed, why it matters, opportunities, risks, recommended next actions, and what must be verified next. Cite evidenceRef fields for every material claim. Do not invent missing demographics, source facts, causal explanations, or forecast certainty.",
+    productionPrompt: "Using only the attached TrendHub report and evidence appendix, preserve the decisionBrief structure: current state, what changed, drivers, opportunities, risks, evidence gaps, and recommended actions. Cite evidenceRef/evidence entries for material claims. Never reinterpret MISSING/AUTH_REQUIRED as zero or absence, and never turn search relevance or publication count into social popularity.",
   };
   return report;
 }
@@ -140,6 +194,29 @@ export function executiveReportMarkdown(report: ExecutiveReport): string {
     `# ${report.title}`,
     "",
     `Generated: ${report.generatedAt}`,
+    `Subject: **${report.subject.canonicalName}** · Research mode: **${report.subject.researchMode}**`,
+    "",
+    "## Decision brief",
+    "",
+    `**Current state:** ${report.decisionBrief.currentState}`,
+    "",
+    `**What changed:** ${report.decisionBrief.whatChanged}`,
+    "",
+    "### Drivers",
+    ...(report.decisionBrief.drivers.length ? report.decisionBrief.drivers.map((x) => `- **${x.title}** — ${x.reason}`) : ["- insufficient evidence"]),
+    "",
+    "### Opportunities",
+    ...(report.decisionBrief.opportunities.length ? report.decisionBrief.opportunities.map((x) => `- **${x.title}** — ${x.reason}`) : ["- none evidenced"]),
+    "",
+    "### Risks",
+    ...(report.decisionBrief.risks.length ? report.decisionBrief.risks.map((x) => `- **${x.title}** — ${x.reason}`) : ["- none evidenced"]),
+    "",
+    "### Evidence gaps",
+    ...(report.decisionBrief.evidenceGaps.length ? report.decisionBrief.evidenceGaps.map((x) => `- **${x.title}** — ${x.reason} Next: ${x.nextStep}`) : ["- none material"]),
+    "",
+    "### Recommended actions",
+    ...(report.decisionBrief.recommendedActions.length ? report.decisionBrief.recommendedActions.map((x) => `- **${x.priority}** ${x.action} — ${x.reason}`) : ["- gather more evidence"]),
+    "",
     `Lifecycle: **${report.status.lifecycle}** · Confidence: **${report.status.confidence}/100 (${report.status.confidenceBand})**`,
     `Evidence ready: **${report.status.evidenceReady}** · Forecast ready: **${report.status.forecastReady}**`,
     "",
