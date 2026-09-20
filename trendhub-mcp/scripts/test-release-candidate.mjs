@@ -11,7 +11,7 @@ const REPO = path.join(ROOT, "..");
 const professional = JSON.parse(fs.readFileSync(path.join(ROOT, "professional-manifest.json"), "utf8"));
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 assert.ok(["release-candidate-ready", "release-ready"].includes(professional.releaseStatus));
-assert.equal(professional.stableBase, "1.7.1");
+assert.equal(professional.stableBase, "1.7.0");
 assert.equal(professional.targetStableVersion, "1.7.1");
 assert.equal(professional.expectedToolCount, 21);
 assert.equal(professional.candidateVersion, "1.7.1");
