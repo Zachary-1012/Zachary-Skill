@@ -6,7 +6,7 @@ TrendHub uses **one verified core** and thin distribution adapters. Marketplace 
 
 - Repository: `Zachary-1012/Zachary-Skill`
 - Core: `trendhub-mcp/`
-- Stable tool contract: **TrendHub v1.7.0, 21 MCP tools, MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 layered sources**
+- Stable tool contract: **TrendHub v1.7.1, 21 MCP tools, MCP Resources, Unified Evidence Contract v1, 51 runtime source adapters, 129 layered sources**
 - Local transport: stdio via `trendhub-mcp/scripts/launcher.mjs`
 - Hosted transport: Streamable HTTP through `trendhub-mcp/scripts/remote-gateway.mjs`
 - Public MCP endpoint: `https://trendhub-remote-production.up.railway.app/mcp`
@@ -33,9 +33,9 @@ Starting with **TrendHub v1.4.3**, TrendHub-authored portions use the **TrendHub
 
 Distribution directories must not describe TrendHub v1.4.3+ as MIT or as open-source software.
 
-## v1.7.0 hosted protocol behavior
+## v1.7.1 hosted protocol behavior
 
-The hosted Remote MCP preserves the 21-tool compatibility facade and v1.6 protocol Resources. v1.7 adds Entity-first Query Evidence Acquisition for business subjects and a Decision-first Intelligence Workspace. The hosted product does not accept visitor private cookies; login-only enrichments remain local. Raw hotlists/news are evidence inputs, not the primary research conclusion. Registry publication validates the deployed production endpoint before publication. Published releases remain immutable; v1.6.1 is the immediate rollback target for v1.7.0.
+The hosted Remote MCP preserves the 21-tool compatibility facade and v1.6 protocol Resources. v1.7 keeps Entity-first Query Evidence Acquisition for business subjects; v1.7.1 corrects the hosted Web into a semantic Subject Field / Change Axis / Evidence Trace research workspace and fixes deterministic deep links. The hosted product does not accept visitor private cookies; login-only enrichments remain local. Raw hotlists/news are evidence inputs, not the primary research conclusion. Registry publication validates the deployed production endpoint before publication. Published releases remain immutable; v1.7.0 is the immediate rollback target for v1.7.1.
 
 ## Direct-use paths
 
