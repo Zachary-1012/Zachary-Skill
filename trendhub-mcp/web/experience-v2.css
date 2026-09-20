@@ -215,7 +215,7 @@ body.experience-v2 .nav-close {
 }
 
 body.experience-v2 .nav {
-  display: block;
+  display: block !important;
   flex: 1;
   width: 100%;
   overflow: auto;
