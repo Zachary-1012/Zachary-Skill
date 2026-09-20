@@ -3,7 +3,7 @@ name: trendhub
 description: 专业级全网趋势情报 Skill，以小红书为深度主打。用于实时热榜、Source Reliability、跨平台共振、新晋/飙升/掉榜、趋势生命周期/速度/持续性/扩散/置信度、Google Trends、未来信号、节点日历、24h/72h 提前发现 Benchmark、话题深度分析，以及基于真实证据产出脚本/文案/方案创作简报。
 ---
 
-# TrendHub · 全网热点趋势专家 v1.7.0
+# TrendHub · 全网热点趋势专家 v1.7.1
 
 本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 **21 个稳定兼容工具**，并从 v1.6.0 起正式提供 MCP Resources、`trendhub.* / trendhub://` canonical namespace、Unified Evidence Contract v1 与 Skill 2.0。覆盖实时趋势、话题雷达、品牌市场与专业信源宇宙。模型负责理解需求、调用工具、读取最小必要 Resources、解释证据与成文；**数据、稳定性指标和确定性趋势分析由工具提供**。插件不内置模型 Key、不做第三方遥测、不把使用数据回传到 TrendHub 中央服务。
 
