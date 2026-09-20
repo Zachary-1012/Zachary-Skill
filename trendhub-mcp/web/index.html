@@ -3,51 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f2f0ea">
+  <meta name="theme-color" content="#f4f3ef">
   <meta name="robots" content="noindex,nofollow">
   <title>TrendHub · 趋势研究</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23223027'/%3E%3Cpath d='M7 21l5-6 4 4 5-8 4 5' fill='none' stroke='%23f2f0ea' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=1.7.3">
-  <link rel="stylesheet" href="responsive-v2.css?v=1.7.3">
-  <link rel="stylesheet" href="experience-v2.css?v=1.7.3">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23212724'/%3E%3Cpath d='M7 21l5-6 4 4 5-8 4 5' fill='none' stroke='%23f4f3ef' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css?v=1.7.4">
+  <link rel="stylesheet" href="responsive-v2.css?v=1.7.4">
+  <link rel="stylesheet" href="experience-v2.css?v=1.7.4">
 </head>
 <body class="experience-v2">
   <div class="nav-backdrop" id="navBackdrop" hidden></div>
 
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#/dashboard">
+      <a class="brand" href="#/dashboard" aria-label="TrendHub 首页">
         <span class="brand-logo">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16l4-5 3 3 4-6 5 6"/></svg>
         </span>
-        <span class="brand-text"><span class="brand-name">TrendHub</span><span class="brand-sub">趋势研究</span></span>
+        <span class="brand-name">TrendHub</span>
       </a>
-      <nav class="nav" aria-label="主导航">
-        <div class="nav-group-name">研究</div>
+
+      <button class="sidebar-new" id="sidebarNewResearch" type="button">＋ 新研究</button>
+
+      <nav class="nav primary-nav" aria-label="主导航">
         <a class="nav-item" data-view="dashboard" href="#/dashboard">首页</a>
-        <a class="nav-item" data-view="research" href="#/research">开始研究</a>
-        <a class="nav-item" data-view="xhs" href="#/xhs">小红书</a>
-
-        <div class="nav-group-name">发现热点</div>
-        <a class="nav-item" data-view="trending" href="#/trending">热点榜</a>
-        <a class="nav-item" data-view="clusters" href="#/clusters">话题发现</a>
-        <a class="nav-item" data-view="overlap" href="#/overlap">跨平台共振</a>
-        <a class="nav-item" data-view="curve" href="#/curve">趋势曲线</a>
-        <a class="nav-item" data-view="related" href="#/related">相关搜索词</a>
-        <a class="nav-item" data-view="signals" href="#/signals">未来信号</a>
-        <a class="nav-item" data-view="events" href="#/events">节点日历</a>
-        <a class="nav-item" data-view="topic" href="#/topic">话题情报</a>
-
-        <div class="nav-group-name">创作</div>
-        <a class="nav-item" data-view="brief" href="#/brief">创作简报</a>
-        <a class="nav-item" data-view="templates" href="#/templates">模板库</a>
-
-        <div class="nav-group-name">设置</div>
-        <a class="nav-item" data-view="sources" href="#/sources">数据源</a>
-        <a class="nav-item" data-view="workspace" href="#/workspace">协作（本机）</a>
-        <a class="nav-item" data-view="ops" href="#/ops">运行与交付</a>
-        <a class="nav-item" data-view="settings" href="#/settings">设置</a>
+        <a class="nav-item" data-view="research" href="#/research">研究</a>
+        <a class="nav-item" data-view="discover" href="#/discover">发现</a>
       </nav>
+
+      <div class="sidebar-recents">
+        <div class="sidebar-section-title">最近研究</div>
+        <div id="sidebarRecents"></div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <a class="nav-item" data-view="settings" href="#/settings">设置</a>
+      </div>
     </aside>
 
     <div class="main">
@@ -58,7 +49,7 @@
           </button>
           <h1 class="topbar-title" id="viewTitle">首页</h1>
           <div class="top-spacer"></div>
-          <button class="btn sm primary" id="newResearchTop">开始研究</button>
+          <button class="top-action" id="newResearchTop" type="button">新研究</button>
         </div>
       </header>
 
@@ -67,7 +58,7 @@
         <footer class="foot">
           <span id="runtimeMode"></span>
           <span class="dot">·</span>
-          <span>数据来自公开平台采集时刻可见信息，缺失会明确标注，不当作“没有”；预测为条件外推，不保证发生。</span>
+          <span>缺失数据会明确标注，不会被当作“没有”。</span>
         </footer>
       </main>
     </div>
@@ -75,44 +66,29 @@
 
   <nav class="navigation-sheet" id="navigationSheet" aria-label="移动导航" hidden>
     <div class="sheet-head">
-      <strong>TrendHub · 趋势研究</strong>
+      <strong>TrendHub</strong>
       <button class="sheet-close" id="closeNavigation" aria-label="关闭菜单">×</button>
     </div>
     <div class="sheet-scroll">
-      <div class="nav-group-name">研究</div>
+      <button class="sheet-new" id="sheetNewResearch" type="button">＋ 新研究</button>
       <a class="nav-item" data-view="dashboard" href="#/dashboard">首页</a>
-      <a class="nav-item" data-view="research" href="#/research">开始研究</a>
-      <a class="nav-item" data-view="xhs" href="#/xhs">小红书</a>
-      <div class="nav-group-name">发现热点</div>
-      <a class="nav-item" data-view="trending" href="#/trending">热点榜</a>
-      <a class="nav-item" data-view="clusters" href="#/clusters">话题发现</a>
-      <a class="nav-item" data-view="overlap" href="#/overlap">跨平台共振</a>
-      <a class="nav-item" data-view="curve" href="#/curve">趋势曲线</a>
-      <a class="nav-item" data-view="related" href="#/related">相关搜索词</a>
-      <a class="nav-item" data-view="signals" href="#/signals">未来信号</a>
-      <a class="nav-item" data-view="events" href="#/events">节点日历</a>
-      <a class="nav-item" data-view="topic" href="#/topic">话题情报</a>
-      <div class="nav-group-name">创作</div>
-      <a class="nav-item" data-view="brief" href="#/brief">创作简报</a>
-      <a class="nav-item" data-view="templates" href="#/templates">模板库</a>
-      <div class="nav-group-name">设置</div>
-      <a class="nav-item" data-view="sources" href="#/sources">数据源</a>
-      <a class="nav-item" data-view="workspace" href="#/workspace">协作（本机）</a>
-      <a class="nav-item" data-view="ops" href="#/ops">运行与交付</a>
+      <a class="nav-item" data-view="research" href="#/research">研究</a>
+      <a class="nav-item" data-view="discover" href="#/discover">发现</a>
+      <div class="sheet-rule"></div>
       <a class="nav-item" data-view="settings" href="#/settings">设置</a>
     </div>
   </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="auth.js?v=1.7.3"></script>
-  <script src="agent-context.js?v=1.7.3"></script>
-  <script src="app.js?v=1.7.3"></script>
-  <script src="views-a.js?v=1.7.3"></script>
-  <script src="views-b.js?v=1.7.3"></script>
-  <script src="views-c.js?v=1.7.3"></script>
-  <script src="views-d.js?v=1.7.3"></script>
-  <script src="views-e.js?v=1.7.3"></script>
-  <script src="views-f.js?v=1.7.3"></script>
+  <script src="auth.js?v=1.7.4"></script>
+  <script src="agent-context.js?v=1.7.4"></script>
+  <script src="app.js?v=1.7.4"></script>
+  <script src="views-a.js?v=1.7.4"></script>
+  <script src="views-b.js?v=1.7.4"></script>
+  <script src="views-c.js?v=1.7.4"></script>
+  <script src="views-d.js?v=1.7.4"></script>
+  <script src="views-e.js?v=1.7.4"></script>
+  <script src="views-f.js?v=1.7.4"></script>
 </body>
 </html>
