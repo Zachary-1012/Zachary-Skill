@@ -221,33 +221,42 @@ async function route() {
     const hint = window.TRENHUB_IS_REMOTE
       ? "请稍后重试，并检查 /health 是否正常。"
       : "请确认控制台正在运行（npm run ui），且能访问各平台公开接口。";
-    content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + `<div class="card"><p class="sub">${hint}</p></div>`;
+    content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + `<div class="recovery-line"><span>恢复路径</span><p>${hint}</p></div>`;
   }
 }
-const mobileNavQuery = window.matchMedia("(max-width: 720px)");
-function setMobileNav(open) {
-  const sidebar = document.querySelector(".sidebar");
+function setNavigation(open) {
+  const sheet = document.querySelector("#navigationSheet");
   const toggle = document.querySelector("#navToggle");
-  sidebar?.classList.toggle("nav-open", Boolean(open));
+  const backdrop = document.querySelector("#navBackdrop");
+  document.body.classList.toggle("nav-open", Boolean(open));
+  sheet?.setAttribute("aria-hidden", String(!open));
   toggle?.setAttribute("aria-expanded", String(Boolean(open)));
   toggle?.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
+  backdrop?.setAttribute("aria-hidden", String(!open));
 }
-function closeMobileNav() {
-  if (mobileNavQuery.matches) setMobileNav(false);
+function closeNavigation() {
+  setNavigation(false);
 }
 document.querySelectorAll(".nav-item").forEach((n) =>
   n.addEventListener("click", () => {
-    closeMobileNav();
+    closeNavigation();
     location.hash = `#/${n.dataset.view}`;
   })
 );
 document.querySelector("#navToggle")?.addEventListener("click", () => {
-  const open = !document.querySelector(".sidebar")?.classList.contains("nav-open");
-  setMobileNav(open);
+  setNavigation(!document.body.classList.contains("nav-open"));
 });
-// iOS can restore a page from its back-forward cache with the old DOM state.
-// Resetting the drawer on load/pageshow guarantees content is visible first.
-closeMobileNav();
-window.addEventListener("pageshow", closeMobileNav);
-mobileNavQuery.addEventListener?.("change", closeMobileNav);
+document.querySelector("#navClose")?.addEventListener("click", closeNavigation);
+document.querySelector("#navBackdrop")?.addEventListener("click", closeNavigation);
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeNavigation();
+});
+window.addEventListener("pageshow", closeNavigation);
 window.addEventListener("hashchange", route);
+// DOMContentLoaded runs after all deferred view scripts, so deep links never race
+// against late VIEWS registrations such as Professional Intelligence.
+window.addEventListener("DOMContentLoaded", () => {
+  closeNavigation();
+  route();
+});
+
