@@ -74,6 +74,8 @@ assert.doesNotMatch(styles, /\.rv-section|subject-aperture|question-axis|trace-s
 /* 创作仍是上下文动作，不进入顶层导航。 */
 assert.match(viewsD, /交给 AI 的写作提示词/);
 assert.doesNotMatch(index, /data-view="brief"/);
+assert.match(viewsD, /高级功能/);
+assert.match(viewsD, /这些能力仍然存在，但不会占据主导航/);
 
 /* 资源版本随候选版本。 */
 assert.match(index, /experience-v2\.css\?v=1\.7\.4/);
