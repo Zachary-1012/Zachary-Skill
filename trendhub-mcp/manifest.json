@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · Agent-native Trend Intelligence",
-  "version": "1.7.0",
-  "description": "专业级 Agent-native 趋势情报 MCP：Entity-first Professional Intelligence v3、Decision-first Intelligence Workspace、21 个稳定工具、MCP Resources、Evidence Contract v1、Skill 2.0、51 个运行时适配器与 129 个分层信源。",
+  "version": "1.7.1",
+  "description": "专业级 Agent-native 趋势情报 MCP：Entity-first Professional Intelligence v3、Subject Field / Research Axis / Evidence Trace 语义研究体验、21 个稳定工具、MCP Resources、Evidence Contract v1 与 Skill 2.0。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -90,7 +90,7 @@
       "autoOpenBrowser": true,
       "requiresLLMKey": false,
       "deeplink": "http://127.0.0.1:8333/#/<view>?<params>",
-      "note": "TrendHub Intelligence Workspace：主体研究先给当前状态、变化、驱动、机会、风险、证据缺口与行动；原始新闻/列表降级为 Evidence。零模型 Key，结论来自同一后端 Intelligence Truth。"
+      "note": "TrendHub Intelligence Workspace：主体研究沿 Subject Field → Change Axis → Evidence Trace → Action Return 展开；原始新闻/Feed 只作为 Evidence。零模型 Key，结论来自同一后端 Intelligence Truth。"
     },
     "setup": "node scripts/setup.mjs",
     "build": "npm run build",
@@ -369,8 +369,10 @@
       "curated-editorial"
     ],
     "executiveReport": "trendhub-executive-report-v2-decision-brief",
-    "webExperience": "decision-first-intelligence-workspace",
-    "routing": "entity-brand-company-commercial-place-product-campaign -> professional_intelligence; topic-hotspot-issue -> analyze_topic; raw-rankings -> get_trending"
+    "webExperience": "field-axis-trace-intelligence-workspace",
+    "routing": "entity-brand-company-commercial-place-product-campaign -> professional_intelligence; topic-hotspot-issue -> analyze_topic; raw-rankings -> get_trending",
+    "deepLinkRouting": "deferred-view-registration-safe",
+    "primaryComposition": "subject-field-change-axis-evidence-trace-action-return"
   },
   "truthSemantics": {
     "schema": "trendhub-truth-state-v1",
@@ -398,6 +400,7 @@
     "skillContract": "trendhub-skill-v2",
     "resourceFoundation": "released",
     "entityFirstResearch": "released",
-    "decisionFirstWeb": "released"
+    "decisionFirstWeb": "released",
+    "semanticResearchWeb": "released"
   }
 }
