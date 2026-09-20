@@ -1,52 +1,5 @@
-/** Stable evidence envelope for new Agent-native capabilities.
- * Legacy tools intentionally keep their existing response shape for compatibility.
- */
-export type ReliabilityStatus = "observed" | "insufficient" | "degraded";
-
-export interface EvidenceRef {
-  id: string;
-  source: string;
-  evidenceType: "live" | "history" | "methodology" | "catalog";
-  observedAt: string;
-  uri?: string | null;
-  title?: string | null;
-  excerpt?: string | null;
-  reliability?: number | null;
-}
-
-export interface TrendHubResult<T> {
-  resultType: "complete";
-  data: T;
-  evidence: EvidenceRef[];
-  reliability: { status: ReliabilityStatus; score: number | null; explanation: string };
-  confidence: { score: number | null; label: "high" | "medium" | "low" | "unknown"; explanation: string };
-  limitations: string[];
-  trace: { capability: string; generatedAt: string; mode: "local-first" | "live"; sources: string[] };
-}
-
-export function completeResult<T>(input: {
-  data: T;
-  capability: string;
-  evidence?: EvidenceRef[];
-  reliability?: Partial<TrendHubResult<T>["reliability"]>;
-  confidence?: Partial<TrendHubResult<T>["confidence"]>;
-  limitations?: string[];
-  mode?: "local-first" | "live";
-}): TrendHubResult<T> {
-  const evidence = input.evidence ?? [];
-  const score = input.confidence?.score ?? (evidence.length ? Math.min(1, evidence.length / 3) : null);
-  const label = input.confidence?.label ?? (score == null ? "unknown" : score >= 0.8 ? "high" : score >= 0.5 ? "medium" : "low");
-  return {
-    resultType: "complete",
-    data: input.data,
-    evidence,
-    reliability: {
-      status: input.reliability?.status ?? (evidence.length ? "observed" : "insufficient"),
-      score: input.reliability?.score ?? null,
-      explanation: input.reliability?.explanation ?? "Reliability is reported only when local observations or source metadata support it.",
-    },
-    confidence: { score, label, explanation: input.confidence?.explanation ?? "Confidence is bounded by evidence coverage and source quality." },
-    limitations: input.limitations ?? [],
-    trace: { capability: input.capability, generatedAt: new Date().toISOString(), mode: input.mode ?? "local-first", sources: [...new Set(evidence.map((x) => x.source))].sort() },
-  };
-}
+import type{EvidenceTruthState}from"./truth-state.js";
+export type ReliabilityStatus="observed"|"insufficient"|"degraded"; export type ResultType="complete"|"partial"|"unavailable";
+export interface EvidenceRef{id:string;source:string;evidenceType:"live"|"history"|"methodology"|"catalog";observedAt:string;uri?:string|null;title?:string|null;excerpt?:string|null;reliability?:number|null;}
+export interface TrendHubResult<T>{resultType:ResultType;truthState:EvidenceTruthState;data:T;evidence:EvidenceRef[];reliability:{status:ReliabilityStatus;score:number|null;explanation:string};confidence:{score:number|null;label:"high"|"medium"|"low"|"unknown";explanation:string};limitations:string[];lineage:{evidenceIds:string[];sources:string[];observedAtRange:{first:string|null;last:string|null}};trace:{capability:string;generatedAt:string;mode:"local-first"|"live";sources:string[]};}
+export function completeResult<T>(input:{data:T;capability:string;evidence?:EvidenceRef[];resultType?:ResultType;truthState?:EvidenceTruthState;reliability?:Partial<TrendHubResult<T>["reliability"]>;confidence?:Partial<TrendHubResult<T>["confidence"]>;limitations?:string[];mode?:"local-first"|"live"}):TrendHubResult<T>{const evidence=input.evidence??[];const times=evidence.map(x=>x.observedAt).filter(x=>Number.isFinite(Date.parse(x))).sort((a,b)=>Date.parse(a)-Date.parse(b));const score=input.confidence?.score??(evidence.length?Math.min(1,evidence.length/4):null);const label=input.confidence?.label??(score==null?"unknown":score>=.8?"high":score>=.5?"medium":"low");const truthState=input.truthState??(evidence.length?"AVAILABLE":"NOT_COLLECTED");const resultType=input.resultType??(truthState==="AVAILABLE"?"complete":truthState==="NOT_COLLECTED"?"unavailable":"partial");const sources=[...new Set(evidence.map(x=>x.source))].sort();return{resultType,truthState,data:input.data,evidence,reliability:{status:input.reliability?.status??(evidence.length?"observed":"insufficient"),score:input.reliability?.score??null,explanation:input.reliability?.explanation??"Reliability is reported only when evidence supports it."},confidence:{score,label,explanation:input.confidence?.explanation??"Confidence is bounded by evidence coverage and source quality; it is not a probability."},limitations:input.limitations??[],lineage:{evidenceIds:evidence.map(x=>x.id),sources,observedAtRange:{first:times[0]??null,last:times.at(-1)??null}},trace:{capability:input.capability,generatedAt:new Date().toISOString(),mode:input.mode??"local-first",sources}};}
