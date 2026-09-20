@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.2 — Task-first Decision View
+
+- Rebuild the Web Console around tasks, content, results and actions. A first-time user only sees four home areas — search, recent research, watched subjects and trend discovery — and eight research areas — current conclusion, trend change, key drivers, platform performance, evidence, opportunities/risks, suggestions and actions.
+- Add the backend **Decision ViewModel** (`trendhub-decision-view-v1`), served read-only through `GET /api/review`. The browser is now a pure renderer; all interpretation (current state, what changed, drivers, opportunities, risks, gaps, actions) is produced by the backend in plain, null-safe Chinese. The machine contract at `/api/professional` is unchanged.
+- Render research progressively: an instant snapshot quick layer and section skeletons with a thin top progress bar appear immediately, while the full decision view resolves on the slow layer instead of showing a full-screen spinner. The slow layer defaults to `refresh=0` (snapshot hotlists plus real-time subject evidence), cutting weak-network completion from roughly 28s to roughly 12s; `refresh=1` still forces a live hotlist refresh.
+- Remove internal vocabulary from the user-facing interface (Agent, Evidence Contract, Tool, Research Axis, Subject Field, Entity-first, Research→Understand→Verify→Act). The underlying Professional Intelligence v3, Entity-first acquisition, Evidence Contract, Skill 2.0, deep links and the 21-tool facade are fully preserved.
+- Gate trend `changePct` and `peak` to `null` whenever the search series is unavailable, so missing trends are never displayed as “0% change / peak 0”.
+- Add a best-effort Xiaohongshu guest hot feed to scheduled snapshots (15s timeout, silent per-source degradation) without changing the explicit-platform snapshot path or the 21-tool/51-source contract.
+- Restore the desktop app shell and the mobile navigation drawer, and put the header, home and research surfaces on one shared 860px reading alignment axis across desktop, tablet and phone.
+- Keep the public read-only/HTTP security boundary intact: `/api/snapshot` and other mutating/observability routes stay private, non-loopback still requires a bearer token, and no visitor `XHS_COOKIE` is injected remotely.
+
+
 ## v1.7.1 — Semantic Experience Correction
 
 - Replace the primary dashboard/card grammar with Subject Field → Change Axis → Interpretation Strata → Evidence Trace → Action Return.

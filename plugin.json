@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "trendhub",
-  "version": "1.7.1",
-  "description": "TrendHub v1.7.1: Entity-first Intelligence, semantic Field/Axis/Trace Web, 21 MCP tools and Evidence Contract.",
+  "version": "1.7.2",
+  "description": "TrendHub v1.7.2：多平台趋势研究 MCP，21 工具、证据优先、小红书专区与普通人可读的研究结果页。",
   "author": {
     "name": "Zachary",
     "url": "https://github.com/Zachary-1012"

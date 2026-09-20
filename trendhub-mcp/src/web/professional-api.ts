@@ -6,6 +6,7 @@ import { brandEntityCatalog, resolveBrandEntity } from "../entities/brand-catalo
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
 import { buildEntityResearch } from "../analysis/entity-research.js";
+import { buildDecisionView } from "../analysis/decision-view.js";
 import { analyzeAudienceSignals } from "../analysis/audience.js";
 import { collectMediaEvidence } from "../analysis/media.js";
 import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } from "../reports/executive.js";
@@ -34,6 +35,7 @@ const VERTICALS = new Set<SourceVertical>([
 
 export const PROFESSIONAL_PUBLIC_READ_PATHS = new Set([
   "/api/professional",
+  "/api/review",
   "/api/professional/report",
   "/api/professional/audience",
   "/api/professional/media",
@@ -214,6 +216,8 @@ export async function handleProfessionalApi(pathname: string, url: URL, method: 
         });
     const intelligence = buildProfessionalIntelligence(keyword, platforms, new Date(), research);
     if (pathname === "/api/professional") return { status: 200, data: intelligence };
+    // 普通人可读的研究结果视图：前端只渲染，结论全部由后端给出。
+    if (pathname === "/api/review") return { status: 200, data: buildDecisionView(intelligence) };
 
     const report = buildExecutiveReport(intelligence);
     const format = url.searchParams.get("format") ?? "json";

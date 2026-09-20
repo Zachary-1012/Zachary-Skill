@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.7.0",
-  "targetStableVersion": "1.7.1",
-  "candidateVersion": "1.7.1",
+  "stableBase": "1.7.1",
+  "targetStableVersion": "1.7.2",
+  "candidateVersion": "1.7.2",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.7.1 corrects the public Experience: semantic Subject Field / Research Axis / Evidence Trace composition, deterministic deep-link routing, and shared alignment without changing the 21-tool, Evidence or Professional Intelligence contracts.",
-    "versionPolicy": "v1.7.0 remains immutable rollback; v1.7.1 is the next patch release.",
+    "rule": "v1.7.2 rebuilds the public Web around ordinary users: a single search entry with recent research, watched subjects and trend discovery on the home page, and a task-to-result research page (current conclusion, change, drivers, platform performance, evidence, opportunities/risks, suggestions and actions) rendered from a backend Decision View; results return progressively without long full-page spinners. Internal system language is hidden from the UI; the 21-tool, Evidence and Professional Intelligence contracts are unchanged.",
+    "versionPolicy": "v1.7.1 remains immutable rollback; v1.7.2 is the next patch release.",
     "prepared": true
   },
   "capabilities": {
@@ -40,7 +40,7 @@
       "alert-rule",
       "audit"
     ],
-    "responsiveWeb": "semantic-field-axis-trace-desktop-tablet-phone",
+    "responsiveWeb": "task-first-decision-view-desktop-tablet-phone",
     "observability": "local-otel-compatible-zero-export",
     "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
     "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
@@ -54,7 +54,7 @@
     "queryEvidence": "google-news-cn-global-gdelt-bluesky-apple-podcasts-xhs-curated-rss",
     "professionalIntelligence": "v3-entity-first-decision-support",
     "executiveReport": "v2-decision-brief",
-    "webExperience": "field-axis-trace-intelligence-workspace",
+    "webExperience": "task-first-decision-view",
     "deepLinkRouting": "deferred-view-registration-safe"
   },
   "sourceAccessModes": [
@@ -66,10 +66,12 @@
     "adapter-planned"
   ],
   "uxRules": [
-    "subject-field-change-axis-evidence-trace-action-return",
+    "user-sees-only-task-content-result-and-action",
+    "single-intent-search-entry-with-progressive-results",
+    "frontend-is-renderer-backend-decision-view-owns-all-judgement",
     "generic-kpi-wall-is-not-a-primary-research-composition",
     "generic-card-grid-is-not-a-primary-research-composition",
-    "one-shared-content-axis-aligns-header-and-research-field",
+    "no-long-full-page-spinner-show-immediate-then-fill-slow-sources",
     "business-entity-research-starts-with-subject-specific-evidence-not-hotlist-absence",
     "raw-news-and-feed-items-are-evidence-not-the-product-summary",
     "never-upload-private-cookie-to-public-hosted-service",

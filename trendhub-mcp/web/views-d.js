@@ -5,7 +5,7 @@ VIEWS.brief = async function (content, params) {
   const platOpts = ['<option value="xiaohongshu" selected>小红书（默认 · 主打）</option>', '<option value="all">通用 all</option>']
     .concat(PLATFORMS.filter((p) => p.platform !== "xiaohongshu").map((p) => `<option value="${esc(p.platform)}">${esc(p.label)}</option>`)).join("");
   content.innerHTML = `
-    <p class="lead">围绕主题聚合真实热点证据、相关词、情感、同平台爆款样本与专家模板，产出逐格填充指引和可直接交给 AI 的 productionPrompt。<strong>本页不接模型、不写成稿</strong>。</p>
+    <p class="lead">围绕主题聚合真实热点证据、相关词、情感、同平台爆款样本与专家模板，产出逐格填充指引和可直接交给 AI 的写作提示词。<strong>本页不接模型、不代替你写成稿</strong>。</p>
     <div class="controls">
       <input class="input" id="f-topic" placeholder="创作主题 / 要蹭的热点（必填）" value="${esc(params.topic || "")}">
       <select id="f-plat" class="input" style="flex:0 1 170px">${platOpts}</select>
@@ -39,9 +39,9 @@ function renderBrief(d) {
   const cp = ev.crossPlatform || {};
   const rq = ev.relatedQueries || {};
   const promptBlock = `<div class="brief-section">
-    <h3>交给 AI 的 productionPrompt</h3>
+    <h3>交给 AI 的写作提示词</h3>
     <div class="toolbar" style="margin-bottom:8px">
-      <button class="btn sm primary" id="cp-prompt">复制 Prompt</button>
+      <button class="btn sm primary" id="cp-prompt">复制提示词</button>
       <button class="btn sm" id="cp-all">复制完整简报（JSON）</button>
     </div>
     <pre class="prompt" id="prompt-text">${esc(d.productionPrompt || "")}</pre></div>`;
@@ -76,7 +76,7 @@ function renderBrief(d) {
     : "";
   setTimeout(() => {
     const cp1 = $("#cp-prompt"), cp2 = $("#cp-all");
-    if (cp1) cp1.addEventListener("click", () => copyText(d.productionPrompt || "", "Prompt 已复制，粘贴给你的 AI 即可成稿"));
+    if (cp1) cp1.addEventListener("click", () => copyText(d.productionPrompt || "", "写作提示词已复制，粘贴给你的 AI 即可成稿"));
     if (cp2) cp2.addEventListener("click", () => copyText(JSON.stringify(d, null, 2), "完整简报 JSON 已复制"));
   }, 0);
   return note("info", esc(d.note || "把本简报与 Prompt 一起交给你的 AI 生成成稿；所有数据须来自证据，缺失保留[待补充]。")) +

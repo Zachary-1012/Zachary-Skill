@@ -1,262 +1,310 @@
-/* TrendHub 控制台前端 —— 原生 JS、零依赖；同一 UI 同时支持本地与公网只读/查询模式。
-   只通过同源 /api/* 调用 TrendHub 能力；分析与成稿由调用方 AI 完成。 */
 "use strict";
-
+/* TrendHub 控制台：纯前端渲染。结论全部来自后端，前端只负责取数与展示。 */
+/* 同一界面支持本地与公网只读/查询模式；只通过同源 /api/* 调用，分析与成稿由调用方 AI 完成。 */
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 window.TRENHUB_IS_REMOTE = !LOOPBACK_HOSTS.has(location.hostname);
 window.TRENHUB_RUNTIME_MODE = window.TRENHUB_IS_REMOTE ? "公网" : "本地";
 
-const COLORS = ["#10a37f", "#2563eb", "#d97706", "#dc2626", "#7c3aed"];
-const ICON = {
-  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01" stroke-linecap="round"/></svg>',
-  warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4l9 16H3z" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke-linecap="round"/></svg>',
-  err: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6" stroke-linecap="round"/></svg>',
-};
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-let PLATFORMS = [];
-let CATS = { platformCategories: [], futureSignalCategories: [], eventCategories: [] };
-
-/* ---------------- 基础工具 ---------------- */
-const $ = (s, el = document) => el.querySelector(s);
-function el(tag, cls, html) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (html != null) e.innerHTML = html;
-  return e;
+function el(tag, attrs = {}, children = []) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v;
+    else if (k === "text") node.textContent = v;
+    else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined) node.setAttribute(k, v);
+  }
+  for (const child of [].concat(children)) {
+    if (child == null) continue;
+    node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+  }
+  return node;
 }
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-function safeUrl(u) {
-  return /^https?:\/\//i.test(u || "") ? u : null;
+
+async function api(path, options = {}) {
+  const res = await fetch(path, options);
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+  if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+  return data;
 }
-function fmtTime(iso) {
-  if (!iso) return "—";
-  try { return new Date(iso).toLocaleString(); } catch { return String(iso); }
+
+async function post(path, body) {
+  return api(path, {
+    method: "POST",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
 }
+
+function copyText(text, msg = "已复制") {
+  const done = () => toast(msg);
+  if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done)); }
+  else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch { toast("复制失败，请手动选择"); }
+  ta.remove();
+}
+
+let toastTimer;
 function toast(msg) {
   const t = $("#toast");
   t.textContent = msg;
   t.classList.add("show");
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove("show"), 2200);
-}
-async function api(path, opts) {
-  const r = await fetch(path, opts);
-  let j = null;
-  try { j = await r.json(); } catch { /* ignore */ }
-  if (!r.ok) throw new Error((j && j.error) || `HTTP ${r.status}`);
-  return j;
-}
-function post(path) {
-  return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-}
-function copyText(text, okMsg) {
-  const done = () => toast(okMsg || "已复制到剪贴板");
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
-  } else fallbackCopy(text, done);
-}
-function fallbackCopy(text, done) {
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  try { document.execCommand("copy"); done(); } catch { toast("复制失败，请手动选择文本"); }
-  document.body.removeChild(ta);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-/* ---------------- 通用 UI 片段 ---------------- */
-const loading = () => '<div class="spinner"></div>';
-const empty = (t) => `<div class="empty">${esc(t || "暂无数据")}</div>`;
-function note(kind, text) {
-  return `<div class="note ${kind}">${ICON[kind] || ICON.info}<div>${text}</div></div>`;
+function loading(label = "正在获取公开数据…") {
+  return `<div class="loading"><span class="spin"></span><span>${esc(label)}</span></div>`;
+}
+function empty(msg) {
+  return `<div class="empty">${esc(msg)}</div>`;
+}
+function note(kind, msg) {
+  const cls = kind === "err" ? "err" : kind === "warn" ? "warn" : kind === "ok" ? "ok" : "info";
+  return `<div class="note ${cls}">${msg}</div>`;
 }
 function qbadge(q) {
-  const map = { ok: ["ok", "正常"], degraded: ["degraded", "降级"], missing: ["missing", "缺失"] };
-  const [c, t] = map[q] || ["neutral", esc(q || "—")];
-  return `<span class="badge ${c}">${t}</span>`;
+  const map = { ok: ["ok", "可用"], degraded: ["warn", "降级"], stale: ["warn", "过期"], missing: ["neutral", "缺失"], down: ["err", "不可用"], auth_required: ["warn", "需登录"], rate_limited: ["warn", "限流"] };
+  const [cls, text] = map[q] || ["neutral", q || "未知"];
+  return `<span class="badge ${cls}">${esc(text)}</span>`;
+}
+function safeUrl(u) {
+  try { const url = new URL(u, location.origin); return ["http:", "https:"].includes(url.protocol) ? url.href : ""; } catch { return ""; }
+}
+function fmtTime(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+}
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 function linkOrText(title, url) {
-  const u = safeUrl(url);
-  return u
-    ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a>`
-    : esc(title);
+  const safe = safeUrl(url);
+  return safe
+    ? `<a href="${esc(safe)}" target="_blank" rel="noreferrer noopener">${esc(title || "(无标题)")}</a>`
+    : esc(title || "(无标题)");
 }
 function itemsTable(items) {
-  if (!items || !items.length) return empty("该平台本次没有可取用的条目");
-  const rows = items
-    .map((it) => {
-      const meta = [it.author, it.hotText].filter(Boolean).map(esc).join(" · ");
-      return `<tr>
-        <td class="rank">${it.rank ?? "—"}</td>
-        <td class="title-cell">${linkOrText(it.title, it.url)}${meta ? `<span class="meta">${meta}</span>` : ""}${it.desc ? `<span class="meta">${esc(it.desc)}</span>` : ""}</td>
-        <td class="hot">${it.hot ?? "—"}</td>
-      </tr>`;
-    })
-    .join("");
-  return `<div class="table-wrap"><table>
-    <colgroup><col style="width:48px"><col><col style="width:96px"></colgroup>
-    <thead><tr><th>#</th><th>标题</th><th style="text-align:right">热度</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>`;
+  if (!items?.length) return empty("暂无条目");
+  return `<div class="table-wrap"><table><colgroup><col style="width:46px"><col><col style="width:96px"></colgroup><thead>
+    <tr><th>#</th><th>标题</th><th>热度</th></tr></thead><tbody>
+    ${items.map((i) => `<tr><td>${i.rank ?? "—"}</td><td>${linkOrText(i.title, i.url)}</td><td class="mono">${esc(i.metric ?? i.hot ?? "—")}</td></tr>`).join("")}
+  </tbody></table></div>`;
 }
-function lineChart(series) {
-  const W = 920, H = 300, padL = 46, padR = 16, padT = 14, padB = 28;
-  const iw = W - padL - padR, ih = H - padT - padB;
-  const n = Math.max(0, ...series.map((s) => s.points.length));
-  if (!n) return empty("无时间序列数据");
-  const X = (i) => padL + (n <= 1 ? iw / 2 : (i * iw) / (n - 1));
-  const Y = (v) => padT + ih - (Math.max(0, Math.min(100, v)) / 100) * ih;
-  let grid = "";
-  for (const gv of [0, 25, 50, 75, 100]) {
-    const y = Y(gv);
-    grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="#eeeeef"/>
-      <text x="${padL - 8}" y="${y + 4}" text-anchor="end" font-size="10" fill="#9b9b9b">${gv}</text>`;
-  }
-  let paths = "";
-  series.forEach((s, si) => {
-    const col = s.color || COLORS[si % COLORS.length];
-    let d = "", pen = true;
-    s.points.forEach((p, i) => {
-      if (p.value == null) { pen = true; return; }
-      const x = X(i), y = Y(p.value);
-      d += `${pen ? "M" : " L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-      pen = false;
-    });
-    paths += `<path class="chart-line" pathLength="1" d="${d}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  });
-  const ref = series[0].points;
-  const step = Math.max(1, Math.round(n / 7));
-  let xl = "";
-  ref.forEach((p, i) => {
-    if (i % step === 0 || i === n - 1)
-      xl += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="#9b9b9b">${esc(String(p.date).slice(0, 10))}</text>`;
-  });
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="趋势折线图">${grid}${paths}${xl}</svg>`;
+function statCard(value, label) {
+  return `<div class="card stat"><div class="stat-num">${esc(value)}</div><div class="stat-label">${esc(label)}</div></div>`;
+}
+function verticalOptions(selected) {
+  const opts = [
+    ["general", "通用"], ["fashion-luxury", "时尚 / 奢侈品"], ["beauty", "美妆"], ["business-corporate", "商业 / 企业"],
+    ["technology", "科技"], ["automotive", "汽车"], ["finance-markets", "金融 / 市场"], ["marketing-advertising", "营销 / 广告"],
+    ["retail-commerce", "零售 / 电商"], ["culture-entertainment", "文化 / 娱乐"],
+  ];
+  return opts.map(([v, l]) => `<option value="${v}" ${selected === v ? "selected" : ""}>${l}</option>`).join("");
 }
 function chartLegend(series) {
-  return `<div class="chart-legend">${series
-    .map((s, i) => `<span class="li"><span class="sw" style="background:${s.color || COLORS[i % COLORS.length]}"></span>${esc(s.name)}</span>`)
-    .join("")}</div>`;
+  return `<div class="chart-legend">${series.map((s, i) => `<span class="legend-item"><i class="legend-dot" style="--dot-color:var(--accent-${i + 1})"></i>${esc(s.name)}</span>`).join("")}</div>`;
+}
+function lineChart(series, opts = {}) {
+  const W = 880, H = 280, P = { t: 16, r: 16, b: 28, l: 40 };
+  const all = series.flatMap((s) => s.points || []).map((p) => Number(p.value)).filter(Number.isFinite);
+  if (!all.length) return empty("暂无可绘制的数据");
+  const maxV = Math.max(...all, 1);
+  const maxLen = Math.max(...series.map((s) => (s.points || []).length), 2);
+  const x = (i) => P.l + (i * (W - P.l - P.r)) / Math.max(1, maxLen - 1);
+  const y = (v) => P.t + (H - P.t - P.b) * (1 - Number(v) / maxV);
+  const grid = [0, 0.25, 0.5, 0.75, 1].map((g) => {
+    const yy = y(g * maxV);
+    return `<line x1="${P.l}" y1="${yy}" x2="${W - P.r}" y2="${yy}" class="chart-grid"/>
+      <text x="${P.l - 8}" y="${yy + 4}" text-anchor="end" class="chart-axis">${Math.round(g * maxV)}</text>`;
+  }).join("");
+  const labels = (() => {
+    const ref = series[0].points || [];
+    const idxs = [0, Math.floor((ref.length - 1) / 2), ref.length - 1].filter((v, i, a) => ref[v] && a.indexOf(v) === i);
+    return idxs.map((i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" class="chart-axis">${esc(String(ref[i].date ?? "").slice(5, 10))}</text>`).join("");
+  })();
+  const paths = series.map((s, si) => {
+    const pts = (s.points || []).map((p, i) => `${x(i)},${y(Number(p.value))}`);
+    return `<polyline class="chart-line series-${si + 1}" fill="none" points="${pts.join(" ")}"/>
+      ${(s.points || []).map((p, i) => `<circle cx="${x(i)}" cy="${y(Number(p.value))}" r="2.4" class="chart-dot series-${si + 1}"/>`).join("")}`;
+  }).join("");
+  return `<div class="chart-scroll"><svg class="chart-draw" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(opts.ariaLabel || "趋势曲线")}">${grid}${labels}${paths}</svg></div>`;
 }
 
-/* 通用对象渲染（用于话题情报/情感等结构不定的结果） */
-function renderAny(value, key = "", depth = 0) {
-  if (value == null || value === "") return depth === 0 ? empty("无数据") : "";
+function renderAny(value, key = "") {
+  if (value == null) return `<span class="null">null</span>`;
+  if (typeof value === "boolean") return `<span class="bool">${value ? "true" : "false"}</span>`;
+  if (typeof value === "number" || typeof value === "string") {
+    if (key.toLowerCase().includes("url") && safeUrl(value)) return `<a href="${esc(value)}" target="_blank" rel="noreferrer">${esc(value)}</a>`;
+    return esc(value);
+  }
   if (Array.isArray(value)) {
-    if (!value.length) return "";
-    if (typeof value[0] === "object") {
-      const cols = Array.from(new Set(value.flatMap((o) => Object.keys(o || {})))).slice(0, 6);
-      const head = cols.map((c) => `<th>${esc(c)}</th>`).join("");
-      const body = value
-        .slice(0, 50)
-        .map((o) => `<tr>${cols.map((c) => `<td>${cellOf(o[c])}</td>`).join("")}</tr>`)
-        .join("");
-      return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
-    }
-    return `<div class="tagrow">${value.slice(0, 60).map((v) => `<span class="tag">${cellOf(v)}</span>`).join("")}</div>`;
+    if (!value.length) return "[]";
+    if (value.every((x) => ["string", "number"].includes(typeof x))) return `<div class="tagrow">${value.map((x) => `<span class="tag">${esc(x)}</span>`).join("")}</div>`;
+    return `<div class="json-list">${value.map((x, i) => `<div class="json-row"><span class="json-key">[${i}]</span><div>${renderAny(x)}</div></div>`).join("")}</div>`;
   }
-  if (typeof value === "object") {
-    if (key === "points" || (Array.isArray(value.points))) {
-      return lineChart([{ name: value.keyword || key, points: value.points }]);
-    }
-    const blocks = Object.entries(value)
-      .map(([k, v]) => {
-        if (v == null || v === "" || (Array.isArray(v) && !v.length)) return "";
-        return `<div class="brief-section"><h3>${esc(k)}</h3>${renderAny(v, k, depth + 1)}</div>`;
-      })
-      .filter(Boolean)
-      .join("");
-    return blocks || empty("无数据");
-  }
-  return esc(String(value));
-}
-function cellOf(v) {
-  if (v == null) return "—";
-  if (typeof v === "number" || typeof v === "boolean") return esc(String(v));
-  if (typeof v === "object") {
-    if (v.title) return linkOrText(v.title, v.url);
-    if (v.query) return esc(v.query) + (v.value ? ` <span class="meta">${esc(v.value)}</span>` : "");
-    if (v.name) return esc(v.name);
-    return esc(JSON.stringify(v));
-  }
-  return esc(String(v));
+  const entries = Object.entries(value).filter(([, v]) => v !== undefined);
+  if (!entries.length) return "{}";
+  return `<div class="json-tree">${entries.map(([k, v]) => {
+    const scalar = v == null || ["string", "number", "boolean"].includes(typeof v);
+    return `<div class="json-row ${scalar ? "scalar" : ""}"><span class="json-key">${esc(k)}</span><div class="json-val">${renderAny(v, k)}</div></div>`;
+  }).join("")}</div>`;
 }
 
-/* ---------------- 视图 ---------------- */
-const VIEWS = {};
-
-/* 概览 */
-/* ---------------- 元数据与路由 ---------------- */
-async function ensureMeta() {
-  if (PLATFORMS.length) return;
-  const [p, c] = await Promise.all([api("/api/platforms"), api("/api/categories")]);
-  PLATFORMS = p.platforms || [];
-  CATS = c;
-}
-function parseHash() {
-  const raw = location.hash.slice(1) || "/dashboard";
-  const [path, qs] = raw.split("?");
-  return { view: (path.replace(/^\//, "") || "dashboard"), params: Object.fromEntries(new URLSearchParams(qs || "")) };
-}
-const TITLES = {
-  dashboard: "研究工作台", xhs: "小红书热点", trending: "当下热榜", overlap: "跨平台共振", clusters: "共振话题发现", changes: "新晋 / 掉榜",
-  curve: "关键词趋势曲线", related: "相关搜索词", signals: "未来信号", events: "节点日历",
-  topic: "话题趋势研究", brief: "创作简报", templates: "模板库", settings: "设置与说明",
-  ops: "运行与交付",
+/* ---------- 本机存储：最近研究 / 正在关注（只存本机，不上传、不回传） ---------- */
+const TH_STORE = {
+  get(key, fallback) {
+    try { const v = JSON.parse(localStorage.getItem("th:" + key)); return v ?? fallback; } catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem("th:" + key, JSON.stringify(value)); } catch { /* 隐私模式等场景静默降级 */ }
+  },
+  recents() { return this.get("recents", []); },
+  addRecent(keyword) {
+    if (!keyword) return;
+    const list = this.get("recents", []).filter((x) => x !== keyword);
+    list.unshift(keyword);
+    this.set("recents", list.slice(0, 8));
+  },
+  removeRecent(keyword) {
+    this.set("recents", this.get("recents", []).filter((x) => x !== keyword));
+  },
+  watching() { return this.get("watching", []); },
+  isWatching(k) { return this.get("watching", []).includes(k); },
+  toggleWatching(k) {
+    if (!k) return false;
+    let list = this.get("watching", []);
+    if (list.includes(k)) list = list.filter((x) => x !== k);
+    else { list.unshift(k); list = list.slice(0, 20); }
+    this.set("watching", list);
+    return list.includes(k);
+  },
 };
+window.TH_STORE = TH_STORE;
+
+/* 统一研究入口：首页大搜索、示例、最近/关注、顶部按钮都走这里 */
+function startResearch(keyword) {
+  const kw = String(keyword || "").trim();
+  if (!kw) { location.hash = "#/research"; return; }
+  TH_STORE.addRecent(kw);
+  location.hash = `#/research?keyword=${encodeURIComponent(kw)}`;
+}
+window.startResearch = startResearch;
+
+/* ---------- 平台元数据 ---------- */
+let META = null;
+async function ensureMeta() {
+  if (META) return META;
+  const d = await api("/api/health");
+  META = { platforms: d.platforms || [], categories: d.categories || [] };
+  return META;
+}
+const PLATFORMS = new Proxy([], {
+  get(target, prop) {
+    if (prop === "length") return META?.platforms.length || 0;
+    if (prop in target) return target[prop];
+    return META?.platforms[prop];
+  },
+});
+const CATS = new Proxy({}, {
+  get(_t, prop) {
+    if (prop === "platformCategories") return [...new Set((META?.platforms || []).map((p) => p.category))].sort();
+    if (prop === "futureSignalCategories") return [...new Set((META?.categories || []).filter((c) => c.type === "future_signal").map((c) => c.category))];
+    if (prop === "eventCategories") return [...new Set((META?.categories || []).filter((c) => c.type === "event").map((c) => c.category))];
+    return undefined;
+  },
+});
+window.PLATFORMS = PLATFORMS;
+window.CATS = CATS;
+
+/* ---------- 路由 ---------- */
+const VIEWS = {};
+const TITLES = {
+  dashboard: "首页", research: "研究结果", professional: "研究结果", xhs: "小红书",
+  trending: "热点榜", overlap: "跨平台共振", clusters: "话题发现", curve: "趋势曲线",
+  related: "相关搜索词", signals: "未来信号", events: "节点日历", topic: "话题情报",
+  brief: "创作简报", templates: "模板库", sources: "数据源", workspace: "协作（本机）",
+  ops: "运行与交付", settings: "设置",
+};
+window.VIEWS = VIEWS;
+window.TITLES = TITLES;
+
+function closeNavigation() {
+  const sheet = $("#navigationSheet");
+  const backdrop = $("#navBackdrop");
+  const toggle = $("#navToggle");
+  if (sheet) sheet.hidden = true;
+  if (backdrop) backdrop.hidden = true;
+  if (toggle) toggle.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("nav-open");
+}
+window.closeNavigation = closeNavigation;
+
 async function route() {
-  const { view, params } = parseHash();
-  const fn = VIEWS[view] || VIEWS.dashboard;
-  $("#viewTitle").textContent = TITLES[view] || "概览";
-  document.querySelectorAll(".nav-item").forEach((n) => n.classList.toggle("active", n.dataset.view === view));
+  closeNavigation();
+  const hash = location.hash || "#/dashboard";
+  const [path, query = ""] = hash.slice(1).split("?");
+  const segments = path.split("/").filter(Boolean);
+  const view = segments[0] || "dashboard";
+  const params = Object.fromEntries(new URLSearchParams(query));
   const content = $("#content");
-  content.innerHTML = loading();
+  const title = TITLES[view] || "";
+  const viewTitle = $("#viewTitle");
+  if (viewTitle) viewTitle.textContent = title;
+  document.title = title ? `${title} · TrendHub` : "TrendHub · 趋势研究";
+  $$(".nav-item").forEach((a) => {
+    const dv = a.dataset.view;
+    a.classList.toggle("active", dv === view || (view === "professional" && dv === "research"));
+  });
+  content.scrollIntoView?.({ block: "start" });
+  window.scrollTo({ top: 0 });
   try {
-    await ensureMeta();
-    await fn(content, params);
+    if (VIEWS[view]) await VIEWS[view](content, params);
+    else content.innerHTML = empty("页面不存在");
   } catch (e) {
-    const hint = window.TRENHUB_IS_REMOTE
-      ? "请稍后重试，并检查 /health 是否正常。"
-      : "请确认控制台正在运行（npm run ui），且能访问各平台公开接口。";
-    content.innerHTML = note("err", `加载失败：${esc(e.message)}`) + `<div class="recovery-line"><span>恢复路径</span><p>${hint}</p></div>`;
+    content.innerHTML = note("err", `加载失败：${esc(e.message)}`);
   }
 }
-function setNavigation(open) {
-  const sheet = document.querySelector("#navigationSheet");
-  const toggle = document.querySelector("#navToggle");
-  const backdrop = document.querySelector("#navBackdrop");
-  document.body.classList.toggle("nav-open", Boolean(open));
-  sheet?.setAttribute("aria-hidden", String(!open));
-  toggle?.setAttribute("aria-expanded", String(Boolean(open)));
-  toggle?.setAttribute("aria-label", open ? "关闭导航" : "打开导航");
-  backdrop?.setAttribute("aria-hidden", String(!open));
-}
-function closeNavigation() {
-  setNavigation(false);
-}
-document.querySelectorAll(".nav-item").forEach((n) =>
-  n.addEventListener("click", () => {
-    closeNavigation();
-    location.hash = `#/${n.dataset.view}`;
-  })
-);
-document.querySelector("#navToggle")?.addEventListener("click", () => {
-  setNavigation(!document.body.classList.contains("nav-open"));
-});
-document.querySelector("#navClose")?.addEventListener("click", closeNavigation);
-document.querySelector("#navBackdrop")?.addEventListener("click", closeNavigation);
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeNavigation();
-});
-window.addEventListener("pageshow", closeNavigation);
-window.addEventListener("hashchange", route);
-// DOMContentLoaded runs after all deferred view scripts, so deep links never race
-// against late VIEWS registrations such as Professional Intelligence.
-window.addEventListener("DOMContentLoaded", () => {
-  closeNavigation();
-  route();
-});
 
+document.addEventListener("DOMContentLoaded", () => {
+  ensureMeta().catch(() => {});
+  if (typeof renderXhsLoginStatus === "function") renderXhsLoginStatus().catch(() => {});
+  if (!location.hash) location.hash = "#/dashboard";
+  route();
+  window.addEventListener("hashchange", route);
+
+  const toggle = $("#navToggle");
+  const sheet = $("#navigationSheet");
+  const backdrop = $("#navBackdrop");
+  if (toggle && sheet && backdrop) {
+    toggle.addEventListener("click", () => {
+      const open = sheet.hidden;
+      sheet.hidden = !open;
+      backdrop.hidden = !open;
+      toggle.setAttribute("aria-expanded", String(open));
+      document.body.classList.toggle("nav-open", open);
+    });
+    backdrop.addEventListener("click", closeNavigation);
+    $("#closeNavigation")?.addEventListener("click", closeNavigation);
+  }
+  $("#newResearchTop")?.addEventListener("click", () => { location.hash = "#/research"; });
+  window.addEventListener("pageshow", (event) => { if (event.persisted) route(); });
+});

@@ -57,21 +57,21 @@ export function buildPromotionPlan(version, { dryRun = true } = {}) {
   const gatewayPath = path.join(ROOT, "scripts", "remote-gateway.mjs");
   const serverTsPath = path.join(ROOT, "src", "server.ts");
 
-  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — Professional Intelligence v3 release ${version}；Entity-first、Field/Axis/Trace Web、21 MCP tools、Evidence-first。`; writeJson(pkgPath, pkg, dryRun);
+  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — 多平台热点趋势采集与证据优先的研究分析（${version}）：普通人可读的研究结果视图、趋势曲线、未来信号、节点日历、小红书专区与创作简报，21 个稳定 MCP 工具。`; writeJson(pkgPath, pkg, dryRun);
   const lock = readJson(lockPath); lock.version = version; if (lock.packages?.[""]) lock.packages[""].version = version; writeJson(lockPath, lock, dryRun);
 
   const manifest = readJson(manifestPath);
   manifest.version = version;
-  manifest.description = "专业级 Agent-native 趋势情报 MCP：21 个稳定工具，Entity-first Professional Intelligence v3、Subject Field / Research Axis / Evidence Trace 语义研究体验、Source Reliability 与 Evidence Contract。";
+  manifest.description = "专业级多平台趋势研究 MCP：21 个稳定工具，证据优先的主体研究与决策简报，普通人打开搜索即可得到当前结论、趋势变化、关键驱动、平台表现、证据、机会风险与建议，含来源可靠性与小红书专区。";
   manifest.aiInstall ||= {}; manifest.aiInstall.successMarker = `SMOKE OK tools=${expectedTools}`;
   ensureTool(manifest, { name: "professional_intelligence", group: "analysis", summary: "Professional Intelligence v3：品牌/公司/商业体/产品/Campaign 的 Entity-first 主动取证、决策简报、历史趋势/预测/受众/媒体/风险机会" });
   ensureTool(manifest, { name: "workspace_manage", group: "collaboration", summary: "本地工作区：RBAC、watchlist、saved query、alert rule 与 audit log；不上传中央服务" });
-  manifest.professionalIntelligence = { ...manifest.professionalIntelligence, methodologyVersion: "professional-intelligence-v3", compatibilityBase: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, entityFirstResearch: "query-evidence-acquisition-before-hotlist-interpretation", executiveReport: "trendhub-executive-report-v2-decision-brief", webExperience: "field-axis-trace-intelligence-workspace", deepLinkRouting: "deferred-view-registration-safe", primaryComposition: "subject-field-change-axis-evidence-trace-action-return", externalConstraints: professional.externalConstraints };
+  manifest.professionalIntelligence = { ...manifest.professionalIntelligence, methodologyVersion: "professional-intelligence-v3", compatibilityBase: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, entityFirstResearch: "query-evidence-acquisition-before-hotlist-interpretation", executiveReport: "trendhub-executive-report-v2-decision-brief", webExperience: "task-first-decision-view", deepLinkRouting: "deferred-view-registration-safe", primaryComposition: "task-content-result-action-user-only-language", externalConstraints: professional.externalConstraints };
   if (manifest.tools.length !== expectedTools) throw new Error(`PROMOTION FAILED: manifest would declare ${manifest.tools.length} tools, expected ${expectedTools}`);
   writeJson(manifestPath, manifest, dryRun);
 
-  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Entity-first trend intelligence: 21 MCP tools, Evidence Trace and semantic research Web."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
-  const plugin = readJson(pluginPath); plugin.version = version; plugin.description = "TrendHub: Entity-first Intelligence, semantic Field/Axis/Trace Web, 21 MCP tools and Evidence Contract."; writeJson(pluginPath, plugin, dryRun);
+  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Trend research MCP with 21 tools, 51 sources, evidence-first analysis and Xiaohongshu."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
+  const plugin = readJson(pluginPath); plugin.version = version; plugin.description = `TrendHub ${version}: 多平台趋势研究 MCP，21 工具、证据优先、小红书专区与普通人可读的研究结果页。`; writeJson(pluginPath, plugin, dryRun);
 
   updateTextFile(gatewayPath, (text) => replaceRequired(text, /const VERSION = "\d+\.\d+\.\d+";/, `const VERSION = "${version}";`, "remote gateway version"), dryRun);
   updateTextFile(serverTsPath, (text) => {

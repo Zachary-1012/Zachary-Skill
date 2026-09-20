@@ -32,6 +32,7 @@ if (!gateway.includes('url.pathname === "/mcp"')) fail("Remote MCP endpoint was 
 if (!gateway.includes('transport: { type: "streamable-http"')) fail("MCP discovery must remain Streamable HTTP");
 if (!gateway.includes('"/api/platforms"') || !gateway.includes('"/api/trending"') || !gateway.includes('"/api/brief"')) fail("safe public query API allowlist is incomplete");
 if (!gateway.includes('"/api/professional"') || !gateway.includes('"/api/professional/report"')) fail("professional read/query APIs must be public-ready");
+if (!gateway.includes('"/api/review"')) fail("ordinary-user decision view API /api/review must be public-ready");
 if (!gateway.includes('"/api/professional/sources"') || !gateway.includes('"/api/professional/entities"')) fail("source universe and entity read APIs must be public-ready");
 
 const allowlistMatch = gateway.match(/const PUBLIC_API_PATHS = new Set\(\[([\s\S]*?)\]\);/);
@@ -49,7 +50,7 @@ if (!gateway.includes('return res.end(OPENAI_APPS_CHALLENGE_TOKEN)') || !gateway
 
 if (!index.includes('name="viewport"') || !index.includes("viewport-fit=cover")) fail("mobile viewport/safe-area metadata missing");
 if (!index.includes(`href="responsive-v2.css${webVersion}"`) || !index.includes(`src="app.js${webVersion}"`)) fail("public shell assets must be versioned to the current product release");
-if (!index.includes('data-view="professional"') || !index.includes('data-view="sources"') || !index.includes(`src="views-e.js${webVersion}"`)) fail("professional/source-universe navigation missing");
+if (!index.includes('data-view="research"') || !index.includes('data-view="sources"') || !index.includes(`src="views-e.js${webVersion}"`)) fail("research/source-universe navigation missing");
 if (!index.includes('data-view="ops"') || !index.includes(`src="views-f.js${webVersion}"`)) fail("Creator Ops navigation missing");
 if (!styles.includes("@media (max-width: 720px)")) fail("base phone responsive breakpoint missing");
 if (!responsive.includes("@media (max-width: 720px)")) fail("professional phone breakpoint missing");
@@ -60,7 +61,7 @@ if (!index.includes('id="navToggle"') || !app.includes("navToggle")) fail("mobil
 if (!index.includes('href="experience-v2.css' + webVersion + '"')) fail("semantic Experience stylesheet missing");
 if (!index.includes('id="navigationSheet"') || !index.includes('id="navBackdrop"')) fail("contextual index sheet shell missing");
 if (!experience.includes(".topbar-inner,") || !experience.includes(".content {")) fail("header and research surface must share one alignment axis");
-if (!experience.includes("Subject Field -> Change Axis") || !experience.includes(".trace-stage")) fail("semantic Field/Axis/Trace composition missing");
+if (!experience.includes(".rv-section") || !experience.includes(".home-search") || experience.includes("trace-stage") || experience.includes("subject-aperture")) fail("task-first decision view composition missing or legacy layout retained");
 if (!app.includes("closeNavigation") || !app.includes('addEventListener("pageshow"')) fail("contextual navigation close/restore handling missing");
 if (!app.includes('addEventListener("DOMContentLoaded"') || /\nroute\(\);\s*$/.test(viewsD)) fail("deep-link routing must wait for deferred view registration");
 if (!gateway.includes('headers["X-TrendHub-Web-Version"] = VERSION') || !gateway.includes('"no-store, max-age=0"')) fail("public HTML/CSS/JS must never retain an obsolete mobile shell");
@@ -69,7 +70,8 @@ if (!viewsB.includes("实时话题词组图") || !viewsB.includes('qs.set("topic
 if (!viewsC.includes("动态趋势曲线")) fail("dynamic trend curve explanation missing");
 if (!app.includes("chart-line") || !responsive.includes("chart-draw")) fail("animated trend curve contract missing");
 if (!app.includes("TRENHUB_IS_REMOTE") || !app.includes("TRENHUB_RUNTIME_MODE")) fail("web console must detect local vs public runtime");
-if (!viewsE.includes("SUBJECT CONTEXT") || !viewsE.includes("EVIDENCE TRACE") || !viewsE.includes("trace-flow") || !viewsE.includes("/api/professional")) fail("professional semantic research view missing");
+if (!viewsE.includes("/api/review") || !viewsE.includes("当前结论") || !viewsE.includes("平台表现") || !viewsE.includes("/api/professional")) fail("task-first research decision view missing");
+if (viewsE.includes("SUBJECT CONTEXT") || viewsE.includes("EVIDENCE TRACE") || viewsE.includes("trace-flow") || viewsE.includes("changeSummary")) fail("legacy internal/trace wording retained in research view");
 if (!viewsE.includes("/api/professional/sources") || !viewsE.includes("/api/professional/entities")) fail("source universe UX missing");
 if (!viewsE.includes("TRENHUB_IS_REMOTE")) fail("workspace view must distinguish remote from local mode");
 if (!viewsF.includes("/api/ops/summary") || !viewsF.includes("TRENHUB_IS_REMOTE")) fail("Creator Ops must have local API and public-boundary UX");

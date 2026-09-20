@@ -1,8 +1,8 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · Agent-native Trend Intelligence",
-  "version": "1.7.1",
-  "description": "专业级 Agent-native 趋势情报 MCP：Entity-first Professional Intelligence v3、Subject Field / Research Axis / Evidence Trace 语义研究体验、21 个稳定工具、MCP Resources、Evidence Contract v1 与 Skill 2.0。",
+  "version": "1.7.2",
+  "description": "专业级多平台趋势研究 MCP：21 个稳定工具，证据优先的主体研究与决策简报；普通人打开搜索即可得到当前结论、趋势变化、关键驱动、平台表现、证据、机会风险与建议，含来源可靠性、趋势预测与小红书专区。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",
   "homepage": "https://github.com/Zachary-1012/Zachary-Skill",
@@ -90,7 +90,7 @@
       "autoOpenBrowser": true,
       "requiresLLMKey": false,
       "deeplink": "http://127.0.0.1:8333/#/<view>?<params>",
-      "note": "TrendHub Intelligence Workspace：主体研究沿 Subject Field → Change Axis → Evidence Trace → Action Return 展开；原始新闻/Feed 只作为 Evidence。零模型 Key，结论来自同一后端 Intelligence Truth。"
+      "note": "打开网页即可使用：搜索一个主体，先给当前结论与平台速览，再逐步补全趋势变化、关键驱动、证据、机会风险与可执行建议；原始新闻和榜单只作为可回溯的证据。无需模型 Key，分析由你接入的 AI 或同一后端完成。"
     },
     "setup": "node scripts/setup.mjs",
     "build": "npm run build",
@@ -369,10 +369,10 @@
       "curated-editorial"
     ],
     "executiveReport": "trendhub-executive-report-v2-decision-brief",
-    "webExperience": "field-axis-trace-intelligence-workspace",
+    "webExperience": "task-first-decision-view",
     "routing": "entity-brand-company-commercial-place-product-campaign -> professional_intelligence; topic-hotspot-issue -> analyze_topic; raw-rankings -> get_trending",
     "deepLinkRouting": "deferred-view-registration-safe",
-    "primaryComposition": "subject-field-change-axis-evidence-trace-action-return"
+    "primaryComposition": "task-content-result-action-user-only-language"
   },
   "truthSemantics": {
     "schema": "trendhub-truth-state-v1",

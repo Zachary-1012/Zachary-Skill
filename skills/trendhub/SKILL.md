@@ -3,7 +3,7 @@ name: trendhub
 description: Evidence-first, agent-native trend intelligence. Load only the workflow needed for the current request.
 ---
 
-# TrendHub Skill 2.0 · TrendHub v1.7.1
+# TrendHub Skill 2.0 · TrendHub v1.7.2
 
 Use TrendHub when a request needs current or historical trend evidence, cross-source validation, brand/topic research, source reliability, or a structured content brief.
 
