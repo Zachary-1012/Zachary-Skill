@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.7.3 — Review Quality & Performance
+
+- Return a fast backend Decision View first, then replace it with fuller evidence when slower sources finish.
+- Bound interactive source waits so a slow Google Trends / XHS / public-query source cannot hold the whole result page hostage.
+- Stop waiting for the full curated RSS crawl on interactive research; background snapshots and public query evidence continue to cover that layer.
+- Keep missing hotlist/search evidence as unknown and suppress all-zero / +0% forecasts that have no decision value.
+- Remove publisher suffixes and ASCII token fragments from automatic driver extraction.
+- Filter upcoming nodes by subject, industry and region so unrelated US earnings/political events do not appear in a Guangzhou retail research result.
+- Preserve the v1.7.2 user interface, renderer-only frontend, Professional Intelligence v3, Evidence Contract and stable 21-tool facade.
+
+
 ## v1.7.2 — Task-first Decision View
 
 - Rebuild the Web Console around tasks, content, results and actions. A first-time user only sees four home areas — search, recent research, watched subjects and trend discovery — and eight research areas — current conclusion, trend change, key drivers, platform performance, evidence, opportunities/risks, suggestions and actions.
