@@ -111,6 +111,8 @@ try {
   assert.equal(intelligence.entityContext?.entity?.id, "louis-vuitton");
   assert.ok(Array.isArray(intelligence.sourceArchitecture?.selected));
   assert.ok(intelligence.sourceArchitecture.selected.length >= 8);
+  assert.ok(intelligence.evidenceState && Array.isArray(intelligence.evidenceState.sources), "professional response must expose explicit evidence truth states");
+  assert.equal(intelligence.evidenceState.rule.includes("ABSENT is asserted only from fresh usable observations"), true);
   assert.equal(intelligence.sourceArchitecture.selected.some((s) => s.blocksBasicUse === true), false,
     "automatic default route must not select sources that require user credentials/session");
 
