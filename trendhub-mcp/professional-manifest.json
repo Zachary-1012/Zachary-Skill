@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v2-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.5.3",
-  "targetStableVersion": "1.6.0",
-  "candidateVersion": "1.6.0",
+  "stableBase": "1.6.0",
+  "targetStableVersion": "1.6.1",
+  "candidateVersion": "1.6.1",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -13,8 +13,8 @@
   "promotion": {
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
-    "rule": "v1.6.0 promotes MCP Resources, canonical namespace, Unified Evidence Contract v1 and Skill 2.0 while preserving the stable 21-tool compatibility contract; v1.5.3 remains immutable rollback.",
-    "versionPolicy": "v1.6.0 is the next stable minor release above v1.5.3; never rewrite published assets or tags.",
+    "rule": "v1.6.1 is a runtime hotfix above v1.6.0: isolate dailyhot route adapters from the upstream Web shell and own the Douyin public adapter while preserving all v1.6 protocol contracts and the stable 21-tool facade.",
+    "versionPolicy": "v1.6.0 remains immutable; v1.6.1 is the next patch release and rollback keeps published artifacts intact.",
     "prepared": true
   },
   "capabilities": {
