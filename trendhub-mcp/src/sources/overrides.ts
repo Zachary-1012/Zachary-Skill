@@ -7,7 +7,7 @@
 import type { HotItem, HotResult } from "../util/schema.js";
 import { missingResult, nowIso } from "../util/schema.js";
 import { httpGet, TtlCache } from "../util/http.js";
-import { config } from "../config.js";
+import { config, USER_AGENT } from "../config.js";
 
 const cache = new TtlCache<HotResult>(config.cacheTtlSec);
 
@@ -46,6 +46,85 @@ export async function fetchWeibo(limit: number): Promise<HotResult> {
     return res;
   } catch (e) {
     return missingResult("weibo", "微博热搜", "social", `自研接口失败：${(e as Error).message}`);
+  }
+}
+
+
+/* ---------------- 抖音 ---------------- */
+export async function fetchDouyin(limit: number): Promise<HotResult> {
+  const key = `ov:douyin:${limit}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const cookieUrl = "https://www.douyin.com/passport/general/login_guiding_strategy/?aid=6383";
+  const hotUrl = "https://www.douyin.com/aweme/v1/web/hot/search/list/?device_platform=webapp&aid=6383&channel=channel_pc_web&detail_list=1";
+
+  try {
+    let csrf: string | null = null;
+    try {
+      const cookieRes = await fetch(cookieUrl, {
+        headers: {
+          "User-Agent": USER_AGENT,
+          Accept: "application/json,text/plain,*/*",
+          Referer: "https://www.douyin.com/",
+        },
+        redirect: "follow",
+        signal: AbortSignal.timeout(8_000),
+      });
+      const headers = cookieRes.headers as Headers & { getSetCookie?: () => string[] };
+      const setCookies = headers.getSetCookie?.() ?? [cookieRes.headers.get("set-cookie") ?? ""];
+      for (const value of setCookies) {
+        const match = value.match(/(?:^|;\s*)passport_csrf_token=([^;]+)/);
+        if (match?.[1]) {
+          csrf = match[1];
+          break;
+        }
+      }
+    } catch {
+      // 临时 Cookie 只是增强项。拿不到时继续无 Cookie 请求，并由最终响应决定 Truth State。
+    }
+
+    const hotRes = await fetch(hotUrl, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json,text/plain,*/*",
+        Referer: "https://www.douyin.com/",
+        ...(csrf ? { Cookie: `passport_csrf_token=${csrf}` } : {}),
+      },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!hotRes.ok) {
+      return missingResult("douyin", "抖音热点", "video", `抖音公开热榜 HTTP ${hotRes.status}；未将 Cookie 缺失伪装成空榜`);
+    }
+
+    const json = await hotRes.json() as { data?: { word_list?: Array<Record<string, unknown>> } };
+    const rows = Array.isArray(json?.data?.word_list) ? json.data.word_list : [];
+    const items: HotItem[] = rows.slice(0, limit).map((row, i) => ({
+      rank: i + 1,
+      title: String(row.word ?? ""),
+      url: row.sentence_id ? `https://www.douyin.com/hot/${String(row.sentence_id)}` : "https://www.douyin.com/hot",
+      hot: typeof row.hot_value === "number" ? row.hot_value : null,
+      hotText: typeof row.hot_value === "number" ? String(row.hot_value) : null,
+      desc: null,
+      author: null,
+      externalId: row.sentence_id ? String(row.sentence_id) : null,
+    })).filter((item) => item.title);
+
+    const result: HotResult = {
+      platform: "douyin",
+      label: "抖音热点",
+      category: "video",
+      capturedAt: nowIso(),
+      sourceUpdatedAt: null,
+      dataQuality: items.length ? "ok" : "degraded",
+      items,
+      note: items.length ? undefined : "抖音公开热榜当前未返回可用条目；保持显式缺失/降级语义",
+    };
+    cache.set(key, result);
+    return result;
+  } catch (e) {
+    return missingResult("douyin", "抖音热点", "video", `抖音公开热榜不可用：${(e as Error).message}`);
   }
 }
 
