@@ -90,7 +90,7 @@
       "autoOpenBrowser": true,
       "requiresLLMKey": false,
       "deeplink": "http://127.0.0.1:8333/#/<view>?<params>",
-      "note": "打开网页即可使用：搜索一个主体，先给当前结论与平台速览，再逐步补全趋势变化、关键驱动、证据、机会风险与可执行建议；原始新闻和榜单只作为可回溯的证据。无需模型 Key，分析由你接入的 AI 或同一后端完成。"
+      "note": "打开网页即可使用：首页直接研究，研究页先返回结论与变化，再按需展开来源，发现页只展示跨平台聚集与最近变化；底层工具、数据源与运行配置不进入主任务导航。"
     },
     "setup": "node scripts/setup.mjs",
     "build": "npm run build",
@@ -369,12 +369,19 @@
       "curated-editorial"
     ],
     "executiveReport": "trendhub-executive-report-v2-decision-brief",
-    "webExperience": "task-first-decision-view",
+    "webExperience": "user-task-research-workspace",
     "routing": "entity-brand-company-commercial-place-product-campaign -> professional_intelligence; topic-hotspot-issue -> analyze_topic; raw-rankings -> get_trending",
     "deepLinkRouting": "deferred-view-registration-safe",
-    "primaryComposition": "task-content-result-action-user-only-language",
+    "primaryComposition": "research-summary-change-support-next",
     "progressiveResearch": "quick-decision-view-then-full-evidence",
-    "reviewQuality": "missing-not-zero-driver-noise-filtered-subject-relevant-events"
+    "reviewQuality": "missing-not-zero-driver-noise-filtered-subject-relevant-events",
+    "evidenceInteraction": "on-demand-source-drawer",
+    "primaryNavigation": [
+      "home",
+      "research",
+      "discover",
+      "settings"
+    ]
   },
   "truthSemantics": {
     "schema": "trendhub-truth-state-v1",
