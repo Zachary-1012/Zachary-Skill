@@ -57,26 +57,26 @@ export function buildPromotionPlan(version, { dryRun = true } = {}) {
   const gatewayPath = path.join(ROOT, "scripts", "remote-gateway.mjs");
   const serverTsPath = path.join(ROOT, "src", "server.ts");
 
-  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — Professional Intelligence v2 release ${version}；21 MCP tools、Evidence-first、BYO-AI、本地优先。`; writeJson(pkgPath, pkg, dryRun);
+  const pkg = readJson(pkgPath); pkg.version = version; pkg.description = `TrendHub MCP — Professional Intelligence v3 release ${version}；21 MCP tools、Evidence-first、BYO-AI、本地优先。`; writeJson(pkgPath, pkg, dryRun);
   const lock = readJson(lockPath); lock.version = version; if (lock.packages?.[""]) lock.packages[""].version = version; writeJson(lockPath, lock, dryRun);
 
   const manifest = readJson(manifestPath);
   manifest.version = version;
-  manifest.description = "专业级全网趋势情报 MCP Skill：21 个 MCP 工具，覆盖实时热点、Source Reliability、Professional Intelligence v2、多年度历史、异常/预测/回测、品牌与信源宇宙、报告和工作区；BYO-AI、零模型 Key、本地优先。";
+  manifest.description = "专业级 Agent-native 趋势情报 MCP：21 个稳定工具，Entity-first Professional Intelligence v3、Decision-first Intelligence Workspace、Source Reliability、历史/预测/报告与 Evidence Contract；BYO-AI、本地优先。";
   manifest.aiInstall ||= {}; manifest.aiInstall.successMarker = `SMOKE OK tools=${expectedTools}`;
-  ensureTool(manifest, { name: "professional_intelligence", group: "analysis", summary: "Professional Intelligence v2：多年度证据、异常、6/24/48/72h 预测与回测、受众/创作者代理、媒体证据、品牌实体、告警和高管报告" });
+  ensureTool(manifest, { name: "professional_intelligence", group: "analysis", summary: "Professional Intelligence v3：品牌/公司/商业体/产品/Campaign 的 Entity-first 主动取证、决策简报、历史趋势/预测/受众/媒体/风险机会" });
   ensureTool(manifest, { name: "workspace_manage", group: "collaboration", summary: "本地工作区：RBAC、watchlist、saved query、alert rule 与 audit log；不上传中央服务" });
-  manifest.professionalIntelligence = { methodologyVersion: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, externalConstraints: professional.externalConstraints };
+  manifest.professionalIntelligence = { ...manifest.professionalIntelligence, methodologyVersion: "professional-intelligence-v3", compatibilityBase: "professional-intelligence-v2", expectedToolCount: expectedTools, history: "sqlite-indexed-multi-year-with-json-fallback", forecastHorizonsHours: [6,24,48,72], forecastValidation: "holdout-backtest-with-uncertainty", sourceUniverse: "priority-tiered-cn-apac-global", userSetup: "zero-config-first", responsiveWeb: true, entityFirstResearch: "query-evidence-acquisition-before-hotlist-interpretation", executiveReport: "trendhub-executive-report-v2-decision-brief", webExperience: "decision-first-intelligence-workspace", externalConstraints: professional.externalConstraints };
   if (manifest.tools.length !== expectedTools) throw new Error(`PROMOTION FAILED: manifest would declare ${manifest.tools.length} tools, expected ${expectedTools}`);
   writeJson(manifestPath, manifest, dryRun);
 
-  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Agent-native evidence-first trend intelligence with 21 MCP tools and Professional Intelligence v2."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
-  const plugin = readJson(pluginPath); plugin.version = version; plugin.description = "Evidence-first Professional Intelligence v2 with 21 MCP tools, source reliability, forecasting, brand/entity context, reports and local-first workspaces."; writeJson(pluginPath, plugin, dryRun);
+  const serverMeta = readJson(serverMetaPath); serverMeta.version = version; serverMeta.description = "Entity-first evidence intelligence with 21 MCP tools, Resources and Decision-first Web."; if (serverMeta.description.length > 100) throw new Error("PROMOTION FAILED: server.json description exceeds registry limit"); writeJson(serverMetaPath, serverMeta, dryRun);
+  const plugin = readJson(pluginPath); plugin.version = version; plugin.description = "Entity-first Professional Intelligence v3 with 21 MCP tools, Resources, decision briefs and local-first workspaces."; writeJson(pluginPath, plugin, dryRun);
 
   updateTextFile(gatewayPath, (text) => replaceRequired(text, /const VERSION = "\d+\.\d+\.\d+";/, `const VERSION = "${version}";`, "remote gateway version"), dryRun);
   updateTextFile(serverTsPath, (text) => {
     let next = replaceRequired(text, /export const SERVER_VERSION = "\d+\.\d+\.\d+";/, `export const SERVER_VERSION = "${version}";`, "MCP server version");
-    next = next.replace("On the professional development branch, professional_intelligence adds", "Professional Intelligence v2 adds");
+    next = next.replace("On the professional development branch, professional_intelligence adds", "Professional Intelligence v3 adds");
     return next;
   }, dryRun);
 
