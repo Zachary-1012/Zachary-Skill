@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>TrendHub Intelligence Workspace</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%2310a37f'/%3E%3Cpath d='M4 16l4.5-5 3.5 3 5-6.5L20 10' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="styles.css?v=1.7.0" />
-  <link rel="stylesheet" href="responsive-v2.css?v=1.7.0" />
-  <link rel="stylesheet" href="intelligence-v1.css?v=1.7.0" />
-  <!-- v1.7.0: Entity-first Intelligence Workspace; raw feeds are evidence, not the primary product. -->
+  <link rel="stylesheet" href="styles.css?v=1.7.1" />
+  <link rel="stylesheet" href="responsive-v2.css?v=1.7.1" />
+  <link rel="stylesheet" href="experience-v2.css?v=1.7.1" />
+  <!-- v1.7.1: semantic field / axis / trace experience; generic dashboard composition is retired from primary research surfaces. -->
 </head>
-<body>
+<body class="experience-v2">
   <div class="app">
-    <aside class="sidebar">
+    <aside class="sidebar" id="navigationSheet" aria-hidden="true">
       <div class="brand">
         <div class="brand-logo">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 16l4.5-5 3.5 3 5-6.5L20 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -21,9 +21,7 @@
           <div class="brand-name">TrendHub</div>
           <div class="brand-sub">Intelligence Workspace</div>
         </div>
-        <button class="nav-toggle" id="navToggle" type="button" aria-controls="nav" aria-expanded="false" aria-label="打开导航">
-          <span></span><span></span><span></span>
-        </button>
+        <button class="nav-close" id="navClose" type="button" aria-label="关闭导航">关闭</button>
       </div>
       <nav class="nav" id="nav">
         <div class="nav-group">总览</div>
@@ -110,11 +108,21 @@
         <div style="margin-top:6px;">零模型 Key · 零遥测 · 无中央数据回传</div>
       </div>
     </aside>
+    <div class="nav-backdrop" id="navBackdrop" aria-hidden="true"></div>
 
     <main class="main">
       <header class="topbar">
-        <h1 id="viewTitle">研究工作台</h1>
-        <div class="crumb" id="crumb">研究先取证，再下结论；缺失不会被解释为 0</div>
+        <div class="topbar-inner">
+          <button class="global-nav-toggle" id="navToggle" type="button" aria-controls="navigationSheet" aria-expanded="false">
+            <span class="menu-mark" aria-hidden="true">☰</span>
+            <span>索引</span>
+          </button>
+          <div class="topbar-context">
+            <span class="topbar-product">TrendHub</span>
+            <h1 id="viewTitle">研究工作台</h1>
+          </div>
+          <div class="crumb" id="crumb">研究先取证，再下结论；缺失不会被解释为 0</div>
+        </div>
       </header>
       <section class="content" id="content">
         <div class="spinner"></div>
@@ -123,14 +131,14 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <script src="auth.js?v=1.7.0" defer></script>
-  <script src="agent-context.js?v=1.7.0" defer></script>
-  <script src="app.js?v=1.7.0" defer></script>
-  <script src="views-a.js?v=1.7.0" defer></script>
-  <script src="views-b.js?v=1.7.0" defer></script>
-  <script src="views-c.js?v=1.7.0" defer></script>
-  <script src="views-d.js?v=1.7.0" defer></script>
-  <script src="views-e.js?v=1.7.0" defer></script>
-  <script src="views-f.js?v=1.7.0" defer></script>
+  <script src="auth.js?v=1.7.1" defer></script>
+  <script src="agent-context.js?v=1.7.1" defer></script>
+  <script src="app.js?v=1.7.1" defer></script>
+  <script src="views-a.js?v=1.7.1" defer></script>
+  <script src="views-b.js?v=1.7.1" defer></script>
+  <script src="views-c.js?v=1.7.1" defer></script>
+  <script src="views-d.js?v=1.7.1" defer></script>
+  <script src="views-e.js?v=1.7.1" defer></script>
+  <script src="views-f.js?v=1.7.1" defer></script>
 </body>
 </html>
