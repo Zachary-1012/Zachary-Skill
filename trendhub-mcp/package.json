@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
-  "version": "1.7.0",
-  "description": "TrendHub MCP — v1.7.0；Entity-first Professional Intelligence v3、Decision-first Intelligence Workspace、MCP Resources、Evidence Contract、Skill 2.0、21 stable tools。",
+  "version": "1.7.1",
+  "description": "TrendHub MCP — v1.7.1；Entity-first Professional Intelligence v3、Field/Axis/Trace Experience、MCP Resources、Evidence Contract、Skill 2.0、21 stable tools。",
   "type": "module",
   "bin": {
     "trendhub-mcp": "dist/src/index.js"
