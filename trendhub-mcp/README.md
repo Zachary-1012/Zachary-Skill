@@ -1,10 +1,10 @@
-# TrendHub · 全网热点趋势专家 v1.6.1
+# TrendHub · 全网热点趋势专家 v1.6.2
 
 > **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。** v1.6.0 正式提供 MCP Resources、canonical namespace、Unified Evidence Contract v1 与 Skill 2.0；同时覆盖国内外 **51 个运行时平台/趋势信源**，并维护 **129 个专业分层信源**，新增公开 RSS/Atom、GDELT、Apple Podcasts 公共目录与 Bluesky 证据适配器，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
 >
 > TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
 >
-> **v1.6.1 Runtime Adapter Hotfix**：dailyhot 聚合改为 route-only 动态加载，不再加载上游 Web 静态壳；抖音改由 TrendHub 自有公开适配器处理临时 Cookie，缺失/限流保持显式 Evidence State，不再打印上游解析异常。\n>\n> **v1.6.0 Agent-native Foundation**：保持 21 个 Tool 名称和参数兼容，正式发布 `trendhub://namespace`、`trendhub://contracts/evidence`、`trendhub://capabilities`、`trendhub://sources`、`trendhub://skill/trendhub` 等 Resources，并提供平台历史、能力详情和信源访问合同 Resource Templates。`missing != 0`、`RELEASED != OPERATING`，采集适配器不拥有 canonical truth。\n>\n> **v1.5.2 Public Shell Hotfix + Creator Ops**：在本地“运行与交付”能力基础上，修复公网手机端导航占满页面的问题；手机默认显示紧凑顶部栏，导航仅在主动打开后以抽屉呈现。HTML/CSS/JS 使用版本化资源和 no-store 缓存策略；不上传遥测、不读取密钥、不自动重启或发布。公网 Remote 不暴露 `/api/ops/*`。安装使用仍**无需审批、注册、登录或中央服务器**。
+> **v1.6.2 Web Truth Hotfix**：公网首页读取完整 P2 Source Universe，统一显示 129 个专业分层信源，并移除稳定版残留 DEV 标记。\n>\n> **v1.6.1 Runtime Adapter Hotfix**：dailyhot 聚合改为 route-only 动态加载，不再加载上游 Web 静态壳；抖音改由 TrendHub 自有公开适配器处理临时 Cookie，缺失/限流保持显式 Evidence State，不再打印上游解析异常。\n>\n> **v1.6.0 Agent-native Foundation**：保持 21 个 Tool 名称和参数兼容，正式发布 `trendhub://namespace`、`trendhub://contracts/evidence`、`trendhub://capabilities`、`trendhub://sources`、`trendhub://skill/trendhub` 等 Resources，并提供平台历史、能力详情和信源访问合同 Resource Templates。`missing != 0`、`RELEASED != OPERATING`，采集适配器不拥有 canonical truth。\n>\n> **v1.5.2 Public Shell Hotfix + Creator Ops**：在本地“运行与交付”能力基础上，修复公网手机端导航占满页面的问题；手机默认显示紧凑顶部栏，导航仅在主动打开后以抽屉呈现。HTML/CSS/JS 使用版本化资源和 no-store 缓存策略；不上传遥测、不读取密钥、不自动重启或发布。公网 Remote 不暴露 `/api/ops/*`。安装使用仍**无需审批、注册、登录或中央服务器**。
 
 ---
 
