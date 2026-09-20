@@ -3,7 +3,7 @@ VIEWS.dashboard = async function (content) {
   const [health, latest, universe] = await Promise.all([
     api("/api/health"),
     api("/api/trending?mode=snapshot&limit=5"),
-    api("/api/professional/sources?priority=P1"),
+    api("/api/professional/sources?priority=P2"),
     ensureMeta(),
   ]);
   const catTiles = CATS.platformCategories
