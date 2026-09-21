@@ -38,5 +38,7 @@ try {
 
   console.log("WEB SNAPSHOT FALLBACK TEST OK");
 } finally {
-  fs.rmSync(tmp, { recursive: true, force: true });
+  const history = await import("../dist/src/store/history.js");
+  history.closeHistoryStore();
+  fs.rmSync(tmp, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 }

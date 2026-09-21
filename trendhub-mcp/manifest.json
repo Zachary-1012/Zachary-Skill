@@ -377,9 +377,9 @@
     "reviewQuality": "missing-not-zero-driver-noise-filtered-subject-relevant-events",
     "evidenceInteraction": "on-demand-source-drawer",
     "primaryNavigation": [
-      "home",
       "research",
       "discover",
+      "watch",
       "settings"
     ]
   },

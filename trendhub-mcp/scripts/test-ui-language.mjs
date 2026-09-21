@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const web = (name) => readFile(join(root, "web", name), "utf8");
 
 const [index, app, viewsA, viewsB, viewsE, styles, viewsD] = await Promise.all([
@@ -28,16 +29,16 @@ for (const [name, content] of [["index", index], ["app", app], ["views-a", views
 }
 
 /* 顶层只保留用户任务，不平铺工具。 */
-for (const view of ["dashboard", "research", "discover", "settings"]) {
+for (const view of ["research", "discover", "watch", "settings"]) {
   assert.match(index, new RegExp(`data-view="${view}"`));
 }
+assert.doesNotMatch(index, /data-view="dashboard"/, "主导航不得恢复旧 Dashboard 入口");
 for (const hiddenTool of ["xhs", "trending", "clusters", "overlap", "curve", "related", "signals", "events", "topic", "sources", "workspace", "ops"]) {
   assert.doesNotMatch(index, new RegExp(`data-view="${hiddenTool}"`), `主导航泄漏工具入口：${hiddenTool}`);
 }
 assert.match(index, /sidebarRecents/);
 assert.match(app, /renderSidebarRecents/);
-assert.ok(app.includes('$(".nav-item").forEach'), "route must iterate all nav items");
-assert.ok(!app.includes('$(".nav-item").forEach'), "route must not call forEach on a single Element");
+assert.ok(app.includes('$$(".nav-item").forEach'), "route must iterate all nav items");
 
 /* 首页是工作入口，不是概念官网。 */
 assert.match(viewsA, /home-search/);
@@ -64,6 +65,7 @@ assert.match(viewsE, /evidenceDrawer/);
 assert.match(viewsE, /openEvidenceDrawer/);
 assert.match(viewsE, /renderDecision/);
 assert.match(viewsE, /rv-skeleton|rvSkeleton/);
+assert.doesNotMatch(viewsE, /href="#\/dashboard"/);
 assert.doesNotMatch(viewsE, /changeSummary/);
 
 /* 内容面而不是八区块报表/KPI墙。 */
@@ -71,6 +73,7 @@ assert.match(styles, /\.research-summary/);
 assert.match(styles, /\.evidence-drawer/);
 assert.match(styles, /\.sidebar-recents/);
 assert.match(styles, /\.home-search/);
+assert.match(styles, /\.home-title[\s\S]*overflow-wrap: anywhere/);
 assert.doesNotMatch(styles, /\.rv-section|subject-aperture|question-axis|trace-stage|interpretation-strata/);
 
 /* 创作仍是上下文动作，不进入顶层导航。 */

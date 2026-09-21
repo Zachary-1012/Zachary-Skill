@@ -140,7 +140,7 @@ VIEWS.research = async function (root, params) {
       $("#rvProgress", root)?.replaceChildren();
       body.innerHTML =
         note("err", `这次研究没有完成：${esc(error.message)}`) +
-        '<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/dashboard">返回首页</a></div>';
+        '<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/research">返回研究</a></div>';
       $("#rvRetry", root).onclick = () => VIEWS.research(root, params);
     } else {
       $("#rvProgress", root)?.replaceChildren();

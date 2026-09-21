@@ -1085,6 +1085,19 @@ body.experience-v2 .entity-card {
 }
 
 @media (max-width: 620px) {
+  .home-title,
+  .home-sub {
+    width: min(100%, 20rem);
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .home-title {
+    font-size: clamp(26px, 8vw, 32px);
+    line-height: 1.25;
+    word-break: break-word;
+  }
   .home-search { flex-direction: column; }
   .home-search .btn.lg { width: 100%; }
   .insight-row { grid-template-columns: 40px minmax(0, 1fr); }

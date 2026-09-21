@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { listCapabilities } from "../dist/src/agent-native/capability-registry.js";
@@ -11,7 +12,7 @@ import { routeIntent } from "../dist/src/agent-native/router.js";
 import { metric } from "../dist/src/agent-native/observability.js";
 import { transitionTask } from "../dist/src/agent-native/tasks.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const skillRoot = join(root, "..", "skills", "trendhub");
 const skill = await readFile(join(skillRoot, "SKILL.md"), "utf8");
 assert.match(skill, /Progressive disclosure/);

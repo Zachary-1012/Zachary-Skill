@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { skillContract } from "../dist/src/agent-native/skill-contract.js";
 import { buildProfessionalIntelligence } from "../dist/src/analysis/professional.js";
 import { buildExecutiveReport } from "../dist/src/reports/executive.js";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(root, "..");
 
 const skill = skillContract();
@@ -98,9 +99,10 @@ const queryEvidence = await readFile(join(root, "src", "sources", "query-evidenc
 /* 使用者只看到任务、内容、结果、操作；内部系统语言不得出现在外壳与主路径 */
 assert.doesNotMatch(index, /Intelligence Workspace|Subject Field|Research Axis|Evidence Trace|subject-aperture|trace-stage/);
 assert.match(index, /experience-v2\.css\?v=1\.7\.4/);
-for (const view of ["dashboard", "research", "discover", "settings"]) {
+for (const view of ["research", "discover", "watch", "settings"]) {
   assert.match(index, new RegExp(`data-view="${view}"`));
 }
+assert.doesNotMatch(index, /data-view="dashboard"/, "legacy dashboard must not return to primary navigation");
 for (const hiddenTool of ["xhs", "trending", "clusters", "overlap", "curve", "related", "signals", "events", "topic", "sources", "workspace", "ops"]) {
   assert.doesNotMatch(index, new RegExp(`data-view="${hiddenTool}"`), `tool route leaked into primary navigation: ${hiddenTool}`);
 }
@@ -160,6 +162,7 @@ assert.equal(manifest.version, "1.7.4");
 assert.equal(manifest.professionalIntelligence.methodologyVersion, "professional-intelligence-v3");
 assert.equal(manifest.professionalIntelligence.webExperience, "user-task-research-workspace");
 assert.equal(manifest.professionalIntelligence.primaryComposition, "research-summary-change-support-next");
+assert.deepEqual(manifest.professionalIntelligence.primaryNavigation, ["research", "discover", "watch", "settings"]);
 assert.equal(manifest.tools.length, 21);
 
 console.log("V1.7 USER PRODUCT AUTHORITY OK tools=21 nav=user-tasks research=continuous evidence=on-demand renderer-only");

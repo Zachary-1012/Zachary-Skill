@@ -70,7 +70,7 @@
   ],
   "uxRules": [
     "user-sees-only-task-content-result-and-action",
-    "primary-navigation-is-home-research-discover-settings-not-tool-list",
+    "primary-navigation-is-research-discover-watch-settings-not-tool-list",
     "single-intent-search-entry-with-progressive-results",
     "frontend-is-renderer-backend-decision-view-owns-all-judgement",
     "research-is-continuous-summary-change-support-next-not-eight-section-report",
