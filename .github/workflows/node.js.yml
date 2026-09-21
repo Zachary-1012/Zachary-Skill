@@ -164,6 +164,25 @@ jobs:
           cat "$RUNNER_TEMP/trendhub-preview.log"
           exit 1
 
+      - name: Install CJK fonts for visual review
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Assert rendered DOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/dashboard" > "$RUNNER_TEMP/home-dom.html"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/research" > "$RUNNER_TEMP/research-dom.html"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/discover" > "$RUNNER_TEMP/discover-dom.html"
+          grep -F 'class="home-search"' "$RUNNER_TEMP/home-dom.html"
+          grep -F 'id="rvEntryForm"' "$RUNNER_TEMP/research-dom.html"
+          grep -F 'class="discover-page"' "$RUNNER_TEMP/discover-dom.html"
+
       - name: Capture real product surfaces
         shell: bash
         run: |
@@ -171,11 +190,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/trendhub-visual"
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/home-desktop.png" "http://127.0.0.1:18445/#/dashboard"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/home-mobile.png" "http://127.0.0.1:18445/#/dashboard"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/research-desktop.png" "http://127.0.0.1:18445/#/research"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/research-mobile.png" "http://127.0.0.1:18445/#/research"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/discover-desktop.png" "http://127.0.0.1:18445/#/discover"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/home-desktop.png" "http://127.0.0.1:18445/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/home-mobile.png" "http://127.0.0.1:18445/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/research-desktop.png" "http://127.0.0.1:18445/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/research-mobile.png" "http://127.0.0.1:18445/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/discover-desktop.png" "http://127.0.0.1:18445/#/discover"
 
       - name: Upload visual preview
         uses: actions/upload-artifact@v4
