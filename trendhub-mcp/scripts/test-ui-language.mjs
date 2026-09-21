@@ -36,6 +36,8 @@ for (const hiddenTool of ["xhs", "trending", "clusters", "overlap", "curve", "re
 }
 assert.match(index, /sidebarRecents/);
 assert.match(app, /renderSidebarRecents/);
+assert.match(app, /\$\$\("\\.nav-item"\)\.forEach/);
+assert.doesNotMatch(app, /\$\("\\.nav-item"\)\.forEach/);
 
 /* 首页是工作入口，不是概念官网。 */
 assert.match(viewsA, /home-search/);
