@@ -25,6 +25,10 @@ npm run start:remote
 
 The hosting platform must provide `PORT` (or `TRENTHUB_REMOTE_PORT`). The gateway binds `0.0.0.0` by default; the private MCP core remains loopback-only on a separate internal port.
 
+## Release ordering
+
+Production promotion is deliberately one-way: GitHub CI succeeds, Railway deploys the connected `main` revision, the public `/health` and MCP handshake confirm the canonical version, and only then may Registry metadata be published. The Registry workflow is triggered by Railway's successful production `deployment_status`; it must never run before deployment and wait on Railway, because Railway's **Wait for CI** gate would create a circular dependency.
+
 ## Public endpoints
 
 - `POST /mcp` — stateless Streamable HTTP MCP
@@ -54,4 +58,4 @@ Local-only mutating routes such as `/api/snapshot` are not published: `GET` retu
 
 The scheduler wraps the same `takeSnapshots()` pipeline as the local edition and is **disabled by default**. When enabling it on the host, mount a persistent volume at `TRENTHUB_DATA_DIR` (e.g. `/data/trendhub`); without it, the bounded history is lost on every redeploy. Collection failures only set `snapshotScheduler.lastError` and never exit the MCP process, and overlapping runs are skipped (`skippedBecauseRunning`). State is exposed on `GET /health` as `snapshotScheduler` (`enabled`/`running`/`intervalMs`/`lastRunAt`/`lastSuccessAt`/`lastOk`/`lastTotal`/`lastError`/`skippedBecauseRunning`). See `scheduled-snapshots.md` for local cron / Windows Task Scheduler equivalents.
 
-The remote gateway is a distribution adapter. v1.5.0 exposes the 21-tool contract and does not weaken the local edition's non-loopback bearer-token requirement.
+The remote gateway is a distribution adapter. v2.0.0 exposes the 21-tool contract and does not weaken the local edition's non-loopback bearer-token requirement.
