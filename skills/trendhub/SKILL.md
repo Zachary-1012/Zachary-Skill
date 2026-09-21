@@ -20,7 +20,18 @@ Progressive disclosure:
 
 Before making a conclusion, follow `policies/evidence.md`, `policies/confidence.md`, and `policies/reliability.md`. For creation, also load `policies/model-routing.md`. Load `policies/forecasting.md` only when a forecast is requested.
 
-Content creation must produce or update a usable artifact. In an MCP Apps host, open the TrendHub Content Studio attached to `get_content_brief` and use the person's current host AI. In a local installation, the workspace may connect to a user-controlled OpenAI-compatible endpoint. Do not ask the person to copy a prompt into a separate model when either route is available.
+Content creation must produce or update a usable artifact. In an MCP Apps host,
+open the TrendHub Content Studio attached to `get_content_brief` and use the
+person's current host AI. In a local installation, optional Settings channels
+accept DeepSeek, Zhipu BigModel, or a user-controlled loopback OpenAI-compatible
+endpoint. An unconfigured channel never blocks the product; once filled and
+saved, it connects automatically and the content studio writes the editable
+artifact in place. Do not
+ask the person to copy a prompt into a separate model when any route is available.
+
+Optional Xiaohongshu Cookie enhancement is also configured in local Settings.
+The Cookie must contain `a1` and `web_session`, stays in process memory, and
+must never be sent to or accepted by the public hosted service.
 
 Use this production chain: Brief → Context → Research/Evidence → Strategy → Draft → Review → Approval → Export/Publish preparation → Measurement → Evaluation → versioned learning. Creative expression may vary; facts and claims may only come from verified evidence or explicit user input. Unknown facts stay marked `【待核验】`.
 

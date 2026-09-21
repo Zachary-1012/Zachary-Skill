@@ -2,7 +2,7 @@
 
 全员可用的 **AI Skill / MCP 插件仓库**。当前主技能 **TrendHub 2.0** 是证据驱动的 AI 内容创作平台：从 51 个运行时信源与 129 个专业分层信源形成简报，进入持久创作项目，调用使用者当前 AI 或本地开放模型生成可编辑成稿，再完成审核、排期与复盘。它保留 Professional Intelligence v3、Unified Evidence Contract、明确 Truth State 与 **21 个稳定 MCP 工具**，并新增 MCP Apps 内容工作台；趋势研究现在是创作输入，而不是产品终点。
 
-每个技能与具体大模型解耦：MCP Apps 中使用当前宿主 AI，本地工作台可连接使用者控制的 OpenAI-compatible/Ollama 端点；**优先复用许可明确、可商用、任务适配的开放权重模型，模型凭据不发送给 TrendHub。**
+每个技能与具体大模型解耦：MCP Apps 中使用当前宿主 AI，本地工作台保留 DeepSeek、智谱和使用者控制的 OpenAI-compatible/Ollama 可选通道；**优先复用许可明确、可商用、任务适配的开放权重模型，模型凭据只驻留本地进程，不发送到 TrendHub 公网服务。**
 
 > 本仓库**公开分发**：拿到仓库链接即可 clone 安装，无需审批、注册、登录或中央服务器。原仓库的写权限仅属于 `@Zachary-1012` 与其明确邀请的 Collaborators；公开用户不会因为仓库可见而获得 upstream 写权限。治理规则见 [`GOVERNANCE.md`](./GOVERNANCE.md)。
 
@@ -211,7 +211,7 @@ TrendHub 不跟随 `main` HEAD 自动更新。`scripts/launcher.mjs` 只检查 *
 ## 安全与治理
 
 - HTTP 默认绑定 `127.0.0.1`；任何非 loopback 监听都必须配置 `TRENTHUB_HTTP_TOKEN`，并用 Bearer Token 访问 `/mcp` 与 `/api/*`。
-- 仓库不应包含任何模型 Key、Cookie、Token 或内部资料；`XHS_COOKIE` 只保存在使用者本机环境变量。
+- 仓库不应包含任何模型 Key、Cookie、Token 或内部资料；`XHS_COOKIE` 可放在使用者本机环境变量，也可从本地设置页临时注入进程内存，均不得进入公网服务、项目数据、日志或诊断。
 - `main` 受保护：必须 PR、Node 22/24 required checks、up-to-date、禁止 force push、禁止删除、无 bypass。
 - upstream 原仓库只允许 owner 与 owner 邀请的 Collaborators 修改；公开用户只有读取/clone/使用 upstream 的权限。
 - 软件从 **TrendHub v1.4.3** 起按 **TrendHub Free Use License 1.0** 分发：个人与公司可免费使用未修改版本，但不得修改、制作派生版本、再发布或再分发软件本身；第三方依赖/代码仍按各自许可证执行。v1.4.2 及以前已经授予的 MIT 权利不追溯撤销。

@@ -1,7 +1,7 @@
 "use strict";
 
-/* TrendHub 2.0 content workspace. Projects stay in this browser. AI credentials
- * stay in session memory and are never sent to TrendHub. */
+/* TrendHub 2.0 content workspace. Projects stay in this browser. Credentials
+ * are sent only to the local TrendHub runtime and remain in process memory. */
 (function () {
   const PROJECT_KEY = "content-projects-v2";
   const MODEL_KEY = "model-settings-v2";
@@ -15,7 +15,11 @@
   const now = () => new Date().toISOString();
   const uid = () => `thp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
   const clean = (value) => String(value ?? "").trim();
-  const modelToken = { value: "" };
+  const PROVIDER_DEFAULTS = {
+    deepseek: { endpoint: "https://api.deepseek.com", model: "deepseek-v4-flash" },
+    zhipu: { endpoint: "https://open.bigmodel.cn/api/paas/v4", model: "" },
+    "openai-compatible": { endpoint: "http://127.0.0.1:11434/v1", model: "" },
+  };
 
   function projects() {
     return TH_STORE.get(PROJECT_KEY, []).filter((item) => item && item.id);
@@ -53,7 +57,10 @@
     return project;
   }
   function modelSettings() {
-    return TH_STORE.get(MODEL_KEY, { endpoint: "http://127.0.0.1:11434/v1", model: "", mode: "auto" });
+    return TH_STORE.get(MODEL_KEY, {
+      mode: "auto", provider: "openai-compatible",
+      endpoint: PROVIDER_DEFAULTS["openai-compatible"].endpoint, model: "",
+    });
   }
   function saveModelSettings(value) { TH_STORE.set(MODEL_KEY, value); }
   function hostAI() { return typeof window.openai?.sendFollowUpMessage === "function"; }
@@ -102,45 +109,36 @@
     return brief;
   }
 
-  async function localGenerate(project) {
+  async function configuredGenerate(project) {
     const settings = modelSettings();
-    if (!clean(settings.endpoint) || !clean(settings.model)) throw new Error("请先在 AI 设置中填写本地端点和模型");
-    const endpoint = settings.endpoint.replace(/\/$/, "") + "/chat/completions";
-    const headers = { "Content-Type": "application/json" };
-    if (modelToken.value) headers.Authorization = `Bearer ${modelToken.value}`;
-    const response = await fetch(endpoint, {
-      method: "POST", headers,
-      body: JSON.stringify({
-        model: settings.model, temperature: 0.72, stream: false,
-        messages: [
-          { role: "system", content: "你是证据约束的资深内容创作者。事实不确定时明确标注，不得编造。输出完整可编辑制品。" },
-          { role: "user", content: productionPrompt(project) },
-        ],
-      }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error?.message || payload.error || `AI 端点 HTTP ${response.status}`);
-    const output = payload.choices?.[0]?.message?.content;
+    if (!clean(settings.model)) throw new Error("请先在设置中连接 AI 并填写模型");
+    const payload = await post("/api/connections/ai/generate", { prompt: productionPrompt(project) });
+    const output = payload.output;
     if (!clean(output)) throw new Error("AI 返回了空内容");
     project.draft = clean(output);
     project.stage = "create";
-    project.ai = { state: "completed", provider: "user-openai-compatible", model: settings.model, lastRunAt: now() };
+    project.ai = {
+      state: "completed",
+      provider: payload.provider || settings.provider || "user-ai",
+      model: payload.model || settings.model,
+      lastRunAt: now(),
+    };
     putProject(project);
   }
 
   async function runAI(project) {
     if (!project.brief) await createBrief(project);
     const settings = modelSettings();
-    if (settings.mode === "local" && clean(settings.model)) return localGenerate(project);
-    if (hostAI() && settings.mode !== "local") {
+    if (settings.mode === "connected" && clean(settings.model)) return configuredGenerate(project);
+    if (hostAI() && settings.mode !== "connected") {
       project.stage = "create";
       project.ai = { state: "handed_to_host", provider: "host-ai", model: "current-user-model", lastRunAt: now() };
       putProject(project);
       await window.openai.sendFollowUpMessage({ prompt: productionPrompt(project), scrollToBottom: true });
       return "host";
     }
-    if (clean(settings.model)) return localGenerate(project);
-    throw new Error("当前浏览器没有可用的宿主 AI；请在 ChatGPT 中打开 TrendHub，或配置本地开放模型端点");
+    if (clean(settings.model)) return configuredGenerate(project);
+    throw new Error("当前没有可用的宿主 AI；请在设置中连接 DeepSeek、智谱或本地开放模型");
   }
 
   function renderSidebarProjects() {
@@ -190,10 +188,10 @@
   function aiPanel(project) {
     const settings = modelSettings();
     const connected = hostAI() || clean(settings.model);
-    const label = hostAI() && settings.mode !== "local" ? "当前宿主 AI" : clean(settings.model) ? settings.model : "未连接";
+    const label = hostAI() && settings.mode !== "connected" ? "当前宿主 AI" : clean(settings.model) ? settings.model : "未连接";
     return `<section class="paper-panel ai-panel">
       <div class="panel-kicker">Your AI</div><h2>创作引擎</h2>
-      <div class="ai-presence"><i class="${connected ? "online" : ""}"></i><div><strong>${esc(label)}</strong><span>${hostAI() ? "使用者当前会话模型" : clean(settings.model) ? "使用者本地/自托管模型" : "不提供假输出"}</span></div></div>
+      <div class="ai-presence"><i class="${connected ? "online" : ""}"></i><div><strong>${esc(label)}</strong><span>${hostAI() && settings.mode !== "connected" ? "使用者当前会话模型" : clean(settings.model) ? "使用者配置的私有连接" : "不提供假输出"}</span></div></div>
       <button class="maple-button full" id="runAI" type="button">让我的 AI 创作</button>
       <button class="text-button" id="openAISettings" type="button">模型与连接设置</button>
       <p class="microcopy">开放模型按许可、能力、中文质量和硬件适配动态选择；TrendHub 不保存密钥。</p>
@@ -204,10 +202,10 @@
     const settings = modelSettings();
     return `<dialog class="model-dialog" id="modelDialog"><form method="dialog">
       <div class="dialog-head"><div><span class="panel-kicker">AI Connection</span><h2>使用你的 AI</h2></div><button class="icon-close" value="cancel" aria-label="关闭">×</button></div>
-      <label>运行方式<select id="aiMode"><option value="auto" ${settings.mode === "auto" ? "selected" : ""}>自动：优先当前宿主 AI</option><option value="host" ${settings.mode === "host" ? "selected" : ""}>仅当前宿主 AI</option><option value="local" ${settings.mode === "local" ? "selected" : ""}>本地 / 自托管开放模型</option></select></label>
-      <label>OpenAI-compatible 端点<input id="aiEndpoint" value="${esc(settings.endpoint)}" placeholder="http://127.0.0.1:11434/v1"></label>
-      <label>模型<input id="aiModel" value="${esc(settings.model)}" placeholder="例如 gpt-oss:20b / qwen3:32b"></label>
-      <label>临时令牌<input id="aiToken" type="password" autocomplete="off" placeholder="仅保存在当前页面内存"></label>
+      <label>提供方<select id="aiProvider"><option value="deepseek" ${settings.provider === "deepseek" ? "selected" : ""}>DeepSeek API</option><option value="zhipu" ${settings.provider === "zhipu" ? "selected" : ""}>智谱 BigModel API</option><option value="openai-compatible" ${settings.provider === "openai-compatible" ? "selected" : ""}>本地 / OpenAI-compatible</option></select></label>
+      <label>端点<input id="aiEndpoint" value="${esc(settings.endpoint)}" placeholder="本地连接只允许 127.0.0.1 / localhost"></label>
+      <label>模型<input id="aiModel" value="${esc(settings.model)}" placeholder="填写提供方可用的模型名称"></label>
+      <label>API Key<input id="aiToken" type="password" autocomplete="new-password" placeholder="仅驻留本地 TrendHub 进程内存"></label>
       <div class="license-note">优先 Apache-2.0 等明确支持商业使用的开放权重模型。实际模型许可证仍以对应版本的官方模型卡为准。</div>
       <div class="dialog-actions"><button class="quiet-button" value="cancel">取消</button><button class="maple-button" id="saveAISettings" value="default">保存连接</button></div>
     </form></dialog>`;
@@ -247,7 +245,31 @@
     root.querySelector("#inspectBrief")?.addEventListener("click", () => root.querySelector("#briefDialog")?.showModal());
     root.querySelector("#briefDialog .icon-close")?.addEventListener("click", () => root.querySelector("#briefDialog")?.close());
     root.querySelector("#openAISettings")?.addEventListener("click", () => root.querySelector("#modelDialog")?.showModal());
-    root.querySelector("#saveAISettings")?.addEventListener("click", (event) => { event.preventDefault(); saveModelSettings({ mode: root.querySelector("#aiMode").value, endpoint: clean(root.querySelector("#aiEndpoint").value), model: clean(root.querySelector("#aiModel").value) }); modelToken.value = root.querySelector("#aiToken").value; root.querySelector("#modelDialog").close(); toast("AI 连接设置已保存"); VIEWS.studio(root, { id: project.id }); });
+    const providerSelect = root.querySelector("#aiProvider");
+    providerSelect?.addEventListener("change", () => {
+      const preset = PROVIDER_DEFAULTS[providerSelect.value];
+      root.querySelector("#aiEndpoint").value = preset?.endpoint || "";
+      if (!clean(root.querySelector("#aiModel").value)) root.querySelector("#aiModel").value = preset?.model || "";
+    });
+    root.querySelector("#saveAISettings")?.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const value = {
+        mode: "connected",
+        provider: providerSelect.value,
+        endpoint: clean(root.querySelector("#aiEndpoint").value),
+        model: clean(root.querySelector("#aiModel").value),
+      };
+      try {
+        if (window.TRENHUB_IS_REMOTE) throw new Error("公网托管页不接收私人密钥，请在本地 TrendHub 中连接");
+        await post("/api/connections/ai", { ...value, apiKey: root.querySelector("#aiToken").value });
+        saveModelSettings(value);
+        root.querySelector("#modelDialog").close();
+        toast("已保存并自动连接；未配置时仍使用宿主 AI");
+        VIEWS.studio(root, { id: project.id });
+      } catch (error) {
+        toast(error.message);
+      }
+    });
   };
 
   VIEWS.library = function (root) {
@@ -264,5 +286,16 @@
 
   window.createTrendHubProject = function () {
     const project = makeProject(); putProject(project); location.hash = `#/studio?id=${project.id}`;
+  };
+
+  window.TrendHubConnections = {
+    presets: PROVIDER_DEFAULTS,
+    getPreferences: modelSettings,
+    savePreferences: saveModelSettings,
+    status: () => api("/api/connections/status"),
+    saveAi: (value) => post("/api/connections/ai", value),
+    clearAi: () => post("/api/connections/ai/clear"),
+    saveXhs: (cookie) => post("/api/connections/xhs", { cookie }),
+    clearXhs: () => post("/api/connections/xhs/clear"),
   };
 })();
