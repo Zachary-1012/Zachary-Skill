@@ -281,7 +281,7 @@ async function route() {
   const viewTitle = $("#viewTitle");
   if (viewTitle) viewTitle.textContent = title;
   document.title = title ? `${title} · TrendHub` : "TrendHub · 趋势研究";
-  $(".nav-item").forEach((a) => {
+  $$(".nav-item").forEach((a) => {
     const dv = a.dataset.view;
     const active =
       dv === view ||
