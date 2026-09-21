@@ -113,20 +113,37 @@ export function generateSearchId(): string {
 class XhsClient {
   private session: XhsSession | null = null;
   private sessionAt = 0;
+  private runtimeCookie = "";
   /** 游客会话保守有效期；过期或失效时自动重新激活。 */
   private readonly ttlMs = 25 * 60 * 1000;
 
   /** 是否配置了可用的真人登录 Cookie（同时含 a1 与 web_session）。 */
   hasLoginCookie(): boolean {
-    const raw = process.env.XHS_COOKIE?.trim();
+    const raw = this.runtimeCookie || process.env.XHS_COOKIE?.trim();
     if (!raw) return false;
     const jar = parseCookieString(raw);
     return Boolean(jar.a1 && jar.web_session);
   }
 
+  /** 仅在当前本地进程内使用登录 Cookie；不会写盘或写回环境变量。 */
+  setLoginCookie(raw: string): { ok: boolean; error?: string } {
+    const value = raw.trim();
+    if (!value) return { ok: false, error: "请填写 Cookie" };
+    const jar = parseCookieString(value);
+    if (!jar.a1 || !jar.web_session) {
+      return { ok: false, error: "Cookie 必须同时包含 a1 与 web_session" };
+    }
+    this.runtimeCookie = value;
+    return { ok: true };
+  }
+
+  clearLoginCookie(): void {
+    this.runtimeCookie = "";
+  }
+
   async getSession(force = false): Promise<XhsSession> {
     // 1) 真人登录态优先（每次读取环境变量，便于运行期注入后即时生效）
-    const envCookie = process.env.XHS_COOKIE?.trim();
+    const envCookie = this.runtimeCookie || process.env.XHS_COOKIE?.trim();
     if (envCookie) {
       const jar = parseCookieString(envCookie);
       if (jar.a1 && jar.web_session) return { jar, mode: "cookie", userId: null };

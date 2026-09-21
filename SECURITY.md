@@ -9,7 +9,7 @@ Security fixes target the latest GitHub **Stable Release**. Development `main` i
 - Local HTTP defaults to `127.0.0.1`.
 - Any non-loopback bind requires `TRENTHUB_HTTP_TOKEN`; `/mcp` and `/api/*` require a Bearer token.
 - TrendHub does not require a model API key and does not send usage telemetry to a TrendHub central service.
-- Platform credentials such as `XHS_COOKIE` are local environment variables only and must never be committed, logged into diagnostics, or copied into benchmark evidence.
+- Optional model API Keys and `XHS_COOKIE` values entered in Settings live only in the local Node.js process. Environment variables remain supported. Secrets must never be accepted by the hosted gateway, persisted, committed, logged into diagnostics, or copied into benchmark evidence.
 - Node-free bootstrap downloads Node 24 LTS from `nodejs.org` and verifies the official `SHASUMS256.txt` before execution.
 - Stable updates follow GitHub Stable Releases, not `main` HEAD.
 
