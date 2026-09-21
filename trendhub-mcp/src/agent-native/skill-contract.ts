@@ -1,7 +1,7 @@
 export const TRENDHUB_SKILL_CONTRACT = {
   schema: "trendhub-skill-v2",
   skillVersion: "2.0",
-  productVersion: "1.7.4",
+  productVersion: "2.0.0",
   name: "trendhub",
   progressiveDisclosure: true,
   compatibilityTools: 21,
@@ -17,9 +17,10 @@ export const TRENDHUB_SKILL_CONTRACT = {
     "brand-radar",
     "campaign-research",
     "content-research",
+    "content-creation",
     "trend-validation",
   ],
-  policies: ["evidence", "confidence", "reliability", "forecasting"],
+  policies: ["evidence", "confidence", "reliability", "forecasting", "model-routing"],
   routing: {
     entityFirst: {
       intents: ["brand", "company", "commercial-place", "product", "campaign", "business-subject"],
@@ -43,7 +44,8 @@ export const TRENDHUB_SKILL_CONTRACT = {
     "call-canonical-tool",
     "cross-check-evidence-when-required",
     "preserve-limitations-and-truth-state",
-    "caller-ai-interprets",
+    "user-ai-produces-editable-artifact",
+    "review-before-publish",
   ],
   boundaries: {
     dataTruthOwner: "trendhub-core",
@@ -51,6 +53,8 @@ export const TRENDHUB_SKILL_CONTRACT = {
     adaptersAreTruthOwners: false,
     plannedCoverageCountsAsLive: false,
     missingBecomesZero: false,
+    modelOutputBecomesEvidence: false,
+    modelCredentialsLeaveUserRuntime: false,
   },
 } as const;
 

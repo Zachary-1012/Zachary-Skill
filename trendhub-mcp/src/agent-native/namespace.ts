@@ -1,6 +1,6 @@
 export const TRENDHUB_NAMESPACE = {
   schema: "trendhub-namespace-v1",
-  productVersion: "1.7.4",
+  productVersion: "2.0.0",
   capabilityPrefix: "trendhub.",
   resourceScheme: "trendhub://",
   toolCompatibility: {
@@ -16,6 +16,7 @@ export const TRENDHUB_NAMESPACE = {
     "trendhub://namespace",
     "trendhub://contracts/evidence",
     "trendhub://skill/trendhub",
+    "ui://trendhub/content-studio.html",
   ],
   resourceTemplates: [
     "trendhub://platform/{platform}/history",

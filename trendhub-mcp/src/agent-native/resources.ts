@@ -7,6 +7,7 @@ import { capabilityRegistry, listCapabilities } from "./capability-registry.js";
 import { completeResult, evidenceContract } from "./evidence-contract.js";
 import { namespaceContract } from "./namespace.js";
 import { skillContract } from "./skill-contract.js";
+import { CONTENT_STUDIO_URI, CONTENT_STUDIO_WIDGET } from "./content-studio-widget.js";
 
 const jsonResource = (uri: string, value: unknown) => ({
   contents: [{ uri, mimeType: "application/json", text: JSON.stringify(value, null, 2) }],
@@ -16,6 +17,13 @@ const safe = (value: unknown): value is string => typeof value === "string" && v
 const one = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] : value;
 
 export function registerAgentResources(server: McpServer): void {
+  server.registerResource(
+    "content-studio",
+    CONTENT_STUDIO_URI,
+    { title: "TrendHub Content Studio", description: "Evidence brief, editable artifact and user AI handoff", mimeType: "text/html;profile=mcp-app" },
+    async () => ({ contents: [{ uri: CONTENT_STUDIO_URI, mimeType: "text/html;profile=mcp-app", text: CONTENT_STUDIO_WIDGET, _meta: { ui: { prefersBorder: false } } }] }),
+  );
+
   server.registerResource(
     "methodology",
     "trendhub://methodology",

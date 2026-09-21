@@ -1,7 +1,7 @@
 /**
  * 本地控制台只读 / 触发 JSON API（仅绑定 127.0.0.1）。
  * 与 MCP 工具复用同一套 sources / analysis / store 逻辑，不重复实现；
- * 不接任何大模型——创作类接口只返回证据与 productionPrompt，成稿交给调用方 AI。
+ * 后端只返回证据与 productionPrompt；内容工作台负责调用使用者的 AI 并保存可编辑制品。
  * 本插件零遥测、零数据回传：这些接口只服务本机浏览器，不向任何外部端点发送数据。
  */
 import { config } from "../config.js";

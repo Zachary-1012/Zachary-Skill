@@ -1,6 +1,6 @@
 "use strict";
-/* TrendHub 控制台：纯前端渲染。结论全部来自后端，前端只负责取数与展示。 */
-/* 同一界面支持本地与公网只读/查询模式；只通过同源 /api/* 调用，分析与成稿由调用方 AI 完成。 */
+/* TrendHub 2.0：趋势判断来自后端；内容项目、编辑状态与使用者 AI 编排位于产品前端。 */
+/* 公网项目保存在浏览器；模型令牌只驻留页面内存，不发送给 TrendHub。 */
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 window.TRENHUB_IS_REMOTE = !LOOPBACK_HOSTS.has(location.hostname);
 window.TRENHUB_RUNTIME_MODE = window.TRENHUB_IS_REMOTE ? "公网" : "本地";
@@ -201,6 +201,7 @@ const TH_STORE = {
 window.TH_STORE = TH_STORE;
 
 function renderSidebarRecents() {
+  if (typeof window.renderSidebarProjects === "function") return window.renderSidebarProjects();
   const box = $("#sidebarRecents");
   if (!box) return;
   const rows = TH_STORE.recents().slice(0, 6);
@@ -249,6 +250,7 @@ window.CATS = CATS;
 /* ---------- 路由 ---------- */
 const VIEWS = {};
 const TITLES = {
+  studio: "内容工作台", library: "内容资产", calendar: "发布计划",
   dashboard: "研究", research: "研究", professional: "研究", discover: "发现", watch: "关注",
   xhs: "小红书", trending: "热点榜", overlap: "跨平台共振", clusters: "话题发现",
   curve: "趋势曲线", related: "相关搜索词", signals: "未来信号", events: "节点日历",
@@ -271,17 +273,17 @@ window.closeNavigation = closeNavigation;
 
 async function route() {
   closeNavigation();
-  const hash = location.hash || "#/research";
+  const hash = location.hash || "#/studio";
   const [path, query = ""] = hash.slice(1).split("?");
   const segments = path.split("/").filter(Boolean);
   const requestedView = segments[0] || "research";
-  const view = requestedView === "dashboard" ? "research" : requestedView;
+  const view = requestedView === "dashboard" ? "research" : requestedView === "brief" ? "studio" : requestedView;
   const params = Object.fromEntries(new URLSearchParams(query));
   const content = $("#content");
   const title = TITLES[view] || "";
   const viewTitle = $("#viewTitle");
   if (viewTitle) viewTitle.textContent = title;
-  document.title = title ? `${title} · TrendHub` : "TrendHub · 趋势研究";
+  document.title = title ? `${title} · TrendHub` : "TrendHub · 内容工作台";
   $$(".nav-item").forEach((a) => {
     const dv = a.dataset.view;
     const active =
@@ -304,7 +306,7 @@ async function route() {
 document.addEventListener("DOMContentLoaded", () => {
   ensureMeta().catch(() => {});
   if (typeof renderXhsLoginStatus === "function") renderXhsLoginStatus().catch(() => {});
-  if (!location.hash) location.hash = "#/research";
+  if (!location.hash) history.replaceState(null, "", "#/studio");
   route();
   window.addEventListener("hashchange", route);
 
@@ -324,12 +326,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const openNewResearch = () => {
     closeNavigation();
-    location.hash = "#/research";
+    if (typeof window.createTrendHubProject === "function") window.createTrendHubProject();
+    else location.hash = "#/studio";
   };
   $("#newResearchTop")?.addEventListener("click", openNewResearch);
   $("#sidebarNewResearch")?.addEventListener("click", openNewResearch);
   $("#sheetNewResearch")?.addEventListener("click", openNewResearch);
   renderSidebarRecents();
+  if (typeof window.renderSidebarProjects === "function") window.renderSidebarProjects();
   window.addEventListener("pageshow", (event) => {
     renderSidebarRecents();
     if (event.persisted) route();

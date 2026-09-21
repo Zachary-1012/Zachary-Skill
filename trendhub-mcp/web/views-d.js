@@ -5,7 +5,7 @@ VIEWS.brief = async function (content, params) {
   const platOpts = ['<option value="xiaohongshu" selected>小红书（默认 · 主打）</option>', '<option value="all">通用 all</option>']
     .concat(PLATFORMS.filter((p) => p.platform !== "xiaohongshu").map((p) => `<option value="${esc(p.platform)}">${esc(p.label)}</option>`)).join("");
   content.innerHTML = `
-    <p class="lead">围绕主题聚合真实热点证据、相关词、情感、同平台爆款样本与专家模板，产出逐格填充指引和可直接交给 AI 的写作提示词。<strong>本页不接模型、不代替你写成稿</strong>。</p>
+    <p class="lead">围绕主题聚合真实热点证据、相关词、同平台样本与专家模板。TrendHub 2.0 会在内容工作台调用使用者的 AI，并保留可编辑成稿。</p>
     <div class="controls">
       <input class="input" id="f-topic" placeholder="创作主题 / 要蹭的热点（必填）" value="${esc(params.topic || "")}">
       <select id="f-plat" class="input" style="flex:0 1 170px">${platOpts}</select>

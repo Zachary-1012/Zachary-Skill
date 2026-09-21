@@ -19,7 +19,7 @@ const registry = json(path.join(REPO, "server.json"));
 const plugin = json(path.join(REPO, "plugin.json"));
 const gateway = read(path.join(ROOT, "scripts", "remote-gateway.mjs"));
 const serverTs = read(path.join(ROOT, "src", "server.ts"));
-const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md", "V1_7_0_INTELLIGENCE_WORKSPACE.md"];
+const requiredDocs = ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md", "V1_7_0_INTELLIGENCE_WORKSPACE.md", "V2_0_0_CONTENT_STUDIO.md"];
 for (const doc of requiredDocs) must(fs.existsSync(path.join(ROOT, "docs", doc)), `missing release document ${doc}`);
 
 const target = professional.targetStableVersion ?? professional.candidateVersion;
@@ -79,6 +79,8 @@ const indexHtml = read(path.join(ROOT, "web", "index.html"));
 const appJs = read(path.join(ROOT, "web", "app.js"));
 const viewsD = read(path.join(ROOT, "web", "views-d.js"));
 must(indexHtml.includes(`experience-v2.css?v=${pkg.version}`), "public shell must load Experience stylesheet at current version");
+must(indexHtml.includes(`content-studio.js?v=${pkg.version}`), "public shell must load Content Studio at current version");
+must(manifest.agentNative?.contentStudio === "released", "v2.0 Content Studio contract missing");
 const viewsE = read(path.join(ROOT, "web", "views-e.js"));
 must(viewsE.includes('depth: "quick"'), "progressive quick Decision View layer missing");
 must(viewsE.includes("发生了什么"), "continuous research surface missing");
