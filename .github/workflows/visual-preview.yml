@@ -1,0 +1,77 @@
+name: TrendHub Visual Preview
+
+on:
+  push:
+    branches:
+      - preview/v174-visual
+  workflow_dispatch:
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install
+        working-directory: trendhub-mcp
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        working-directory: trendhub-mcp
+        run: npm run build
+
+      - name: Start local TrendHub
+        working-directory: trendhub-mcp
+        env:
+          TRENTHUB_AUTOUPDATE: "0"
+          TRENTHUB_TRANSPORT: http
+          TRENTHUB_HOST: 127.0.0.1
+          TRENTHUB_DATA_DIR: ${{ runner.temp }}/trendhub-preview
+        run: |
+          nohup node dist/src/index.js --http --port=8787 > ${{ runner.temp }}/trendhub.log 2>&1 &
+          for i in {1..80}; do
+            if curl -fsS http://127.0.0.1:8787/api/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat ${{ runner.temp }}/trendhub.log
+          exit 1
+
+      - name: Locate Chrome
+        id: chrome
+        run: |
+          if command -v google-chrome >/dev/null; then
+            echo "bin=$(command -v google-chrome)" >> "$GITHUB_OUTPUT"
+          elif command -v google-chrome-stable >/dev/null; then
+            echo "bin=$(command -v google-chrome-stable)" >> "$GITHUB_OUTPUT"
+          elif command -v chromium >/dev/null; then
+            echo "bin=$(command -v chromium)" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Chrome/Chromium found" >&2
+            exit 1
+          fi
+
+      - name: Capture desktop and mobile
+        run: |
+          mkdir -p visual-preview
+          CHROME="${{ steps.chrome.outputs.bin }}"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot=visual-preview/home-desktop.png "http://127.0.0.1:8787/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --screenshot=visual-preview/home-mobile.png "http://127.0.0.1:8787/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot=visual-preview/research-desktop.png "http://127.0.0.1:8787/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=390,844 --screenshot=visual-preview/research-mobile.png "http://127.0.0.1:8787/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --window-size=1440,1200 --screenshot=visual-preview/discover-desktop.png "http://127.0.0.1:8787/#/discover"
+
+      - name: Upload visual preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: trendhub-v174-visual-preview
+          path: visual-preview/*.png
+          if-no-files-found: error
