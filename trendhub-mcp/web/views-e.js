@@ -1,8 +1,8 @@
 /* 研究结果页（结论全部由后端 /api/review 给出，前端只渲染）+ 数据源 + 本机协作。 */
 "use strict";
 
-TITLES.research = "研究结果";
-TITLES.professional = "研究结果";
+TITLES.research = "研究";
+TITLES.professional = "研究";
 TITLES.sources = "数据源";
 TITLES.workspace = "协作（本机）";
 
@@ -77,30 +77,41 @@ VIEWS.research = async function (root, params) {
   if (!keyword) {
     root.innerHTML = rvEntry("");
     const input = $("#rvEntryKeyword", root);
-    $("#rvEntryForm", root).addEventListener("submit", (e) => {
-      e.preventDefault();
+    $("#rvEntryForm", root).addEventListener("submit", (event) => {
+      event.preventDefault();
       startResearch(input.value);
     });
-    root.querySelectorAll("[data-example]").forEach((b) => b.addEventListener("click", () => startResearch(b.dataset.example)));
+    root.querySelectorAll("[data-example]").forEach((button) => {
+      button.addEventListener("click", () => startResearch(button.dataset.example));
+    });
     input.focus();
     return;
   }
 
   root.innerHTML = `
-    <div class="rv-progress" id="rvProgress"><span></span></div>
-    <div class="rv-page">
-      <div class="research-head">
-        <div class="research-head-main">
-          <div class="rv-kind" id="rvKind">正在研究…</div>
+    <div class="research-page">
+      <div class="research-progress" id="rvProgress"><span></span></div>
+      <header class="research-header">
+        <div>
+          <div class="research-kind" id="rvKind">正在研究</div>
           <h1 class="research-title">${esc(keyword)}</h1>
         </div>
-        <div class="research-head-actions" id="rvHeadActions"></div>
-      </div>
-      <div id="rvQuick"></div>
+        <div class="research-actions" id="rvHeadActions"></div>
+      </header>
       <div id="rvBody">${rvSkeleton()}</div>
+      <aside class="evidence-drawer" id="evidenceDrawer" hidden aria-label="来源与依据">
+        <div class="evidence-drawer-head">
+          <div>
+            <div class="evidence-drawer-eyebrow">来源与依据</div>
+            <h2 id="evidenceDrawerTitle">依据</h2>
+          </div>
+          <button type="button" class="evidence-close" id="evidenceClose" aria-label="关闭">×</button>
+        </div>
+        <div class="evidence-drawer-body" id="evidenceDrawerBody"></div>
+      </aside>
+      <div class="evidence-backdrop" id="evidenceBackdrop" hidden></div>
     </div>`;
 
-  /* 渐进返回：先给普通用户可读的快速结果，再无缝补齐完整证据。 */
   const base = {
     keyword,
     geo: params.geo || "CN",
@@ -122,241 +133,261 @@ VIEWS.research = async function (root, params) {
     finalRendered = true;
     await quickTask;
     renderDecision(root, keyword, view, params, false);
-  } catch (e) {
+  } catch (error) {
     await quickTask;
-    const body = $("#rvBody");
-    if (body && !body.querySelector(".rv-section")) {
-      const progress = $("#rvProgress");
-      if (progress) progress.innerHTML = "";
+    const body = $("#rvBody", root);
+    if (body && !body.querySelector(".research-summary")) {
+      $("#rvProgress", root)?.replaceChildren();
       body.innerHTML =
-        note("err", `这次研究没有完成：${esc(e.message)}。可以重试，或先到“热点榜 / 小红书”看公开数据。`) +
-        `<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/dashboard">返回首页</a></div>`;
-      $("#rvRetry").onclick = () => VIEWS.research(root, params);
+        note("err", `这次研究没有完成：${esc(error.message)}`) +
+        '<div class="rv-retry"><button class="btn primary" id="rvRetry">重新研究</button><a class="btn" href="#/research">返回研究</a></div>';
+      $("#rvRetry", root).onclick = () => VIEWS.research(root, params);
     } else {
-      const progress = $("#rvProgress");
-      if (progress) progress.innerHTML = "";
-      toast("更多平台暂时没有补齐，已保留当前可用结果");
+      $("#rvProgress", root)?.replaceChildren();
+      toast("更多数据暂时没有补齐，已保留当前结果");
     }
   }
 };
 VIEWS.professional = VIEWS.research;
 
-function rvBadge(text, cls = "") {
-  return `<span class="rv-badge ${cls}">${esc(text)}</span>`;
-}
-
 function renderDecision(root, keyword, view, params, updating = false) {
-  const progress = $("#rvProgress");
-  if (progress && !updating) progress.innerHTML = "";
+  const progress = $("#rvProgress", root);
+  if (progress && !updating) progress.replaceChildren();
 
+  const current = view.current || {};
+  const change = view.change || {};
   const watching = TH_STORE.isWatching(keyword);
-  $("#rvKind").textContent = view.subject.kind || "研究结果";
-  $("#rvHeadActions").innerHTML = `
-    <button class="btn sm" id="rvWatchTop">${watching ? "★ 已关注" : "☆ 加入关注"}</button>
-    <a class="btn sm" href="#/brief?topic=${encodeURIComponent(keyword)}">写创作简报</a>
-    <a class="btn sm" href="#/xhs?keyword=${encodeURIComponent(keyword)}">看小红书</a>`;
 
-  const c = view.current || {};
-  const ch = view.change || {};
+  $("#rvKind", root).textContent = updating ? "已返回首批结果 · 正在继续补充" : (view.subject?.kind || "研究结果");
+  $("#rvHeadActions", root).innerHTML = `
+    <button class="research-action" id="rvWatchTop" type="button">${watching ? "已关注" : "关注"}</button>
+    <button class="research-action" id="rvRefresh" type="button">更新</button>
+    <button class="research-action primary" id="rvExport" type="button">导出</button>`;
 
-  /* 趋势变化 */
-  const curveBlock = ch.curve && ch.curve.points && ch.curve.points.length > 1
-    ? `<div class="rv-curve">${lineChart([{ name: keyword, points: ch.curve.points }], { ariaLabel: "搜索热度趋势" })}<p class="rv-cap">${esc(ch.curve.scaleNote || "")}</p></div>`
+  const curveBlock = change.curve?.points?.length > 1
+    ? `<div class="research-curve">${lineChart([{ name: keyword, points: change.curve.points }], { ariaLabel: "搜索热度趋势" })}<p class="research-caption">${esc(change.curve.scaleNote || "")}</p></div>`
     : "";
-  const related = ch.related || {};
+
+  const related = change.related || {};
   const relatedBlock = (related.rising?.length || related.top?.length)
-    ? `<div class="rv-related">
-        ${related.rising?.length ? `<div class="rv-related-group"><span class="rv-related-label">近期上升相关词</span><div class="tagrow">${related.rising.slice(0, 16).map((x) => `<span class="tag rising">↑ ${esc(x)}</span>`).join("")}</div></div>` : ""}
-        ${related.top?.length ? `<div class="rv-related-group"><span class="rv-related-label">长期热门相关词</span><div class="tagrow">${related.top.slice(0, 16).map((x) => `<span class="tag">${esc(x)}</span>`).join("")}</div></div>` : ""}
-      </div>` : "";
-  const forecast = ch.forecast;
-  const forecastBlock = forecast
-    ? `<div class="rv-forecast">
-        <div class="rv-forecast-head"><strong>${esc(forecast.statusText)}</strong></div>
-        ${forecast.rows.length ? `<div class="table-wrap"><table><thead><tr><th>时间</th><th>预期相对热度</th><th>较现在</th></tr></thead><tbody>
-          ${forecast.rows.map((r) => `<tr><td>${esc(r.horizonText)}</td><td class="mono">${esc(r.value)}</td><td>${esc(r.deltaText || "—")}</td></tr>`).join("")}
-        </tbody></table></div>` : ""}
-        <p class="rv-cap">${esc(forecast.validationText)}</p>
-      </div>` : "";
-  const changeBadges = [
-    rvBadge(`方向：${ch.directionText || "暂不明确"}`, ch.directionText === "上升" || ch.directionText === "快速上升" ? "up" : ch.directionText === "下降" ? "down" : ""),
-    ch.changePct != null ? rvBadge(`变化约 ${ch.changePct > 0 ? "+" : ""}${ch.changePct}%`) : "",
-    ch.peak != null ? rvBadge(`近期峰值 ${ch.peak}`) : "",
-    rvBadge(ch.qualityText || "搜索趋势暂缺"),
-  ].join("");
+    ? `<div class="research-related">
+        ${related.rising?.length ? `<div><span>近期上升</span>${related.rising.slice(0, 10).map((item) => `<button type="button" data-related="${esc(item)}">${esc(item)}</button>`).join("")}</div>` : ""}
+        ${related.top?.length ? `<div><span>相关搜索</span>${related.top.slice(0, 10).map((item) => `<button type="button" data-related="${esc(item)}">${esc(item)}</button>`).join("")}</div>` : ""}
+      </div>`
+    : "";
 
-  /* 平台表现 */
-  const platformsBlock = (view.platforms || []).length
-    ? `<div class="rv-platforms">${view.platforms.map(rvPlatform).join("")}</div>`
-    : empty("这次没有取到可用的平台数据，稍后重试或在本机登录后增强。");
+  const changeMeta = [
+    change.directionText && change.directionText !== "方向暂不明确" ? change.directionText : "",
+    change.changePct != null ? `${change.changePct > 0 ? "+" : ""}${change.changePct}%` : "",
+    change.qualityText || "",
+  ].filter(Boolean).join(" · ");
 
-  /* 证据（展示层聚合去重，结论仍来自后端） */
-  const seen = new Set();
-  const evidence = (view.platforms || [])
-    .flatMap((p) => (p.evidence || []).map((e) => ({ ...e, platform: p.name })))
-    .filter((e) => {
-      const key = e.url || `${e.platform}|${e.title}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .sort((a, b) => String(b.time || "").localeCompare(String(a.time || "")));
-  const shownEvidence = evidence.slice(0, 30);
-  const evidenceBlock = shownEvidence.length
-    ? `<div class="rv-evidence">${shownEvidence.map((e) => `
-        <div class="rv-ev-item">
-          <div class="rv-ev-meta">${esc(e.platform || e.source || "公开来源")}${e.time ? ` · ${esc(fmtTime(e.time))}` : ""}</div>
-          <div class="rv-ev-title">${linkOrText(e.title, e.url)}</div>
-        </div>`).join("")}</div>
-      ${evidence.length > shownEvidence.length ? `<p class="rv-cap">仅展示最近 ${shownEvidence.length} 条，共 ${evidence.length} 条。</p>` : ""}`
-    : empty("暂无可回溯到链接的证据条目；平台暂时取不到的数据已在上方标注。");
+  const insights = [
+    ...(view.drivers || []).map((item, index) => ({ ...item, kind: "驱动", source: "drivers", index })),
+    ...(view.opportunities || []).map((item, index) => ({ ...item, kind: "机会", source: "opportunities", index })),
+    ...(view.risks || []).map((item, index) => ({ ...item, kind: "风险", source: "risks", index })),
+  ];
 
-  /* 机会 / 风险 */
-  const twoCol = `<div class="rv-two-col">
-      <div class="rv-col"><div class="rv-col-head up">机会</div>${rvResultList(view.opportunities, "当前没有证据支持的明确机会")}</div>
-      <div class="rv-col"><div class="rv-col-head down">风险</div>${rvResultList(view.risks, "当前没有证据支持的明确风险")}</div>
-    </div>`;
+  const insightBlock = insights.length
+    ? `<div class="insight-stream">${insights.map((item) => `
+        <article class="insight-row">
+          <div class="insight-kind">${esc(item.kind)}</div>
+          <div class="insight-copy">
+            <strong>${esc(item.title)}</strong>
+            ${item.reason ? `<p>${esc(item.reason)}</p>` : ""}
+          </div>
+          ${item.evidence?.length ? `<button type="button" class="text-action" data-insight-source="${item.source}" data-insight-index="${item.index}">查看依据</button>` : ""}
+        </article>`).join("")}</div>`
+    : '<p class="research-empty">当前证据还不足以识别稳定的驱动、机会或风险。</p>';
 
-  /* 建议 + 缺口 + 节点 */
-  const suggestionsBlock = view.suggestions?.length
-    ? `<div class="rv-suggestions">${view.suggestions.map((s) => `
-        <div class="rv-suggestion">
-          <span class="rv-priority priority-${esc(s.priority || "next")}">${esc(s.priorityText || "建议接下来做")}</span>
-          <div><strong>${esc(s.title)}</strong>${s.reason ? `<p>${esc(s.reason)}</p>` : ""}</div>
-        </div>`).join("")}</div>`
-    : empty("先补充更多平台证据，再给出行动建议。");
-  const gapsBlock = view.gaps?.length
-    ? `<details class="rv-gaps"><summary>还有哪些地方不能下结论（${view.gaps.length}）</summary>
-        ${view.gaps.map((g) => `<div class="rv-gap"><strong>${esc(g.title)}</strong><p>${esc(g.reason || "")}</p><p class="rv-gap-next">下一步：${esc(g.nextStep || "在本机登录对应平台后补充。")}</p></div>`).join("")}
-      </details>` : "";
+  const platforms = view.platforms || [];
+  const platformBlock = platforms.length
+    ? `<div class="platform-stream">${platforms.map((platform, index) => `
+        <article class="platform-row state-${esc(platform.state)}">
+          <div class="platform-state-dot" aria-hidden="true"></div>
+          <div class="platform-copy">
+            <div class="platform-title-line">
+              <strong>${esc(platform.name)}</strong>
+              <span>${esc(platform.stateText)}${platform.count ? ` · ${platform.count} 条` : ""}</span>
+            </div>
+            ${platform.conclusion ? `<p>${esc(platform.conclusion)}</p>` : ""}
+          </div>
+          <button type="button" class="text-action" data-platform-index="${index}">${platform.evidence?.length ? "查看依据" : "查看说明"}</button>
+        </article>`).join("")}</div>`
+    : '<p class="research-empty">这次没有取到可用的平台数据。</p>';
+
+  const suggestions = view.suggestions || [];
+  const suggestionBlock = suggestions.length
+    ? `<div class="next-stream">${suggestions.map((item) => `
+        <article class="next-row">
+          <span class="next-priority">${esc(item.priorityText || "建议")}</span>
+          <div><strong>${esc(item.title)}</strong>${item.reason ? `<p>${esc(item.reason)}</p>` : ""}</div>
+        </article>`).join("")}</div>`
+    : '<p class="research-empty">当前还没有足够依据给出下一步建议。</p>';
+
   const upcomingBlock = view.upcoming?.length
-    ? `<div class="rv-upcoming"><div class="rv-col-head">近期相关节点</div>${view.upcoming.slice(0, 6).map((u) => `
-      <div class="rv-node"><div><strong>${esc(u.name)}</strong>${u.impact ? `<p>${esc(u.impact)}</p>` : ""}</div><time>${esc(u.date || "")}</time></div>`).join("")}</div>` : "";
+    ? `<div class="next-nodes">
+        <div class="subhead">接下来值得留意</div>
+        ${view.upcoming.slice(0, 4).map((item) => `
+          <div class="next-node"><div><strong>${esc(item.name)}</strong>${item.impact ? `<p>${esc(item.impact)}</p>` : ""}</div><time>${esc(item.date || "")}</time></div>`).join("")}
+      </div>`
+    : "";
 
-  const updatingBlock = updating ? note("info", "已先返回可用结果，正在补充更多平台和趋势数据…") : "";
+  const gapsBlock = view.gaps?.length
+    ? `<details class="research-limits">
+        <summary>这次研究还有 ${view.gaps.length} 个数据限制</summary>
+        ${view.gaps.map((gap) => `<div class="limit-row"><strong>${esc(gap.title)}</strong><p>${esc(gap.reason || "")}</p>${gap.nextStep ? `<p>${esc(gap.nextStep)}</p>` : ""}</div>`).join("")}
+      </details>`
+    : "";
 
-  $("#rvBody").innerHTML = `${updatingBlock}
-    <section class="rv-section rv-current tone-${esc(c.tone || "insufficient")}">
-      <div class="rv-kicker">当前结论</div>
-      <p class="rv-conclusion">${esc(c.conclusion || "正在整理该主体的公开证据。")}</p>
-      <div class="rv-badges">
-        ${rvBadge(esc(c.strengthText || "证据不足"))}
-        ${rvBadge(c.visibilityText || "公开证据有限")}
-        ${rvBadge(`证据 ${c.evidenceCount ?? 0} 条`)}
-        ${rvBadge(`${c.channelCount ?? 0} 个平台有信号`)}
+  $("#rvBody", root).innerHTML = `
+    <section class="research-summary">
+      <p class="research-conclusion">${esc(current.conclusion || "正在整理该主体的公开信息。")}</p>
+      <div class="research-meta">
+        <span>${esc(current.strengthText || "证据不足")}</span>
+        <span>${esc(current.evidenceCount ?? 0)} 条依据</span>
+        <span>${esc(current.channelCount ?? 0)} 个来源有信号</span>
       </div>
-      <p class="rv-hotlist">${esc(c.hotlistText || "")}</p>
+      ${current.hotlistText ? `<p class="research-context">${esc(current.hotlistText)}</p>` : ""}
     </section>
 
-    <section class="rv-section">
-      <div class="rv-kicker">趋势变化</div>
-      <p class="rv-lead">${esc(ch.text || "")}</p>
-      <div class="rv-badges">${changeBadges}</div>
+    <section class="research-flow">
+      <div class="flow-heading">
+        <h2>发生了什么</h2>
+        ${changeMeta ? `<span>${esc(changeMeta)}</span>` : ""}
+      </div>
+      <p class="flow-lead">${esc(change.text || "当前没有足够的趋势序列判断变化方向。")}</p>
       ${curveBlock}
       ${relatedBlock}
-      ${forecastBlock}
     </section>
 
-    <section class="rv-section">
-      <div class="rv-kicker">关键驱动</div>
-      ${rvResultList(view.drivers, "目前没有足够证据识别关键驱动。")}
+    <section class="research-flow">
+      <div class="flow-heading"><h2>为什么值得注意</h2></div>
+      ${insightBlock}
     </section>
 
-    <section class="rv-section">
-      <div class="rv-kicker">平台表现</div>
-      ${platformsBlock}
+    <section class="research-flow">
+      <div class="flow-heading">
+        <h2>哪些平台支持这个判断</h2>
+        <button type="button" class="text-action" id="rvAllSources">查看全部来源</button>
+      </div>
+      ${platformBlock}
     </section>
 
-    <section class="rv-section">
-      <div class="rv-kicker">证据</div>
-      ${evidenceBlock}
-    </section>
-
-    <section class="rv-section">
-      <div class="rv-kicker">机会与风险</div>
-      ${twoCol}
-    </section>
-
-    <section class="rv-section">
-      <div class="rv-kicker">建议</div>
-      ${suggestionsBlock}
+    <section class="research-flow next-step">
+      <div class="flow-heading"><h2>下一步</h2></div>
+      ${suggestionBlock}
       ${upcomingBlock}
+      <div class="next-secondary">
+        <a href="#/brief?topic=${encodeURIComponent(keyword)}">生成创作简报</a>
+      </div>
       ${gapsBlock}
     </section>
 
-    <section class="rv-section rv-actions-section">
-      <div class="rv-kicker">操作</div>
-      <div class="rv-action-bar">
-        <button class="btn primary" id="rvWatch">${watching ? "★ 取消关注" : "☆ 加入关注"}</button>
-        <button class="btn" id="rvMd">复制研究简报</button>
-        <button class="btn" id="rvJson">复制结果 JSON</button>
-        <button class="btn" id="rvCsv">复制 CSV</button>
-        <button class="btn" id="rvRetry2">重新研究</button>
-        <a class="btn" href="#/brief?topic=${encodeURIComponent(keyword)}">去写创作简报</a>
-        <a class="btn" href="#/research">换个主体</a>
-      </div>
-      <p class="rv-data-note">${esc(view.dataNote || "")}</p>
-    </section>`;
+    <p class="research-data-note">${esc(view.dataNote || "")}</p>`;
 
-  bindDecisionActions(root, keyword, view, params);
+  bindResearchInteractions(root, keyword, view, params);
 }
 
-function rvResultList(items, emptyText) {
-  if (!items || !items.length) return empty(emptyText);
-  return `<div class="rv-result-list">${items
-    .map((x) => `<div class="rv-result"><strong>${esc(x.title || "—")}</strong>${x.reason ? `<p>${esc(x.reason)}</p>` : ""}</div>`)
-    .join("")}</div>`;
-}
-
-function rvPlatform(p) {
-  const ev = (p.evidence || []).slice(0, 3);
-  const more = (p.evidence || []).length - ev.length;
-  return `<div class="rv-platform state-${esc(p.state)}">
-    <div class="rv-platform-head">
-      <span class="state-dot" aria-hidden="true"></span>
-      <strong class="rv-platform-name">${esc(p.name)}</strong>
-      <span class="rv-platform-family">${esc(p.familyText)}</span>
-      <span class="rv-platform-state">${esc(p.stateText)}${p.count ? ` · ${p.count} 条` : ""}</span>
-    </div>
-    ${p.conclusion ? `<p class="rv-platform-conclusion">${esc(p.conclusion)}</p>` : ""}
-    ${ev.length ? `<div class="rv-platform-ev">${ev
-      .map((e) => `<div class="rv-ev-item"><div class="rv-ev-meta">${esc(e.source || "公开来源")}${e.time ? ` · ${esc(fmtTime(e.time))}` : ""}</div><div class="rv-ev-title">${linkOrText(e.title, e.url)}</div></div>`)
-      .join("")}${more > 0 ? `<p class="rv-cap">还有 ${more} 条已计入证据区。</p>` : ""}</div>` : ""}
-    ${p.note ? `<p class="rv-cap">${esc(p.note)}</p>` : ""}
-  </div>`;
-}
-
-function bindDecisionActions(root, keyword, view, params) {
-  const setWatchBtn = (on) => {
-    const labels = on ? ["★ 取消关注", "★ 已关注"] : ["☆ 加入关注", "☆ 加入关注"];
-    const b1 = $("#rvWatch", root);
-    const b2 = $("#rvWatchTop", root);
-    if (b1) b1.textContent = labels[0];
-    if (b2) b2.textContent = labels[1];
+function bindResearchInteractions(root, keyword, view, params) {
+  const setWatch = (active) => {
+    const button = $("#rvWatchTop", root);
+    if (button) button.textContent = active ? "已关注" : "关注";
   };
-  const toggleWatch = () => {
-    const on = TH_STORE.toggleWatching(keyword);
-    setWatchBtn(on);
-    toast(on ? "已加入“正在关注”" : "已取消关注");
-  };
-  $("#rvWatch", root)?.addEventListener("click", toggleWatch);
-  $("#rvWatchTop", root)?.addEventListener("click", toggleWatch);
 
-  $("#rvJson", root)?.addEventListener("click", () =>
-    copyText(JSON.stringify(view, null, 2), "研究结果 JSON 已复制"));
+  $("#rvWatchTop", root)?.addEventListener("click", () => {
+    const active = TH_STORE.toggleWatching(keyword);
+    setWatch(active);
+    toast(active ? "已关注" : "已取消关注");
+  });
 
-  const copyReport = async (format, label) => {
+  $("#rvRefresh", root)?.addEventListener("click", () => {
+    VIEWS.research(root, { ...params, refresh: "1" });
+  });
+
+  $("#rvExport", root)?.addEventListener("click", async () => {
     try {
-      const qs = new URLSearchParams({ keyword, format, refresh: "0", geo: params.geo || "CN", timeframe: params.timeframe || "today 3-m" });
-      const r = await api(`/api/professional/report?${qs}`);
-      copyText(typeof r.content === "string" ? r.content : JSON.stringify(r.content, null, 2), `${label}已复制`);
-    } catch (e) {
-      toast(`复制失败：${e.message}`);
+      const qs = new URLSearchParams({
+        keyword,
+        format: "markdown",
+        refresh: "0",
+        geo: params.geo || "CN",
+        timeframe: params.timeframe || "today 3-m",
+      });
+      const report = await api(`/api/professional/report?${qs}`);
+      copyText(typeof report.content === "string" ? report.content : JSON.stringify(report.content, null, 2), "研究简报已复制");
+    } catch (error) {
+      toast(`导出失败：${error.message}`);
     }
-  };
-  $("#rvMd", root)?.addEventListener("click", () => copyReport("markdown", "研究简报"));
-  $("#rvCsv", root)?.addEventListener("click", () => copyReport("csv", "CSV"));
-  $("#rvRetry2", root)?.addEventListener("click", () => VIEWS.research(root, params));
+  });
+
+  root.querySelectorAll("[data-related]").forEach((button) => {
+    button.addEventListener("click", () => startResearch(button.dataset.related));
+  });
+
+  root.querySelectorAll("[data-platform-index]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const platform = view.platforms?.[Number(button.dataset.platformIndex)];
+      if (!platform) return;
+      openEvidenceDrawer(root, platform.name, platform.evidence || [], platform.note || platform.conclusion || "");
+    });
+  });
+
+  root.querySelectorAll("[data-insight-source]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const list = view[button.dataset.insightSource] || [];
+      const item = list[Number(button.dataset.insightIndex)];
+      if (!item) return;
+      openEvidenceDrawer(root, item.title, item.evidence || [], item.reason || "");
+    });
+  });
+
+  $("#rvAllSources", root)?.addEventListener("click", () => {
+    const all = [];
+    const seen = new Set();
+    for (const platform of (view.platforms || [])) {
+      for (const item of (platform.evidence || [])) {
+        const key = item.url || `${platform.name}|${item.title}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        all.push({ ...item, source: item.source || platform.name });
+      }
+    }
+    openEvidenceDrawer(root, "全部来源", all, "仅展示本次研究实际取得的公开来源；缺失平台不会被补成 0。");
+  });
+
+  $("#evidenceClose", root)?.addEventListener("click", () => closeEvidenceDrawer(root));
+  $("#evidenceBackdrop", root)?.addEventListener("click", () => closeEvidenceDrawer(root));
+}
+
+function openEvidenceDrawer(root, title, evidence, noteText) {
+  const drawer = $("#evidenceDrawer", root);
+  const backdrop = $("#evidenceBackdrop", root);
+  const body = $("#evidenceDrawerBody", root);
+  if (!drawer || !backdrop || !body) return;
+
+  $("#evidenceDrawerTitle", root).textContent = title || "来源";
+  body.innerHTML = `
+    ${noteText ? `<p class="evidence-note">${esc(noteText)}</p>` : ""}
+    ${evidence?.length
+      ? evidence.map((item) => `
+          <article class="evidence-item">
+            <div class="evidence-meta">${esc(item.source || "公开来源")}${item.time ? ` · ${esc(fmtTime(item.time))}` : ""}</div>
+            <div class="evidence-title">${linkOrText(item.title, item.url)}</div>
+          </article>`).join("")
+      : '<p class="research-empty">当前没有可回溯到链接的依据。</p>'}`;
+
+  drawer.hidden = false;
+  backdrop.hidden = false;
+  document.body.classList.add("evidence-open");
+}
+
+function closeEvidenceDrawer(root) {
+  const drawer = $("#evidenceDrawer", root);
+  const backdrop = $("#evidenceBackdrop", root);
+  if (drawer) drawer.hidden = true;
+  if (backdrop) backdrop.hidden = true;
+  document.body.classList.remove("evidence-open");
 }
 
 /* ================= 数据源（设置页，面向安装者） ================= */

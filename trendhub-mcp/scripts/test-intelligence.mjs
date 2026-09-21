@@ -7,7 +7,7 @@ import path from "node:path";
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "trendhub-intelligence-test-"));
 process.env.TRENTHUB_DATA_DIR = temp;
 
-const { appendHistory, readHistory } = await import("../dist/src/store/history.js");
+const { appendHistory, closeHistoryStore, readHistory } = await import("../dist/src/store/history.js");
 const { recordSourceObservation, getSourceReliability, classifyFailure } = await import("../dist/src/store/reliability.js");
 const { analyzeTrendIntelligence, benchmarkTrendLead } = await import("../dist/src/analysis/intelligence.js");
 
@@ -60,5 +60,6 @@ assert.ok((benchmark.leadHours ?? 0) >= 47.9);
 assert.equal(benchmark.detected24hAhead, true);
 assert.equal(benchmark.detected72hAhead, false);
 
-fs.rmSync(temp, { recursive: true, force: true });
+closeHistoryStore();
+fs.rmSync(temp, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 console.log(`INTELLIGENCE TEST OK lifecycle=${intel.lifecycle} confidence=${intel.confidence} leadHours=${benchmark.leadHours} lookahead=blocked`);

@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "1.7.2",
-  "targetStableVersion": "1.7.3",
-  "candidateVersion": "1.7.3",
+  "stableBase": "1.7.3",
+  "targetStableVersion": "1.7.4",
+  "candidateVersion": "1.7.4",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -14,7 +14,7 @@
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
     "rule": "v1.7.3 improves user-facing research quality and latency: quick Decision View first, bounded slow sources, missing-not-zero forecasts, cleaner drivers, and subject-relevant upcoming nodes; 21-tool and Evidence contracts remain unchanged.",
-    "versionPolicy": "v1.7.2 remains immutable rollback; v1.7.3 is the next patch release.",
+    "versionPolicy": "v1.7.3 remains the rollback base; v1.7.4 is the user-product candidate.",
     "prepared": true
   },
   "capabilities": {
@@ -40,7 +40,7 @@
       "alert-rule",
       "audit"
     ],
-    "responsiveWeb": "task-first-decision-view-desktop-tablet-phone",
+    "responsiveWeb": "user-task-research-workspace-desktop-tablet-phone",
     "observability": "local-otel-compatible-zero-export",
     "truthState": "explicit-not-collected-unavailable-stale-offline-auth-rate-limit-vs-observed-absence",
     "capabilityRegistry": "v2-one-canonical-owner-method-plus-evidence-lifecycle",
@@ -54,10 +54,11 @@
     "queryEvidence": "google-news-cn-global-gdelt-bluesky-apple-podcasts-xhs-curated-rss",
     "professionalIntelligence": "v3-entity-first-decision-support",
     "executiveReport": "v2-decision-brief",
-    "webExperience": "task-first-decision-view",
+    "webExperience": "user-task-research-workspace",
     "deepLinkRouting": "deferred-view-registration-safe",
     "progressiveResearch": "quick-view-then-full-evidence",
-    "reviewQuality": "missing-not-zero-driver-noise-filtering-relevant-events"
+    "reviewQuality": "missing-not-zero-driver-noise-filtering-relevant-events",
+    "evidenceInteraction": "on-demand-source-drawer"
   },
   "sourceAccessModes": [
     "live-public",
@@ -69,8 +70,11 @@
   ],
   "uxRules": [
     "user-sees-only-task-content-result-and-action",
+    "primary-navigation-is-research-discover-watch-settings-not-tool-list",
     "single-intent-search-entry-with-progressive-results",
     "frontend-is-renderer-backend-decision-view-owns-all-judgement",
+    "research-is-continuous-summary-change-support-next-not-eight-section-report",
+    "evidence-opens-on-demand-in-context-drawer",
     "generic-kpi-wall-is-not-a-primary-research-composition",
     "generic-card-grid-is-not-a-primary-research-composition",
     "no-long-full-page-spinner-show-immediate-then-fill-slow-sources",

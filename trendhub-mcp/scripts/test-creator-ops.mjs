@@ -56,8 +56,9 @@ child.stderr.on("data", (chunk) => logs.push(String(chunk)));
 try {
   await waitForServer(base, child, logs);
   const shell = await (await fetch(`${base}/`)).text();
-  assert.match(shell, /data-view="ops"/);
-  assert.match(shell, /views-f\.js/);
+  assert.match(shell, /data-view="settings"/);
+  assert.doesNotMatch(shell, /data-view="ops"/, "Creator Ops must stay out of primary navigation");
+  assert.match(shell, /views-f\.js/, "Creator Ops implementation must remain packaged for advanced/local use");
 
   const initial = await request(base, "/api/ops/summary");
   assert.equal(initial.response.status, 200);

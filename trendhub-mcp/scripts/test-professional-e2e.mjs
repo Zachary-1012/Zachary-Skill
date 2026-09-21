@@ -70,7 +70,9 @@ try {
   const shell = await (await fetch(`${base}/`)).text();
   assert.match(shell, /responsive-v2\.css/);
   assert.match(shell, /data-view="research"/);
-  assert.match(shell, /data-view="sources"/);
+  assert.match(shell, /data-view="discover"/);
+  assert.match(shell, /data-view="settings"/);
+  assert.doesNotMatch(shell, /data-view="sources"/);
 
   const responsive = await (await fetch(`${base}/responsive-v2.css`)).text();
   assert.match(responsive, /@media \(max-width: 720px\)/);

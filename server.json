@@ -3,7 +3,7 @@
   "name": "io.github.Zachary-1012/trendhub",
   "title": "TrendHub",
   "description": "Entity-first trend intelligence: 21 MCP tools, fast decision views and evidence.",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "remotes": [
     {
       "type": "streamable-http",

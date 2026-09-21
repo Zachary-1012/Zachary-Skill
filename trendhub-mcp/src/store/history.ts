@@ -63,6 +63,17 @@ const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 let databaseState: DatabaseLike | null | undefined;
 
+/** Release the optional SQLite handle for orderly shutdown and isolated runs. */
+export function closeHistoryStore(): void {
+  const database = databaseState;
+  databaseState = undefined;
+  try {
+    database?.close?.();
+  } catch {
+    // Closing analytical storage must not prevent process shutdown.
+  }
+}
+
 function safeName(p: string): string {
   return p.replace(/[^a-zA-Z0-9_.:-]/g, "_");
 }

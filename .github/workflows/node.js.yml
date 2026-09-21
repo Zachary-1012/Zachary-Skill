@@ -126,3 +126,100 @@ jobs:
           if ($status -ne 0) { exit $status }
           if (-not ($output | Select-String -SimpleMatch "AI_BOOTSTRAP_OK ")) { throw "missing AI_BOOTSTRAP_OK marker" }
           if (-not ($output | Select-String -SimpleMatch "SMOKE OK tools=$expected")) { throw "missing $expected-tool smoke marker" }
+
+
+  visual-preview:
+    name: Visual preview / desktop + mobile
+    if: github.event_name == 'pull_request' && github.head_ref == 'feat/v1.7.4-user-product-clean'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: trendhub-mcp
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+          cache-dependency-path: trendhub-mcp/package-lock.json
+
+      - name: Install and build
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Start preview server
+        env:
+          TRENHUB_AUTOUPDATE: "0"
+          TRENHUB_REMOTE_HOST: 127.0.0.1
+          PORT: "18445"
+        run: |
+          npm run start:remote >"$RUNNER_TEMP/trendhub-preview.log" 2>&1 &
+          for i in $(seq 1 80); do
+            curl -fsS http://127.0.0.1:18445/health >/dev/null 2>&1 && exit 0
+            sleep 0.5
+          done
+          cat "$RUNNER_TEMP/trendhub-preview.log"
+          exit 1
+
+      - name: Install CJK fonts for visual review
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Assert rendered DOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/trendhub-debug"
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/dashboard" > "$RUNNER_TEMP/trendhub-debug/home-dom.html" 2>"$RUNNER_TEMP/trendhub-debug/home-chrome.log" || true
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/research" > "$RUNNER_TEMP/trendhub-debug/research-dom.html" 2>"$RUNNER_TEMP/trendhub-debug/research-chrome.log" || true
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=2500 --dump-dom "http://127.0.0.1:18445/#/discover" > "$RUNNER_TEMP/trendhub-debug/discover-dom.html" 2>"$RUNNER_TEMP/trendhub-debug/discover-chrome.log" || true
+          cp "$RUNNER_TEMP/trendhub-preview.log" "$RUNNER_TEMP/trendhub-debug/server.log" || true
+          node - <<'NODE'
+          const fs = require('fs');
+          const checks = [
+            ['home', process.env.RUNNER_TEMP + '/trendhub-debug/home-dom.html', 'class="home-search"'],
+            ['research', process.env.RUNNER_TEMP + '/trendhub-debug/research-dom.html', 'id="rvEntryForm"'],
+            ['discover', process.env.RUNNER_TEMP + '/trendhub-debug/discover-dom.html', 'class="discover-page"'],
+          ];
+          let failed = false;
+          for (const [name, file, needle] of checks) {
+            const html = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+            const ok = html.includes(needle);
+            console.log(`DOM_ASSERT ${name}=${ok ? 'OK' : 'FAIL'} bytes=${html.length} needle=${needle}`);
+            if (!ok) {
+              failed = true;
+              console.log(`DOM_HEAD_${name.toUpperCase()}\n${html.slice(0, 2400)}`);
+            }
+          }
+          if (failed) process.exit(1);
+          NODE
+
+      - name: Capture real product surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/trendhub-visual"
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/home-desktop.png" "http://127.0.0.1:18445/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/home-mobile.png" "http://127.0.0.1:18445/#/dashboard"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/research-desktop.png" "http://127.0.0.1:18445/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=390,844 --screenshot="$RUNNER_TEMP/trendhub-visual/research-mobile.png" "http://127.0.0.1:18445/#/research"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --hide-scrollbars --virtual-time-budget=2500 --window-size=1440,1200 --screenshot="$RUNNER_TEMP/trendhub-visual/discover-desktop.png" "http://127.0.0.1:18445/#/discover"
+
+      - name: Upload visual preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trendhub-v174-visual-preview
+          path: |
+            ${{ runner.temp }}/trendhub-visual/*.png
+            ${{ runner.temp }}/trendhub-debug/*
+          if-no-files-found: warn

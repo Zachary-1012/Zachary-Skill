@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const domestic = await readFile(join(root, "src", "sources", "domestic.ts"), "utf8");
 const overrides = await readFile(join(root, "src", "sources", "overrides.ts"), "utf8");
 const index = await readFile(join(root, "src", "sources", "index.ts"), "utf8");

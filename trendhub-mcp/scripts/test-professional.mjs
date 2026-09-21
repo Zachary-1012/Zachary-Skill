@@ -197,5 +197,6 @@ try {
 
   console.log(`PROFESSIONAL V2 TEST OK backend=${history.historyStoreInfo().backend} history=${depth.samples} forecast=${f.status}/${f.validation.grade} media=${med.evidenceCount} creators=${aud.evidence.creatorsObserved} sources=${allSources.length} entities=${brands.brandEntityCatalog("P1").length}`);
 } finally {
-  fs.rmSync(temp, { recursive: true, force: true });
+  history.closeHistoryStore();
+  fs.rmSync(temp, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
 }

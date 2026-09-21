@@ -112,38 +112,61 @@ VIEWS.templates = async function (content) {
 
 /* 设置与说明 */
 VIEWS.settings = async function (content) {
-  content.innerHTML = loading();
-  let health = { version: "—", platformCount: "—", categoryCount: "—" };
-  try { health = await api("/api/health"); } catch { /* ignore */ }
-  const envRows = [
-    ["TRENTHUB_TRANSPORT", "stdio | http", "传输方式，默认 stdio"],
-    ["TRENTHUB_HOST / TRENTHUB_PORT", "127.0.0.1 / 8333", "HTTP 与控制台监听地址/端口"],
-    ["TRENTHUB_CACHE_TTL", "300", "热榜 HTTP 缓存秒数"],
-    ["TRENTHUB_TIMEOUT_MS / TRENTHUB_RETRIES", "15000 / 1", "外呼超时与重试"],
-    ["TRENTHUB_DATA_DIR", "包内 data/", "快照等运行期数据目录"],
-    ["TRENTHUB_RSS_SOURCES", "—", "自定义未来信号 RSS 清单 JSON"],
-    ["XHS_COOKIE", "—", "可选：小红书网页 Cookie（需含 a1 与 web_session），解锁官方热搜词榜与关键词搜索；不设则游客模式仅热门推荐流"],
-  ].map((r) => `<tr><td class="mono">${esc(r[0])}</td><td class="mono">${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("");
   content.innerHTML = `
-    <div class="grid cols-3">
-      ${statCard(esc(health.version), "插件版本")}
-      ${statCard(esc(health.platformCount), "平台数")}
-      ${statCard(esc(health.categoryCount), "分类数")}
-    </div>
-    <div class="section-title">启动方式</div>
-    <div class="card">
-      <p>桌面 AI 客户端（Claude / Cursor / 豆包 / VS Code）用 <span class="mono">stdio</span>：命令 <span class="mono">node dist/src/index.js</span></p>
-      <p>URL 类客户端用 HTTP MCP：<span class="mono">npm run start:http</span>，端点 <span class="mono">http://127.0.0.1:8333/mcp</span></p>
-      <p>打开本控制台：<span class="mono">npm run ui</span>（等价 <span class="mono">node dist/src/index.js --ui</span>，自动开浏览器）。AI 也可直接给你形如 <span class="mono">http://127.0.0.1:8333/#/brief?topic=关键词</span> 的深链，打开即定位。</p>
-      <p class="sub">各客户端具体接入字段见仓库 docs/setup-clients.md。</p>
-    </div>
-    <div class="section-title">环境变量</div>
-    <div class="table-wrap"><table><colgroup><col style="width:28%"><col style="width:22%"><col></colgroup>
-      <thead><tr><th>变量</th><th>默认</th><th>说明</th></tr></thead><tbody>${envRows}</tbody></table></div>
-    <div class="section-title">隐私、合规与数据纪律</div>
-    <div class="grid cols-2">
-      <div class="card"><h3>零 Key · 零遥测 · 零回传</h3><p class="sub">插件不内置任何大模型 Key，不收集点击、关键词、标题或正文，不向任何外部端点上报；控制台只监听 127.0.0.1 本机回环，不对公网开放。分析与成稿算力全部由你接入的 AI 承担。</p></div>
-      <div class="card"><h3>不编造、可追溯</h3><p class="sub">缺失字段为 null 并标记 missing/degraded；每条数据带 capturedAt 与来源链接；Google Trends 为 0–100 相对热度而非绝对搜索量；抓取类源随上游改版可能需要 git pull 更新。</p></div>
-    </div>`;
-};
+    <div class="settings-page">
+      <section class="settings-section">
+        <h2>研究设置</h2>
+        <a class="settings-row" href="#/sources">
+          <div><strong>数据源</strong><p>查看当前可用、需要授权和暂不可用的数据来源</p></div><span>›</span>
+        </a>
+        <a class="settings-row" href="#/workspace">
+          <div><strong>关注与协作</strong><p>本地工作区、关注对象和已存研究</p></div><span>›</span>
+        </a>
+      </section>
 
+      <section class="settings-section">
+        <h2>高级功能</h2>
+        <details class="settings-details">
+          <summary>查看高级分析入口</summary>
+          <div class="settings-links">
+            <a href="#/xhs">小红书公开数据</a>
+            <a href="#/trending">平台热点榜</a>
+            <a href="#/curve">趋势曲线</a>
+            <a href="#/related">相关搜索</a>
+            <a href="#/events">节点日历</a>
+            <a href="#/topic">话题深度分析</a>
+            <a href="#/templates">创作模板</a>
+          </div>
+        </details>
+        <p class="settings-note">这些能力仍然存在，但不会占据主导航。正常研究会在需要时自动使用对应数据。</p>
+      </section>
+
+      <section class="settings-section">
+        <h2>运行与隐私</h2>
+        <a class="settings-row" href="#/ops">
+          <div><strong>运行状态</strong><p>查看本机/托管运行状态和交付信息</p></div><span>›</span>
+        </a>
+        <details class="settings-details" id="localConfig">
+          <summary>本地配置</summary>
+          <div class="settings-config">
+            <div><code>XHS_COOKIE</code><span>可选，仅用于你自己的本地小红书登录增强；公网托管端不接收私人 Cookie。</span></div>
+            <div><code>TRENTHUB_DATA_DIR</code><span>本地快照与历史数据目录。</span></div>
+            <div><code>TRENTHUB_HTTP_TOKEN</code><span>非本机回环监听时使用的访问令牌。</span></div>
+          </div>
+        </details>
+      </section>
+
+      <section class="settings-about">
+        <div id="settingsVersion">TrendHub</div>
+        <p>公开来源可能因平台限制出现缺失、限流或暂不可用。TrendHub 会标注这些状态，不把缺失解释为 0。</p>
+      </section>
+    </div>`;
+
+  try {
+    const health = await api("/api/health");
+    const version = $("#settingsVersion", content);
+    if (version) version.textContent = `TrendHub ${health.version || ""} · ${health.platformCount ?? "—"} 个运行来源`;
+  } catch {
+    /* 设置页不因健康信息暂时不可用而阻断。 */
+  }
+};
