@@ -1,9 +1,11 @@
 name: Publish MCP Registry
 
 on:
-  workflow_run:
-    workflows: ["Stable Release"]
-    types: [completed]
+  # Railway Wait for CI watches every workflow attached to a commit. Starting
+  # Registry publication before Railway finishes creates a cycle: Railway waits
+  # for this workflow while this workflow waits for Railway. Publish only after
+  # Railway reports a successful production deployment instead.
+  deployment_status:
   workflow_dispatch:
 
 permissions:
@@ -16,7 +18,10 @@ concurrency:
 
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'production')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
