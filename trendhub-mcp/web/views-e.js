@@ -1,8 +1,8 @@
 /* 研究结果页（结论全部由后端 /api/review 给出，前端只渲染）+ 数据源 + 本机协作。 */
 "use strict";
 
-TITLES.research = "研究结果";
-TITLES.professional = "研究结果";
+TITLES.research = "研究";
+TITLES.professional = "研究";
 TITLES.sources = "数据源";
 TITLES.workspace = "协作（本机）";
 
