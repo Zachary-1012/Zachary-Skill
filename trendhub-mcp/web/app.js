@@ -249,7 +249,7 @@ window.CATS = CATS;
 /* ---------- 路由 ---------- */
 const VIEWS = {};
 const TITLES = {
-  dashboard: "首页", research: "研究", professional: "研究", discover: "发现",
+  dashboard: "研究", research: "研究", professional: "研究", discover: "发现", watch: "关注",
   xhs: "小红书", trending: "热点榜", overlap: "跨平台共振", clusters: "话题发现",
   curve: "趋势曲线", related: "相关搜索词", signals: "未来信号", events: "节点日历",
   topic: "话题情报", brief: "创作简报", templates: "模板库", sources: "数据源",
@@ -271,10 +271,11 @@ window.closeNavigation = closeNavigation;
 
 async function route() {
   closeNavigation();
-  const hash = location.hash || "#/dashboard";
+  const hash = location.hash || "#/research";
   const [path, query = ""] = hash.slice(1).split("?");
   const segments = path.split("/").filter(Boolean);
-  const view = segments[0] || "dashboard";
+  const requestedView = segments[0] || "research";
+  const view = requestedView === "dashboard" ? "research" : requestedView;
   const params = Object.fromEntries(new URLSearchParams(query));
   const content = $("#content");
   const title = TITLES[view] || "";
@@ -303,7 +304,7 @@ async function route() {
 document.addEventListener("DOMContentLoaded", () => {
   ensureMeta().catch(() => {});
   if (typeof renderXhsLoginStatus === "function") renderXhsLoginStatus().catch(() => {});
-  if (!location.hash) location.hash = "#/dashboard";
+  if (!location.hash) location.hash = "#/research";
   route();
   window.addEventListener("hashchange", route);
 
