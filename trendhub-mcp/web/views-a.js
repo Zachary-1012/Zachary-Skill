@@ -4,6 +4,17 @@ VIEWS.dashboard = async function (content) {
 
   content.innerHTML = `
     <div class="home-page">
+      <section class="home-create" aria-labelledby="homeCreateTitle">
+        <h1 id="homeCreateTitle">说一句，直接创作</h1>
+        <p>不填表。TrendHub 自动判断平台与格式，研究证据后交给当前 AI 生成成稿。</p>
+        <form id="homeCreateForm" class="home-create-form">
+          <textarea id="homeCreatePrompt" rows="3" placeholder="例如：为一家新消费品牌写一篇面向年轻职场人的小红书种草笔记"></textarea>
+          <button class="maple-button" type="submit">开始创作</button>
+        </form>
+        <nav class="creation-platform-bar" aria-label="常用内容平台">
+          ${Object.entries(window.TrendHubCreationPresets || {}).map(([id, item]) => `<button type="button" data-create-platform="${esc(id)}">${esc(item.label)}</button>`).join("")}
+        </nav>
+      </section>
       <section class="home-command">
         <form class="home-search" id="homeSearch">
           <input class="home-keyword" id="homeKeyword" type="search" autocomplete="off"
@@ -45,6 +56,16 @@ VIEWS.dashboard = async function (content) {
     </div>`;
 
   const keywordInput = $("#homeKeyword", content);
+  $("#homeCreateForm", content).addEventListener("submit", (event) => {
+    event.preventDefault();
+    const prompt = $("#homeCreatePrompt", content).value.trim();
+    if (!prompt) return toast("直接说出你想创作什么");
+    window.startTrendHubCreation(prompt, "auto");
+  });
+  content.querySelectorAll("[data-create-platform]").forEach((button) => button.addEventListener("click", () => {
+    const prompt = $("#homeCreatePrompt", content).value.trim();
+    window.startTrendHubCreation(prompt, button.dataset.createPlatform);
+  }));
   $("#homeSearch", content).addEventListener("submit", (event) => {
     event.preventDefault();
     startResearch(keywordInput.value);
@@ -123,10 +144,11 @@ async function loadHomeDiscover(root) {
 /* 小红书主打专区 */
 VIEWS.xhs = function (content) {
   content.innerHTML = `
-    <p class="lead">小红书主打专区：官方首页『热门推荐流』真实笔记（封面 / 作者 / 点赞 / 原文）+ 由热门标题词频派生的高频话题词。游客零配置可用热门流；官方热搜词榜与关键词搜索需配置 <span class="mono">XHS_COOKIE</span>。</p>
+    <p class="lead">行业内容雷达：聚焦品牌营销、商业运营、广告与媒体。小红书登录态优先使用关键词证据；游客模式只保留与行业或输入主题直接相关的推荐内容，受限时自动显示可追溯的行业公开证据。</p>
     <div class="controls">
+      <label class="field">行业 / 品牌 / Campaign<input id="xhs-focus" type="search" value="品牌营销 商业运营 广告 媒体" placeholder="例如：零售媒体、品牌出海、某个 Campaign"></label>
       <label class="field">笔记条数<select id="f-limit">${[20, 30, 40].map((n) => `<option value="${n}" ${n === 30 ? "selected" : ""}>${n}</option>`).join("")}</select></label>
-      <button class="btn primary" id="btn-go">实时刷新小红书热点</button>
+      <button class="btn primary" id="btn-go">获取行业相关结果</button>
       <button class="btn" id="btn-copy">复制选题素材给 AI</button>
       <span id="mode"></span>
     </div>
@@ -138,10 +160,12 @@ VIEWS.xhs = function (content) {
     const items = feed.items || [];
     const topics = (d.derivedTopics && d.derivedTopics.topics) || [];
     const hot = d.officialHotlist;
-    $("#mode").innerHTML = d.loggedIn ? `<span class="badge ok">登录态 · 全能力</span>` : `<span class="badge neutral">游客模式 · 热门流开放</span>`;
+    const fallback = d.usefulFallback || null;
+    const fallbackItems = fallback && Array.isArray(fallback.items) ? fallback.items : [];
+    $("#mode").innerHTML = d.loggedIn ? `<span class="badge ok">登录态 · 全能力</span>` : `<span class="badge neutral">游客模式 · 行业聚焦</span>`;
     const modeNote = d.loggedIn
-      ? note("info", "已检测到 XHS_COOKIE：热门推荐流与官方热搜词榜均可用。")
-      : note("warn", "游客模式：下方为官方首页『热门推荐流』（平台推荐序，<strong>非官方热搜词榜</strong>），点赞为展示近似值（如 4.1万 / 10万+，非精确整数）。配置 XHS_COOKIE 后解锁官方热搜词榜与关键词爆款搜索。");
+      ? note("info", "已使用本地授权会话；优先返回主题相关平台证据。")
+      : note("warn", "游客模式不会展示泛化推荐流；只保留行业/主题直接命中。平台受限或没有命中时，下方替代层提供行业媒体、新闻与公开讨论证据，并明确区分来源。");
     const feedWarn = feed.dataQuality && feed.dataQuality !== "ok" ? note(feed.dataQuality === "missing" ? "err" : "warn", esc(feed.note || "")) : "";
     const cards = items.length
       ? `<div class="xhs-grid">${items.map(xhsCard).join("")}</div>`
@@ -152,13 +176,17 @@ VIEWS.xhs = function (content) {
     const hotItems = hot && hot.items ? hot.items.slice(0, 24) : [];
     const hotBlock = hotItems.length
       ? `<div class="card xhs-side-card"><h3>官方热搜词榜 <span class="badge ok">登录</span></h3>${hotItems.map((h, i) => `<div class="xhs-word"><span class="xhs-w-text"><span class="xhs-rank">${i + 1}</span>${linkOrText(h.title, h.url)}</span><span class="xhs-w-freq">${esc(h.hotText || "")}</span></div>`).join("")}</div>`
-      : `<div class="card xhs-side-card"><h3>官方热搜词榜</h3>${note("info", "官方词榜仅登录态开放：在启动环境设置 XHS_COOKIE（含 a1 与 web_session）后重启。游客请使用左侧热门推荐流与派生词。")}</div>`;
+      : `<div class="card xhs-side-card"><h3>官方热搜词榜</h3>${note("info", "官方词榜仅登录态开放；游客结果由行业公开证据补足，不伪装成官方词榜。")}</div>`;
+    const fallbackBlock = fallbackItems.length
+      ? `<div class="card" style="margin:14px 0"><div class="section-title">${esc(fallback.label || "行业公开证据替代层")} <span class="badge neutral">非小红书热榜</span></div><p class="sub">${esc(fallback.reason || "")}</p>${fallbackItems.slice(0, 18).map((item) => `<div class="discover-row"><div><strong>${linkOrText(item.title, item.url)}</strong><div class="meta">${esc(item.source || "公开来源")} · ${item.publishedAt ? esc(fmtTime(item.publishedAt)) : "时间未提供"}</div></div><span class="discover-platform">${esc(item.family || "evidence")}</span></div>`).join("")}</div>`
+      : "";
     $("#out").innerHTML =
       modeNote +
-      `<div class="grid cols-3" style="margin-bottom:14px">${statCard(items.length, "热门笔记")}${statCard(topics.length, "派生话题词")}${statCard(d.loggedIn ? "已解锁" : "未配置", "官方词榜 / 搜索")}</div>` +
+      `<div class="grid cols-3" style="margin-bottom:14px">${statCard(items.length, "行业相关平台内容")}${statCard(fallbackItems.length, "替代公开证据")}${statCard(d.loggedIn ? "已解锁" : "游客聚焦", "平台模式")}</div>` +
+      fallbackBlock +
       `<div class="xhs-layout">
         <div class="xhs-main">
-          <div class="xhs-head"><div class="section-title" style="margin:0">热门推荐笔记</div><span class="captured" style="margin:0">采集 ${fmtTime(feed.capturedAt)}</span></div>
+          <div class="xhs-head"><div class="section-title" style="margin:0">行业相关平台内容</div><span class="captured" style="margin:0">采集 ${fmtTime(feed.capturedAt)}</span></div>
           ${feedWarn}${cards}
         </div>
         <div class="xhs-side">
@@ -171,7 +199,8 @@ VIEWS.xhs = function (content) {
   const run = async (sourceMode = "live") => {
     $("#out").innerHTML = loading();
     try {
-      const d = await api(`/api/xhs/topics?limit=${$("#f-limit").value}&topic_limit=24&mode=${encodeURIComponent(sourceMode)}`);
+      const focus = $("#xhs-focus").value.trim();
+      const d = await api(`/api/xhs/topics?limit=${$("#f-limit").value}&topic_limit=24&industry_only=1&focus=${encodeURIComponent(focus)}&mode=${encodeURIComponent(sourceMode)}`);
       renderXhs(d);
     } catch (e) {
       $("#out").innerHTML = note("err", esc(e.message));
@@ -210,6 +239,7 @@ function xhsCard(it) {
 function xhsBriefText(d) {
   const feed = d.feed || {}, items = feed.items || [], topics = (d.derivedTopics && d.derivedTopics.topics) || [];
   const hot = (d.officialHotlist && d.officialHotlist.items) || [];
+  const fallback = (d.usefulFallback && d.usefulFallback.items) || [];
   const L = [];
   L.push("【小红书当下热点 · 选题素材】");
   L.push(`采集时间：${feed.capturedAt || ""}；口径：官方首页热门推荐流（平台推荐序，非官方热搜词榜），点赞为展示近似值。`);
@@ -228,6 +258,11 @@ function xhsBriefText(d) {
     L.push("");
     L.push("三、官方热搜词榜：");
     hot.forEach((h, i) => L.push(`${i + 1}. ${h.title}`));
+  }
+  if (fallback.length) {
+    L.push("");
+    L.push("四、行业公开证据替代层（非小红书热榜）：");
+    fallback.slice(0, 18).forEach((item, i) => L.push(`${i + 1}. ${item.title} — ${item.source || "公开来源"} — ${item.url || ""}`));
   }
   L.push("");
   L.push("请基于以上真实热点，按 xiaohongshu-note 模板产出 3 个选题方向、5 个标题钩子与一篇笔记正文框架；数据不得编造，缺失标注[待补充]。");

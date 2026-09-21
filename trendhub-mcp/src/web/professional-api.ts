@@ -9,6 +9,7 @@ import { buildEntityResearch } from "../analysis/entity-research.js";
 import { buildDecisionView } from "../analysis/decision-view.js";
 import { analyzeAudienceSignals } from "../analysis/audience.js";
 import { collectMediaEvidence } from "../analysis/media.js";
+import { INDUSTRY_DEFAULT_VERTICALS } from "../sources/industry-focus.js";
 import { buildExecutiveReport, executiveReportCsv, executiveReportMarkdown } from "../reports/executive.js";
 import { localObservabilitySnapshot, recordApiObservation } from "../observability/local.js";
 import {
@@ -192,7 +193,8 @@ export async function handleProfessionalApi(pathname: string, url: URL, method: 
     if (!keyword) return bad("keyword is required");
 
     const selected = splitList(url.searchParams.get("platforms"));
-    const verticals = splitVerticals(url.searchParams.get("verticals"));
+    const requestedVerticals = splitVerticals(url.searchParams.get("verticals"));
+    const verticals = requestedVerticals.length ? requestedVerticals : INDUSTRY_DEFAULT_VERTICALS;
     const platforms = selected.length ? selected : defaultLivePlatformIds({ max: 12, verticals });
 
     if (url.searchParams.get("refresh") !== "0" && pathname !== "/api/professional/audience" && pathname !== "/api/professional/media") {

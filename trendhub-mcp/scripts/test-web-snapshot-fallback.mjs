@@ -21,7 +21,7 @@ const makeResult = (platform, label, title) => ({
 });
 
 fs.writeFileSync(path.join(snapshotDir, "weibo.json"), JSON.stringify({ latest: makeResult("weibo", "微博", "快照热榜"), previous: null }));
-fs.writeFileSync(path.join(snapshotDir, "xiaohongshu.json"), JSON.stringify({ latest: makeResult("xiaohongshu", "小红书", "快照小红书"), previous: null }));
+fs.writeFileSync(path.join(snapshotDir, "xiaohongshu.json"), JSON.stringify({ latest: makeResult("xiaohongshu", "小红书", "品牌营销快照小红书"), previous: null }));
 
 try {
   const { handleApi } = await import(`../dist/src/web/api.js?snapshot-test=${Date.now()}`);
@@ -34,7 +34,8 @@ try {
   const xhs = await handleApi("/api/xhs/topics", new URL("http://127.0.0.1/api/xhs/topics?mode=snapshot&limit=5&topic_limit=5"), "GET", "");
   assert.equal(xhs.status, 200);
   assert.equal(xhs.data.sourceMode, "snapshot");
-  assert.equal(xhs.data.feed.items[0].title, "快照小红书");
+  assert.equal(xhs.data.feed.items[0].title, "品牌营销快照小红书");
+  assert.equal(xhs.data.usefulFallback, null);
 
   console.log("WEB SNAPSHOT FALLBACK TEST OK");
 } finally {
