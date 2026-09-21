@@ -4,7 +4,7 @@
  * - 默认 stdio：供 Claude / Cursor / 豆包 / VS Code 等桌面客户端以子进程方式连接。
  * - --http 或 TRENHUB_TRANSPORT=http：HTTP MCP（默认 127.0.0.1:8333/mcp）。
  * - --ui：在 --http 基础上启动本地可视化控制台（http://127.0.0.1:8333/）并自动打开浏览器。
- *   控制台只做数据可视化与手动触发，不接任何大模型（分析/成稿算力仍由调用方 AI 承担）。
+ *   2.0 内容工作台使用宿主 AI 或使用者控制的本地端点；TrendHub 不持有模型凭据。
  *
  * 网络边界：loopback 默认免鉴权；任何非 loopback 监听都必须设置 TRENHUB_HTTP_TOKEN，
  * /mcp 与 /api/* 使用 Authorization: Bearer <token>。插件无模型 Key、无第三方遥测、

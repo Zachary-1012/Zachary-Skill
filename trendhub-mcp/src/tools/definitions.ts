@@ -18,6 +18,7 @@ import { listSourceReliability } from "../store/reliability.js";
 import { XHS_PLATFORM, XHS_HOTLIST_PLATFORM } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
+import { CONTENT_STUDIO_URI } from "../agent-native/content-studio-widget.js";
 
 const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
 
@@ -310,10 +311,10 @@ export function registerTools(server: McpServer): void {
     }
   );
 
-  server.tool(
-    "get_content_brief",
-    "专家创作简报：围绕主题聚合真实热点证据、相关搜索词、情感信号、同平台真实爆款样本，并匹配模板，输出逐格填充指引与可直接交给大模型的 productionPrompt。脚本/文案/方案的成稿由调用方大模型完成。",
-    {
+  server.registerTool("get_content_brief", {
+    title: "在 TrendHub 内容工作台创作",
+    description: "围绕主题聚合真实热点证据、相关搜索词、同平台样本与模板，并在内容工作台中调用使用者当前 AI 产出可编辑制品。",
+    inputSchema: {
       topic: z.string().describe("创作主题/要蹭的热点"),
       template_id: z.string().optional().describe("模板 id；不传则按 platform 自动匹配"),
       platform: z.string().optional().describe("目标平台，如 douyin/xiaohongshu/weibo/wechat/twitter/douyin-live；all=通用"),
@@ -321,8 +322,14 @@ export function registerTools(server: McpServer): void {
       audience: z.string().optional().describe("目标人群画像"),
       geo: z.string().optional().describe("搜索趋势地区"),
     },
-    WEB_READ,
-    async ({ topic, template_id, platform, goal, audience, geo }) =>
-      json(await getContentBrief(topic, { templateId: template_id, platform, goal, audience, geo }))
-  );
+    annotations: WEB_READ,
+    _meta: { ui: { resourceUri: CONTENT_STUDIO_URI }, "openai/outputTemplate": CONTENT_STUDIO_URI },
+  }, async ({ topic, template_id, platform, goal, audience, geo }) => {
+    const brief = await getContentBrief(topic, { templateId: template_id, platform, goal, audience, geo });
+    return {
+      structuredContent: { brief },
+      content: [{ type: "text" as const, text: `已生成“${topic}”的证据简报。请在 TrendHub 内容工作台中调用你的当前 AI 继续生成可编辑成稿。` }],
+      _meta: { "openai/outputTemplate": CONTENT_STUDIO_URI },
+    };
+  });
 }

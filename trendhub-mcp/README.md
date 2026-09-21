@@ -1,8 +1,10 @@
-# TrendHub · Agent-native Trend Intelligence v1.7.3
+# TrendHub 2.0 · Evidence-backed AI Content Studio
 
-> **本地优先、Evidence-first、BYO-AI 的专业趋势情报 Skill / MCP 插件。** v1.6.0 正式提供 MCP Resources、canonical namespace、Unified Evidence Contract v1 与 Skill 2.0；同时覆盖国内外 **51 个运行时平台/趋势信源**，并维护 **129 个专业分层信源**，新增公开 RSS/Atom、GDELT、Apple Podcasts 公共目录与 Bluesky 证据适配器，以小红书为深度主打，提供话题雷达、Source Reliability、趋势生命周期/速度/持续性/跨平台扩散/置信度、Google Trends、未来信号、节点日历、24h/72h Lead-time Benchmark、品牌市场分析和内容生产，共 **21 个 MCP 工具**。
+> **本地优先、Evidence-first、BYO-AI 的内容创作 Skill / MCP 插件。** TrendHub 2.0 把 51 个运行时信源与 129 个专业分层信源转成持久创作项目、证据简报、可编辑制品、审核阶段、发布准备和评估，同时保留 **21 个稳定 MCP 工具**、Professional Intelligence v3、MCP Resources 与 Unified Evidence Contract v1。
 >
-> TrendHub 负责取数、证据、确定性分析和创作脚手架；理解、判断与成稿由正在使用的 ChatGPT / Claude / 豆包 / DeepSeek / Gemini / Cursor 等 AI 使用自身算力完成。**不内置模型 API Key、默认零第三方遥测、无 TrendHub 中央数据回传。**
+> MCP Apps 页面可把完整创作任务交给使用者当前 AI；本地 Web 工作台可连接使用者控制的开放模型端点并将结果直接回填编辑器。优先可商用开放权重模型，令牌只保存在当前页面内存。**默认零第三方遥测、无 TrendHub 中央数据回传。**
+>
+> **v2.0.0 Content Studio**：默认首页升级为宣纸质感的内容工作台，采用克制暖中性色与枫叶红动作色；支持项目、简报、成稿、审核、排期、发布链接和复盘状态。`get_content_brief` 绑定 MCP Apps UI，宿主 AI 与本地 OpenAI-compatible 模型均经过真实交互验收。
 >
 > **v1.7.3 Review Quality & Performance**：研究先返回快速 Decision View，再补齐完整证据；慢源有明确超时边界，交互路径不再等待整套 RSS；缺失不显示为 0/+0% 预测；关键驱动去来源/英文碎词噪声；近期节点按主体/行业/地区相关性筛选。用户界面与 21-tool / Evidence 合同不变。\n>\n> **v1.7.2 Task-first Decision View**：网页重做为任务优先研究台，首页只保留“搜索 / 最近研究 / 正在关注 / 趋势发现”，研究页直接给“当前结论 / 趋势变化 / 关键驱动 / 平台表现 / 证据 / 机会与风险 / 建议 / 操作”；后端 Decision ViewModel 统一生成结论、前端只负责呈现，结果渐进返回、不长时间空转，桌面与手机共用同一阅读对齐轴；趋势数据缺失时显式标注、不显示为 0。21 个工具、51 个运行时信源（129 个分层信源）、Entity-first、Evidence Contract、Skill 2.0 与公网只读安全边界保持不变。\n>\n> **v1.7.1 Semantic Experience Correction**：主研究面改为 Subject Field → Change Axis → Interpretation Strata → Evidence Trace → Action Return；退役 KPI/卡片墙和固定后台侧栏，统一内容对齐轴并修复 Professional 深链初始化竞态。后端 Entity-first / Evidence / 21-tool 合同不变。\n>\n> **v1.7.0 Entity-first Intelligence Workspace**：品牌/公司/商业体/产品/Campaign 先主动检索主体证据，再进入 Professional Intelligence v3；Web 默认先给状态、变化、驱动、机会、风险、缺口与行动，原始新闻/Feed 只作为 Evidence。\n>\n> **v1.6.1 Runtime Adapter Hotfix**：dailyhot 聚合改为 route-only 动态加载，不再加载上游 Web 静态壳；抖音改由 TrendHub 自有公开适配器处理临时 Cookie，缺失/限流保持显式 Evidence State。\n>\n> **v1.6.0 Agent-native Foundation**：保持 21 个 Tool 名称和参数兼容，正式发布 `trendhub://namespace`、`trendhub://contracts/evidence`、`trendhub://capabilities`、`trendhub://sources`、`trendhub://skill/trendhub` 等 Resources，并提供平台历史、能力详情和信源访问合同 Resource Templates。`missing != 0`、`RELEASED != OPERATING`，采集适配器不拥有 canonical truth。\n>\n> **v1.5.2 Public Shell Hotfix + Creator Ops**：在本地“运行与交付”能力基础上，修复公网手机端导航占满页面的问题；手机默认显示紧凑顶部栏，导航仅在主动打开后以抽屉呈现。HTML/CSS/JS 使用版本化资源和 no-store 缓存策略；不上传遥测、不读取密钥、不自动重启或发布。公网 Remote 不暴露 `/api/ops/*`。安装使用仍**无需审批、注册、登录或中央服务器**。
 

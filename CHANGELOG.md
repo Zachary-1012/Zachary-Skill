@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.0 — Evidence-backed AI Content Studio
+
+- Promote TrendHub from a trend-research surface to a persistent content creation platform.
+- Add the rice-paper, restrained neutral and maple-red Content Studio, Content Library, and Publishing Plan surfaces.
+- Attach an MCP Apps UI resource to `get_content_brief` without changing the stable 21-tool facade.
+- Use the person's current host AI in ChatGPT-compatible hosts; support a user-controlled OpenAI-compatible local endpoint with direct draft insertion.
+- Keep project data browser-local, credentials out of persistent storage, and model output separate from factual Evidence.
+- Add Brief → Evidence → Strategy → Draft → Review → Ready → Published → Evaluated workflow and responsive desktop/mobile acceptance.
+
 ## v1.7.3 — Review Quality & Performance
 
 - Return a fast backend Decision View first, then replace it with fuller evidence when slower sources finish.

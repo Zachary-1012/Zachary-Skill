@@ -2,8 +2,8 @@
   "schema": "trendhub-skill-v2",
   "name": "trendhub",
   "skillVersion": "2.0",
-  "productVersion": "1.7.4",
-  "description": "Progressively disclosed evidence-first trend intelligence skill with Entity-first business research, Decision-first Web, 21 stable MCP tools and protocol-native Resources.",
+  "productVersion": "2.0.0",
+  "description": "Evidence-backed AI content workspace with persistent projects, user-controlled AI, editable artifacts, review stages, 21 stable MCP tools and protocol-native Resources.",
   "namespace": {
     "capabilityPrefix": "trendhub.",
     "resourceScheme": "trendhub://"
@@ -20,13 +20,15 @@
     "workflows/brand-radar.md",
     "workflows/campaign-research.md",
     "workflows/content-research.md",
+    "workflows/content-creation.md",
     "workflows/trend-validation.md"
   ],
   "policies": [
     "policies/evidence.md",
     "policies/confidence.md",
     "policies/reliability.md",
-    "policies/forecasting.md"
+    "policies/forecasting.md",
+    "policies/model-routing.md"
   ],
   "compatibility": {
     "toolCount": 21,
@@ -39,7 +41,9 @@
     "adapters-do-not-own-truth",
     "evidence-state-is-explicit",
     "entity-research-is-not-hotlist-only",
-    "raw-evidence-is-not-the-product-summary"
+    "raw-evidence-is-not-the-product-summary",
+    "model-output-is-not-evidence",
+    "user-ai-credentials-stay-in-user-runtime"
   ],
   "routing": {
     "entityFirst": {

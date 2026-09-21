@@ -49,9 +49,11 @@ await client.connect(transport);
 
 const tools = await client.listTools();
 assert.equal(tools.tools.length, 21, "legacy compatibility facade must remain 21 tools");
+const contentBriefTool = tools.tools.find((tool) => tool.name === "get_content_brief");
+assert.equal(contentBriefTool?._meta?.ui?.resourceUri, "ui://trendhub/content-studio.html");
 
 const resources = await client.listResources();
-for (const uri of ["trendhub://methodology", "trendhub://namespace", "trendhub://contracts/evidence", "trendhub://skill/trendhub"]) {
+for (const uri of ["trendhub://methodology", "trendhub://namespace", "trendhub://contracts/evidence", "trendhub://skill/trendhub", "ui://trendhub/content-studio.html"]) {
   assert.ok(resources.resources.some((x) => x.uri === uri), uri);
 }
 
@@ -68,6 +70,9 @@ const namespace = await client.readResource({ uri: "trendhub://namespace" });
 assert.match(namespace.contents[0].text, /trendhub-namespace-v1/);
 const capability = await client.readResource({ uri: "trendhub://capability/trendhub.intelligence.lifecycle" });
 assert.match(capability.contents[0].text, /trend_intelligence/);
+const studio = await client.readResource({ uri: "ui://trendhub/content-studio.html" });
+assert.equal(studio.contents[0].mimeType, "text/html;profile=mcp-app");
+assert.match(studio.contents[0].text, /让我的 AI 创作/);
 
 await client.close();
 console.log(`AGENT NATIVE OK tools=${tools.tools.length} resources=${resources.resources.length} templates=${templates.resourceTemplates.length} local-observability=otel-compatible`);
