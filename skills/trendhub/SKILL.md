@@ -9,6 +9,17 @@ Use TrendHub when a request needs current or historical trend evidence, cross-so
 
 Core discipline: **Missing is not zero.** Keep the existing 21-tool compatibility contract, disclose source limitations, and never present planned or credentialed coverage as live zero-config evidence.
 
+Default product focus is brand marketing, business operations, advertising,
+media, retail and adjacent commercial industries. Do not use a broad guest
+homepage feed as the primary answer for these requests. Prefer subject-specific
+query evidence and the `industry` future-signal category.
+
+When a platform is restricted, keep the result useful through this evidence
+order: live official/public result → user-authorized local session → latest
+successful snapshot → subject-relevant public industry evidence. Keep substitute
+evidence in a separately labelled fallback block; never rename it as the
+restricted platform's hotlist or imply equivalent coverage.
+
 Progressive disclosure:
 
 - Trend discovery: `workflows/trend-discovery.md`
@@ -28,10 +39,19 @@ endpoint. An unconfigured channel never blocks the product; once filled and
 saved, it connects automatically and the content studio writes the editable
 artifact in place. Do not
 ask the person to copy a prompt into a separate model when any route is available.
+Treat one natural-language request as sufficient input. Infer the target platform,
+artifact format, objective, audience and tone; collect evidence and start creation
+without requiring a form. Keep detailed fields available only as optional advanced
+controls. Surface Xiaohongshu, Douyin, WeChat articles, Weibo, short video and
+long-form article creation in the primary workspace rather than hiding them in settings.
 
 Optional Xiaohongshu Cookie enhancement is also configured in local Settings.
 The Cookie must contain `a1` and `web_session`, stays in process memory, and
 must never be sent to or accepted by the public hosted service.
+Without a Cookie, Xiaohongshu output must be narrowed by the requested brand,
+Campaign or industry. If the guest feed is blocked or has no direct match,
+return the separately labelled industry-public-evidence fallback instead of a
+generic recommendation feed or an empty product surface.
 
 Use this production chain: Brief → Context → Research/Evidence → Strategy → Draft → Review → Approval → Export/Publish preparation → Measurement → Evaluation → versioned learning. Creative expression may vary; facts and claims may only come from verified evidence or explicit user input. Unknown facts stay marked `【待核验】`.
 

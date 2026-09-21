@@ -17,8 +17,16 @@ import { listTemplates, getTemplate, getContentBrief } from "../analysis/produce
 import { fetchXiaohongshu, fetchXiaohongshuHotlist } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
+import { collectPublicQueryEvidence } from "../sources/query-evidence.js";
+import {
+  buildUsefulIndustryFallback,
+  filterIndustryItems,
+  INDUSTRY_FOCUS_ALIASES,
+  INDUSTRY_FOCUS_LABEL,
+  INDUSTRY_FOCUS_QUERY,
+} from "../sources/industry-focus.js";
 
-const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
+const DEFAULT_PLATFORMS = ["weibo", "zhihu", "baidu", "toutiao", "thepaper", "36kr", "huxiu", "sspai", "ifanr", "social-media-today"];
 
 export interface ApiResponse {
   status: number;
@@ -288,6 +296,9 @@ export async function handleApi(pathname: string, url: URL, method: string, body
     case "/api/xhs/topics": {
       const n = intParam(q("limit"), 30, 5, 40);
       const tn = intParam(q("topic_limit"), 20, 5, 50);
+      const focus = q("focus")?.trim() ?? "";
+      const industryOnly = q("industry_only") !== "0";
+      const focusText = focus || INDUSTRY_FOCUS_LABEL;
       const sourceMode = q("mode") === "snapshot" ? "snapshot" : "live";
       return handled(async () => {
         let feed: any = sourceMode === "snapshot" ? snapshotFallback("xiaohongshu", n) : null;
@@ -300,6 +311,16 @@ export async function handleApi(pathname: string, url: URL, method: string, body
           feed = cached ?? liveFeed;
           feedFromSnapshot = Boolean(cached);
         }
+        const rawFeed = feed;
+        const focusedItems = industryOnly ? filterIndustryItems(rawFeed.items ?? [], focus, n) : (rawFeed.items ?? []);
+        feed = {
+          ...rawFeed,
+          items: focusedItems,
+          dataQuality: focusedItems.length ? rawFeed.dataQuality : "degraded",
+          note: focusedItems.length
+            ? `${rawFeed.note ?? ""}；已按「${focusText}」收窄。`.replace(/^；/, "")
+            : `${rawFeed.note ?? "平台游客流未返回可用内容"}；未发现与「${focusText}」直接相关的推荐内容。`,
+        };
         const derivedTopics = extractXhsTopics(feed.items.map((i: any) => i.title), tn);
         const loggedIn = xhsClient.hasLoginCookie();
         const officialHotlist = sourceMode === "snapshot"
@@ -309,10 +330,23 @@ export async function handleApi(pathname: string, url: URL, method: string, body
             : null;
         if (sourceMode === "live") {
           const toStore = [
-            ...(feedFromSnapshot ? [] : [feed]),
+            ...(feedFromSnapshot ? [] : [rawFeed]),
             ...(officialHotlist ? [officialHotlist] : []),
           ];
           if (toStore.length) updateFromResults(toStore);
+        }
+        let usefulFallback = null;
+        if (!focusedItems.length) {
+          const channels = await collectPublicQueryEvidence(
+            focus || INDUSTRY_FOCUS_QUERY,
+            focus ? [] : INDUSTRY_FOCUS_ALIASES,
+            10,
+          );
+          usefulFallback = buildUsefulIndustryFallback(
+            channels,
+            focusText,
+            "小红书游客/当前会话未返回相关内容，改用行业媒体、新闻、公开社交与播客证据；这些结果不冒充小红书热榜。",
+          );
         }
         return {
           generatedAt: new Date().toISOString(),
@@ -322,6 +356,7 @@ export async function handleApi(pathname: string, url: URL, method: string, body
           feed,
           derivedTopics,
           officialHotlist,
+          usefulFallback,
         };
       });
     }

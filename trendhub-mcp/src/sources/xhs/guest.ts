@@ -114,11 +114,13 @@ class XhsClient {
   private session: XhsSession | null = null;
   private sessionAt = 0;
   private runtimeCookie = "";
+  private cookieRejected = false;
   /** 游客会话保守有效期；过期或失效时自动重新激活。 */
   private readonly ttlMs = 25 * 60 * 1000;
 
   /** 是否配置了可用的真人登录 Cookie（同时含 a1 与 web_session）。 */
   hasLoginCookie(): boolean {
+    if (this.cookieRejected) return false;
     const raw = this.runtimeCookie || process.env.XHS_COOKIE?.trim();
     if (!raw) return false;
     const jar = parseCookieString(raw);
@@ -134,17 +136,21 @@ class XhsClient {
       return { ok: false, error: "Cookie 必须同时包含 a1 与 web_session" };
     }
     this.runtimeCookie = value;
+    this.cookieRejected = false;
+    this.session = null;
     return { ok: true };
   }
 
   clearLoginCookie(): void {
     this.runtimeCookie = "";
+    this.cookieRejected = false;
+    this.session = null;
   }
 
   async getSession(force = false): Promise<XhsSession> {
     // 1) 真人登录态优先（每次读取环境变量，便于运行期注入后即时生效）
     const envCookie = this.runtimeCookie || process.env.XHS_COOKIE?.trim();
-    if (envCookie) {
+    if (envCookie && !this.cookieRejected) {
       const jar = parseCookieString(envCookie);
       if (jar.a1 && jar.web_session) return { jar, mode: "cookie", userId: null };
     }
@@ -270,8 +276,9 @@ class XhsClient {
     }
 
     const sessionDead = json?.code === -100 || json?.code === -101 || res.status === 461 || res.status === 471;
-    if (sessionDead && sess.mode === "guest" && !opts.retried) {
+    if (sessionDead && !opts.retried) {
       this.session = null;
+      if (sess.mode === "cookie") this.cookieRejected = true;
       return this.request(method, uri, { ...opts, retried: true });
     }
     return { status: res.status, json };

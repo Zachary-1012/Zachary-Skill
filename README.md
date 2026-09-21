@@ -118,17 +118,18 @@ args: <trendhub-mcp绝对路径>/scripts/launcher.mjs
 
 | 能力层 | 当前能力 |
 | --- | --- |
-| 实时发现 | 51 个运行时平台/趋势信源；小红书热门推荐流为深度主打，并新增公开 RSS、GDELT、Apple Podcasts 与 Bluesky 证据适配器 |
-| 小红书增强 | 游客热门推荐；本地 `XHS_COOKIE` 可解锁官方热搜词榜与关键词爆款搜索 |
+| 实时发现 | 51 个运行时平台/趋势信源；默认聚焦品牌营销、商业运营、广告、媒体与零售商业，而不是泛娱乐首页流 |
+| 受限平台恢复 | 官方实时数据 → 本地授权会话 → 最近成功快照 → 行业公开证据；替代来源独立标注，绝不冒充原平台热榜 |
+| 小红书增强 | 游客结果按行业/主题收窄；受限或无命中时返回行业媒体/新闻/公开社交证据；本地 `XHS_COOKIE` 解锁官方热搜词榜与关键词爆款搜索 |
 | 跨平台 | 共振、自动聚类、新晋/飙升/掉榜、历史快照 |
 | **定时趋势历史（v1.4.2）** | 托管 Remote MCP 默认每小时自动快照并持久化有界历史；本地支持 cron / Windows 任务计划程序，见 [`docs/scheduled-snapshots.md`](./trendhub-mcp/docs/scheduled-snapshots.md) |
 | **Source Reliability** | UP / DEGRADED / DOWN / AUTH_REQUIRED / RATE_LIMITED；24h/7d/30d ok/usable rate；P50/P95 延迟；连续失败；schema drift |
 | **Trend Intelligence Engine** | `emerging → accelerating → mainstream → saturating → declining`；速度、持续性、扩散、可靠度、历史充分度、置信度 |
 | 搜索趋势 | Google Trends 相对热度曲线、相关词 top/rising |
-| 未来信号 | 科技/AI/商业/营销 RSS 信源 + 趋势节点日历 |
+| 未来信号 | `industry` 组合覆盖 Marketing Dive、ADWEEK、Marketing Week、Digiday、Retail Dive、Nieman Lab、AdExchanger、MarTech、PR Daily、IAB SEA+India、CFO Dive 等全球公开 RSS，并保留科技/AI 信源与趋势节点日历 |
 | **真实场景 Benchmark** | 用外部 ground-truth 时间计算是否提前 24h / 72h 发现趋势；支持批量 benchmark cases |
 | 深度分析 | 共振 + 走势 + 相关词 + 信号 + 节点 + 规则情感 |
-| **内容工作台 · v2.0** | 宣纸质感项目工作区 + 使用者当前 AI / 本地开放模型 + 可编辑成稿 + 审核阶段 + 发布计划 + 复盘；MCP Apps UI 绑定 `get_content_brief` |
+| **内容工作台 · v2.0** | 首页输入一句创作要求即可自动判断平台、格式、目标与受众，取证后调用使用者当前 AI 直接成稿；小红书、抖音、公众号、微博、短视频、深度文章均为首屏入口，并保留可选高级设置、可编辑成稿、审核、发布计划与复盘 |
 | 质量诊断 | `npm run quality:diagnostic` 生成本地匿名化诊断；默认零遥测、零自动上传 |
 | **Entity-first Intelligence · v1.7** | 品牌/公司/商业体/产品/Campaign → 主动 Query Evidence Acquisition → Professional Intelligence v3；热榜只作为次级“是否形成全网热点”信号 |
 | **任务优先研究台 · v1.7.3** | 首页四区（搜索 / 最近研究 / 正在关注 / 趋势发现）+ 研究页八区（当前结论 / 趋势变化 / 关键驱动 / 平台表现 / 证据 / 机会与风险 / 建议 / 操作）；后端统一给结论、前端只负责呈现，结果渐进返回；不使用 KPI 墙 / 卡片墙骨架，原始 Feed/新闻只作为可回溯证据 |

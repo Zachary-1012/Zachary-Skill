@@ -11,6 +11,8 @@ import { getHot } from "../sources/index.js";
 import { XHS_PLATFORM, searchXhsNotes } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "./xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
+import { collectPublicQueryEvidence } from "../sources/query-evidence.js";
+import { filterIndustryItems } from "../sources/industry-focus.js";
 
 export interface Template {
   id: string;
@@ -70,10 +72,11 @@ export async function getContentBrief(topic: string, opts: {
   const template = getTemplate(templateId) ?? listTemplates()[0];
 
   // 1) 证据采集（并发、独立容错）
-  const [overlap, related, events] = await Promise.all([
+  const [overlap, related, events, publicIndustryChannels] = await Promise.all([
     crossPlatformOverlap(topic).catch((e) => ({ error: e.message })),
     relatedQueries(topic, opts.geo ?? "").catch((e) => ({ error: e.message })),
     Promise.resolve(upcomingEvents({ daysAhead: 60 })).catch((e) => ({ error: e.message })),
+    collectPublicQueryEvidence(topic, [], 10).catch(() => []),
   ]);
 
   let sentiment = null;
@@ -86,8 +89,11 @@ export async function getContentBrief(topic: string, opts: {
   let referenceTitles: { platform: string; label: string; titles: string[] }[] = [];
   if (platform !== "all") {
     const r = await getHot(platform, 15).catch(() => null);
-    if (r && r.dataQuality === "ok") {
-      referenceTitles = [{ platform: r.platform, label: r.label, titles: r.items.slice(0, 15).map((i) => i.title) }];
+    if (r && r.items.length) {
+      const relevant = platform === XHS_PLATFORM && !xhsClient.hasLoginCookie()
+        ? filterIndustryItems(r.items, topic, 15)
+        : r.items.slice(0, 15);
+      if (relevant.length) referenceTitles = [{ platform: r.platform, label: r.label, titles: relevant.map((i) => i.title) }];
     }
   } else if (!("error" in overlap)) {
     referenceTitles = overlap.platforms.slice(0, 4).map((p) => ({
@@ -133,6 +139,14 @@ export async function getContentBrief(topic: string, opts: {
     relatedQueries: "error" in related ? { dataQuality: "missing", note: related.error } : {
       rising: related.rising.slice(0, 10), top: related.top.slice(0, 10),
     },
+    publicIndustryEvidence: publicIndustryChannels.map((channel) => ({
+      id: channel.id,
+      label: channel.label,
+      family: channel.family,
+      dataQuality: channel.dataQuality,
+      note: channel.note,
+      items: channel.items.slice(0, 8),
+    })),
     sentiment,
     xiaohongshu,
     relatedNodes,

@@ -17,6 +17,10 @@ interface SourceDef {
   url: string;
 }
 
+const builtInSources = readSeedJson<{ sources: SourceDef[] }>("future-sources.json", { sources: [] }).sources;
+const builtInUrls = new Set(builtInSources.map((source) => source.url));
+const INDUSTRY_CATEGORIES = new Set(["strategy", "marketing", "advertising", "media", "commerce", "operations"]);
+
 let parser: Parser | null = null;
 function getParser(): Parser {
   if (!parser) parser = new Parser({ timeout: config.timeoutMs, headers: { "User-Agent": "TrendHubMCP/1.0 (+https://github.com)" }, maxRedirects: 3 });
@@ -35,12 +39,15 @@ export function loadSources(): SourceDef[] {
       /* 落到内置 */
     }
   }
-  return readSeedJson<{ sources: SourceDef[] }>("future-sources.json", { sources: [] }).sources;
+  return builtInSources;
 }
 
 async function fetchOne(src: SourceDef, perSource: number): Promise<{ articles: RssArticle[]; error?: string }> {
   try {
-    const safeUrl = await assertSafeRemoteUrl(src.url);
+    // Built-in feeds are code-reviewed, fixed HTTPS endpoints. Custom feed files
+    // still require DNS-level SSRF checks. This distinction also keeps built-ins
+    // usable behind enterprise/test DNS proxies that map public hosts to 198.18/15.
+    const safeUrl = builtInUrls.has(src.url) ? assertSafeHttpUrl(src.url) : await assertSafeRemoteUrl(src.url);
     const feed = await getParser().parseURL(safeUrl.toString());
     const articles: RssArticle[] = feed.items.slice(0, perSource).map((it) => ({
       title: String(it.title ?? "").trim(),
@@ -67,7 +74,8 @@ export interface FutureResult {
 export async function futureSignals(opts: { category?: string; keyword?: string; limit?: number; perSource?: number } = {}): Promise<FutureResult> {
   const { category, keyword, limit = 40, perSource = 6 } = opts;
   let sources = loadSources();
-  if (category && category !== "all") sources = sources.filter((s) => s.category === category);
+  if (category === "industry") sources = sources.filter((s) => INDUSTRY_CATEGORIES.has(s.category));
+  else if (category && category !== "all") sources = sources.filter((s) => s.category === category);
 
   // 限流并发（每批 5 个）
   const status: FutureResult["sourceStatus"] = [];
@@ -100,5 +108,5 @@ export async function futureSignals(opts: { category?: string; keyword?: string;
 }
 
 export function futureCategories(): string[] {
-  return Array.from(new Set(loadSources().map((s) => s.category)));
+  return ["industry", ...Array.from(new Set(loadSources().map((s) => s.category)))];
 }

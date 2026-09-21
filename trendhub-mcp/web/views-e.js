@@ -12,7 +12,7 @@ function scoreCard(label, value, sub) {
 }
 function verticalOptions(selected) {
   const opts = [
-    ["", "自动 / 综合"], ["fashion-luxury", "时尚 / 奢侈品"], ["beauty", "美妆"],
+    ["", "行业默认：品牌 / 商业 / 广告 / 媒体"], ["fashion-luxury", "时尚 / 奢侈品"], ["beauty", "美妆"],
     ["business-corporate", "商业 / 公司"], ["technology", "科技"], ["automotive", "汽车"],
     ["finance-markets", "财经 / 市场"], ["marketing-advertising", "营销 / 广告"],
     ["retail-commerce", "零售 / 电商"], ["culture-entertainment", "文化 / 娱乐"],

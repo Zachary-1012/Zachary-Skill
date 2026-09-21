@@ -11,6 +11,14 @@
     xiaohongshu: "小红书图文", short_video: "短视频脚本", article: "深度文章",
     social: "社交短帖", campaign: "内容矩阵", newsletter: "Newsletter",
   };
+  const CREATION_PRESETS = {
+    xiaohongshu: { label: "小红书", platform: "xiaohongshu", format: "xiaohongshu", seed: "创作一篇小红书内容" },
+    douyin: { label: "抖音", platform: "douyin", format: "short_video", seed: "创作一条抖音短视频脚本" },
+    wechat: { label: "公众号", platform: "wechat", format: "article", seed: "创作一篇微信公众号文章" },
+    weibo: { label: "微博", platform: "weibo", format: "social", seed: "创作一条微博内容" },
+    short_video: { label: "短视频", platform: "all", format: "short_video", seed: "创作一个短视频脚本" },
+    article: { label: "深度文章", platform: "all", format: "article", seed: "创作一篇深度文章" },
+  };
 
   const now = () => new Date().toISOString();
   const uid = () => `thp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -20,6 +28,35 @@
     zhipu: { endpoint: "https://open.bigmodel.cn/api/paas/v4", model: "" },
     "openai-compatible": { endpoint: "http://127.0.0.1:11434/v1", model: "" },
   };
+
+  function inferCreationRequest(input, preferred = "auto") {
+    const request = clean(input);
+    const rules = [
+      [/小红书|种草|笔记/, "xiaohongshu"],
+      [/抖音/, "douyin"],
+      [/公众号|微信文章|微信推文/, "wechat"],
+      [/微博/, "weibo"],
+      [/短视频|视频脚本|分镜|口播/, "short_video"],
+      [/深度文章|长文|行业报告|白皮书/, "article"],
+    ];
+    const detected = rules.find(([pattern]) => pattern.test(request))?.[1];
+    const key = detected || (preferred !== "auto" ? preferred : "article");
+    const preset = CREATION_PRESETS[key] || CREATION_PRESETS.article;
+    const goal = /带货|成交|转化|销售|购买/.test(request) ? "促进可信转化" :
+      /涨粉|关注|互动/.test(request) ? "提升目标受众关注与互动" :
+      /发布会|新品|上市/.test(request) ? "清晰传达新品价值" : "建立可信影响力";
+    const audienceMatch = request.match(/(?:面向|写给|给)([^，。；,.]{2,24})(?:的|看|创作|写)/);
+    return {
+      request,
+      title: request.slice(0, 42) || preset.seed,
+      topic: request || preset.seed,
+      goal,
+      audience: audienceMatch?.[1]?.trim() || "由创作请求自动判断",
+      platform: preset.platform,
+      format: preset.format,
+      tone: /活泼|轻松|幽默/.test(request) ? "自然、鲜活、有证据" : "克制、清晰、有证据",
+    };
+  }
 
   function projects() {
     return TH_STORE.get(PROJECT_KEY, []).filter((item) => item && item.id);
@@ -32,7 +69,7 @@
   function makeProject(seed = {}) {
     const stamp = now();
     return {
-      id: uid(), title: seed.title || "未命名创作", topic: seed.topic || "", goal: seed.goal || "建立可信影响力",
+      id: uid(), title: seed.title || "未命名创作", request: seed.request || seed.topic || "", topic: seed.topic || "", goal: seed.goal || "建立可信影响力",
       audience: seed.audience || "", platform: seed.platform || "xiaohongshu", format: seed.format || "xiaohongshu",
       tone: seed.tone || "克制、清晰、有证据", language: "zh-CN", stage: "brief", draft: "", brief: null,
       evidenceState: "not_collected", evidenceUpdatedAt: null, scheduleAt: "", publishedUrl: "", metrics: {},
@@ -49,10 +86,10 @@
     persistHostState(project);
     return project;
   }
-  function ensureProject(id) {
+  function ensureProject(id, seed = {}) {
     const existing = id && getProject(id);
     if (existing) return existing;
-    const project = makeProject();
+    const project = makeProject(seed);
     putProject(project);
     return project;
   }
@@ -89,6 +126,7 @@
     const evidence = evidenceSummary(project);
     return `你正在 TrendHub 2.0 内容工作台中协助完成一个真实创作项目。\n\n` +
       `项目：${project.title}\n主题：${project.topic}\n目标：${project.goal}\n受众：${project.audience || "待明确"}\n平台：${project.platform}\n内容格式：${FORMAT_LABEL[project.format] || project.format}\n语气：${project.tone}\n\n` +
+      `使用者原始创作要求：${project.request || project.topic}\n\n` +
       `证据摘要：${JSON.stringify(evidence, null, 2)}\n\n` +
       `${project.brief?.productionPrompt || "当前没有已生成的 TrendHub 证据简报；不得虚构数据、热度、案例或来源。"}\n\n` +
       `请直接产出可编辑成稿，不要只给流程。结构为：标题候选、正文/脚本成稿、视觉或镜头建议、事实核验清单、发布前检查。` +
@@ -138,7 +176,7 @@
       return "host";
     }
     if (clean(settings.model)) return configuredGenerate(project);
-    throw new Error("当前没有可用的宿主 AI；请在设置中连接 DeepSeek、智谱或本地开放模型");
+    throw new Error("当前页面没有宿主 AI。请从 ChatGPT / Codex 中打开 TrendHub；这里不会用假内容代替生成结果");
   }
 
   function renderSidebarProjects() {
@@ -212,19 +250,28 @@
   }
 
   VIEWS.studio = async function (root, params) {
-    const project = ensureProject(params.id);
+    const seed = inferCreationRequest(params.prompt || "", params.platform || "auto");
+    const project = ensureProject(params.id, params.prompt || params.platform ? seed : {});
     root.innerHTML = `<div class="studio-shell">
       <header class="studio-heading"><div><span class="eyebrow">Content Studio · Local-first</span><input class="title-input" data-field="title" value="${esc(project.title)}" aria-label="项目名称"></div><div class="save-state">自动保存在此浏览器</div></header>
       ${stageRail(project)}
       <div class="studio-grid"><section class="paper-canvas">
-        <div class="canvas-fields">
+        <form class="direct-creator" id="directCreator">
+          <label for="creationRequest">告诉 TrendHub 你想创作什么</label>
+          <textarea id="creationRequest" rows="3" placeholder="例如：为一家准备出海东南亚的新消费品牌，创作一篇有数据依据的小红书种草笔记">${esc(project.request || project.topic)}</textarea>
+          <nav class="creation-platform-bar" aria-label="常用内容平台">
+            ${Object.entries(CREATION_PRESETS).map(([id, item]) => `<button type="button" data-studio-platform="${esc(id)}">${esc(item.label)}</button>`).join("")}
+          </nav>
+          <div class="direct-creator-actions"><span>平台、格式、目标和受众会自动判断</span><button class="maple-button" id="createNow" type="submit">直接创作</button></div>
+        </form>
+        <details class="creation-advanced"><summary>高级设置（可选）</summary><div class="canvas-fields">
           <label><span>创作主题</span><input data-field="topic" value="${esc(project.topic)}" placeholder="一个真实主题、事件或品牌命题"></label>
           <label><span>内容目标</span><input data-field="goal" value="${esc(project.goal)}"></label>
           <label><span>目标受众</span><input data-field="audience" value="${esc(project.audience)}" placeholder="谁需要看见并采取什么行动"></label>
           <label><span>平台</span><select data-field="platform"><option value="xiaohongshu">小红书</option><option value="douyin">抖音</option><option value="wechat">公众号</option><option value="weibo">微博</option><option value="all">通用</option></select></label>
           <label><span>制品类型</span><select data-field="format">${Object.entries(FORMAT_LABEL).map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}</select></label>
           <label><span>语气</span><input data-field="tone" value="${esc(project.tone)}"></label>
-        </div>
+        </div></details>
         <div class="editor-head"><div><span class="panel-kicker">Artifact</span><h2>可编辑成稿</h2></div><span>${project.draft.length} 字符</span></div>
         <textarea id="studioDraft" class="artifact-editor" placeholder="点击“让我的 AI 创作”生成真实成稿，或直接在这里写作。">${esc(project.draft)}</textarea>
         <div class="canvas-actions"><button class="quiet-button" id="copyDraft">复制成稿</button><button class="quiet-button" id="advanceStage">提交审核</button><button class="maple-button" id="runAIBottom">让我的 AI 继续</button></div>
@@ -237,7 +284,22 @@
     syncForm(project, root);
     root.querySelectorAll("[data-stage]").forEach((button) => button.addEventListener("click", () => { project.stage = button.dataset.stage; putProject(project); VIEWS.studio(root, { id: project.id }); }));
     root.querySelector("#refreshBrief")?.addEventListener("click", async (event) => { event.currentTarget.disabled = true; event.currentTarget.textContent = "正在收集公开证据…"; try { await createBrief(project); toast("证据简报已更新"); VIEWS.studio(root, { id: project.id }); } catch (error) { toast(error.message); event.currentTarget.disabled = false; } });
-    const run = async (button) => { button.disabled = true; button.textContent = "正在连接你的 AI…"; try { const mode = await runAI(project); if (mode === "host") toast("创作任务已交给当前 AI，项目上下文已同步"); else { toast("成稿已回填"); VIEWS.studio(root, { id: project.id }); } } catch (error) { toast(error.message); button.disabled = false; button.textContent = "让我的 AI 创作"; } };
+    const run = async (button) => { button.disabled = true; button.textContent = "正在研究并创作…"; try { const mode = await runAI(project); if (mode === "host") toast("已由当前 AI 开始创作"); else { toast("成稿已回填"); VIEWS.studio(root, { id: project.id }); } } catch (error) { toast(error.message); button.disabled = false; button.textContent = button.id === "createNow" ? "直接创作" : "让我的 AI 创作"; } };
+    root.querySelector("#directCreator")?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const request = clean(root.querySelector("#creationRequest").value);
+      if (!request) return toast("直接说出你想创作什么");
+      Object.assign(project, inferCreationRequest(request, "auto"), { brief: null, evidenceState: "not_collected" });
+      putProject(project);
+      await run(root.querySelector("#createNow"));
+    });
+    root.querySelectorAll("[data-studio-platform]").forEach((button) => button.addEventListener("click", () => {
+      const preset = CREATION_PRESETS[button.dataset.studioPlatform];
+      const input = root.querySelector("#creationRequest");
+      if (!clean(input.value)) input.value = preset.seed;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }));
     root.querySelector("#runAI")?.addEventListener("click", (event) => run(event.currentTarget));
     root.querySelector("#runAIBottom")?.addEventListener("click", (event) => run(event.currentTarget));
     root.querySelector("#copyDraft")?.addEventListener("click", () => copyText(project.draft, "成稿已复制"));
@@ -287,6 +349,14 @@
   window.createTrendHubProject = function () {
     const project = makeProject(); putProject(project); location.hash = `#/studio?id=${project.id}`;
   };
+  window.startTrendHubCreation = function (prompt = "", platform = "auto") {
+    const seed = inferCreationRequest(prompt || CREATION_PRESETS[platform]?.seed || "", platform);
+    const project = makeProject(seed);
+    putProject(project);
+    location.hash = `#/studio?id=${encodeURIComponent(project.id)}`;
+  };
+  window.TrendHubCreationPresets = CREATION_PRESETS;
+  window.inferTrendHubCreationRequest = inferCreationRequest;
 
   window.TrendHubConnections = {
     presets: PROVIDER_DEFAULTS,

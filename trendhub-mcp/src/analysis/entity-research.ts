@@ -292,7 +292,24 @@ export async function buildEntityResearch(
         ),
     quick
       ? Promise.resolve({ dataQuality: "degraded" as const, total: 0, articles: [], sourceStatus: [], note: "快速结果不等待行业 RSS。" })
-      : Promise.resolve({ dataQuality: "degraded" as const, total: 0, articles: [], sourceStatus: [], note: "交互研究不阻塞等待行业 RSS；由后台快照与公开查询证据补充。" }),
+      : withTimeout(
+          futureSignals({ keyword: canonicalName, limit: 24, perSource: 4 })
+            .catch((error) => ({
+              capturedAt: generatedAt,
+              dataQuality: "missing" as const,
+              total: 0,
+              articles: [],
+              sourceStatus: [{ name: "industry-rss", category: "industry", ok: false, error: (error as Error).message }],
+            })),
+          8_000,
+          {
+            capturedAt: generatedAt,
+            dataQuality: "degraded" as const,
+            total: 0,
+            articles: [],
+            sourceStatus: [{ name: "industry-rss", category: "industry", ok: false, error: "行业 RSS 响应超时；已保留其他公开查询证据。" }],
+          },
+        ),
     Promise.resolve(upcomingEvents({ daysAhead })).catch(() => ({ total: 0, events: [] })),
     quick
       ? Promise.resolve(null)
@@ -327,7 +344,7 @@ export async function buildEntityResearch(
     items: xhsEvidence,
     note: loggedIn
       ? "本地登录态：关键词搜索 + 首页推荐流命中；平台展示热度只在小红书口径内解释。"
-      : "公网/游客态：仅能使用首页推荐流中的标题命中；关键词搜索为 AUTH_REQUIRED。公网托管端不接收私人 Cookie。",
+      : "公网/游客态：仅保留与研究主体直接命中的首页内容；关键词搜索为 AUTH_REQUIRED。若没有命中，仍由新闻、行业媒体、公开社交与播客证据继续完成研究。",
   };
 
   const curatedItems: QueryEvidenceItem[] = (curated.articles ?? []).map((article: any, index: number) => ({

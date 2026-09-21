@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getMany } from "../sources/index.js";
 import { defaultLivePlatformIds } from "../sources/access-plan.js";
+import { INDUSTRY_DEFAULT_VERTICALS } from "../sources/industry-focus.js";
 import type { SourceVertical } from "../sources/professional-catalog.js";
 import { updateFromResults } from "../store/snapshot.js";
 import { buildProfessionalIntelligence } from "../analysis/professional.js";
@@ -67,7 +68,11 @@ export function registerProfessionalTools(server: McpServer): void {
     WEB_STATE,
     async ({ keyword, platforms, verticals, refresh, report, geo, timeframe, days_ahead }) => observed("professional_intelligence", async () => {
       const names = splitList(platforms);
-      const selected = names.length ? names : defaultLivePlatformIds({ max: 12, verticals: splitVerticals(verticals) });
+      const requestedVerticals = splitVerticals(verticals);
+      const selected = names.length ? names : defaultLivePlatformIds({
+        max: 12,
+        verticals: requestedVerticals.length ? requestedVerticals : INDUSTRY_DEFAULT_VERTICALS,
+      });
       if (refresh !== false) {
         const results = await getMany(selected, 30);
         updateFromResults(results);

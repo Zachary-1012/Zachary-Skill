@@ -15,12 +15,20 @@ import { upcomingEvents, eventCategories } from "../sources/events.js";
 import { diffPlatform, takeSnapshots, updateFromResults } from "../store/snapshot.js";
 import { historyDepth } from "../store/history.js";
 import { listSourceReliability } from "../store/reliability.js";
-import { XHS_PLATFORM, XHS_HOTLIST_PLATFORM } from "../sources/xiaohongshu.js";
+import { XHS_PLATFORM, XHS_HOTLIST_PLATFORM, searchXhsNotes } from "../sources/xiaohongshu.js";
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
+import { collectPublicQueryEvidence } from "../sources/query-evidence.js";
+import {
+  buildUsefulIndustryFallback,
+  filterIndustryItems,
+  INDUSTRY_FOCUS_ALIASES,
+  INDUSTRY_FOCUS_LABEL,
+  INDUSTRY_FOCUS_QUERY,
+} from "../sources/industry-focus.js";
 import { CONTENT_STUDIO_URI } from "../agent-native/content-studio-widget.js";
 
-const DEFAULT_PLATFORMS = ["xiaohongshu", "weibo", "zhihu", "baidu", "bilibili", "douyin", "toutiao", "ithome", "hackernews", "github-trending"];
+const DEFAULT_PLATFORMS = ["weibo", "zhihu", "baidu", "toutiao", "thepaper", "36kr", "huxiu", "sspai", "ifanr", "social-media-today"];
 
 // MCP annotations are part of the public tool contract. They are intentionally
 // conservative: any tool that may refresh/write TrendHub's local evidence state
@@ -91,16 +99,44 @@ export function registerTools(server: McpServer): void {
       limit: z.number().min(5).max(40).optional().describe("热门笔记条数，默认30，最多40"),
       topic_limit: z.number().min(5).max(50).optional().describe("派生话题词数量，默认20"),
       with_hotlist: z.boolean().optional().describe("登录态下是否同时取官方热搜词榜，默认 true"),
+      focus: z.string().optional().describe("品牌、Campaign、行业或话题；游客模式会据此收窄推荐流并补充行业公开证据"),
+      industry_only: z.boolean().optional().describe("是否只保留品牌营销、商业运营、广告、媒体相关内容，默认 true"),
     },
     WEB_STATE,
-    async ({ limit, topic_limit, with_hotlist }) => {
+    async ({ limit, topic_limit, with_hotlist, focus, industry_only }) => {
       const n = limit ?? 30;
-      const feed = await getHot(XHS_PLATFORM, n);
-      const derivedTopics = extractXhsTopics(feed.items.map((i) => i.title), topic_limit ?? 20);
+      const rawFeed = await getHot(XHS_PLATFORM, n);
       const loggedIn = xhsClient.hasLoginCookie();
+      const focusText = focus?.trim() || INDUSTRY_FOCUS_LABEL;
+      const focusedItems = industry_only === false ? rawFeed.items : filterIndustryItems(rawFeed.items, focus, n);
+      const keywordMatches = loggedIn && focus?.trim()
+        ? await searchXhsNotes(focus.trim(), Math.min(n, 20), "popularity_descending").catch(() => null)
+        : null;
+      const feed = {
+        ...rawFeed,
+        items: focusedItems,
+        dataQuality: focusedItems.length ? rawFeed.dataQuality : "degraded" as const,
+        note: focusedItems.length
+          ? `${rawFeed.note ?? ""}；已按「${focusText}」收窄。`.replace(/^；/, "")
+          : `${rawFeed.note ?? "平台游客流未返回可用内容"}；未发现与「${focusText}」直接相关的推荐内容。`,
+      };
+      const derivedTopics = extractXhsTopics([...focusedItems, ...(keywordMatches ?? [])].map((i) => i.title), topic_limit ?? 20);
       let officialHotlist = null;
       if (with_hotlist !== false && loggedIn) officialHotlist = await getHot(XHS_HOTLIST_PLATFORM, 20);
-      updateFromResults([feed, ...(officialHotlist ? [officialHotlist] : [])]);
+      updateFromResults([rawFeed, ...(officialHotlist ? [officialHotlist] : [])]);
+      let usefulFallback = null;
+      if (!focusedItems.length && !(keywordMatches?.length)) {
+        const channels = await collectPublicQueryEvidence(
+          focus?.trim() || INDUSTRY_FOCUS_QUERY,
+          focus?.trim() ? [] : INDUSTRY_FOCUS_ALIASES,
+          10,
+        );
+        usefulFallback = buildUsefulIndustryFallback(
+          channels,
+          focusText,
+          "小红书游客/当前会话未返回相关内容，改用行业媒体、新闻、公开社交与播客证据；这些结果不冒充小红书热榜。",
+        );
+      }
       return json({
         generatedAt: new Date().toISOString(),
         platform: XHS_PLATFORM,
@@ -108,13 +144,14 @@ export function registerTools(server: McpServer): void {
         loggedIn,
         feed,
         derivedTopics,
+        keywordMatches,
         officialHotlist,
+        usefulFallback,
         hints: loggedIn
-          ? ["已使用 XHS_COOKIE 登录态：热门推荐流 + 官方热搜词榜均可用；关键词爆款见 analyze_topic / get_content_brief。"]
+          ? ["已使用本地登录态：优先返回与研究主题相关的关键词结果、推荐流和官方热搜词榜。"]
           : [
-              "游客模式：热门推荐流真实可取（平台推荐序，非官方热搜词榜）。",
-              "官方热搜词榜与关键词搜索对游客关闭（平台 -104）；配置 XHS_COOKIE（含 a1 与 web_session）后解锁。",
-              "liked_count 为平台展示近似值（如 4.1万/10万+），非精确整数。",
+              "游客模式只保留与品牌营销、商业运营、广告、媒体或 focus 直接相关的推荐内容。",
+              "平台限制或无相关命中时返回 usefulFallback 行业公开证据，不返回空白，也不冒充小红书数据。",
             ],
       });
     }
@@ -225,7 +262,7 @@ export function registerTools(server: McpServer): void {
     "future_signals",
     "聚合高质量科技/AI/商业/营销信源的最新文章（未来趋势信号素材），可按分类或关键词过滤。趋势判断由调用方大模型完成。",
     {
-      category: z.string().optional().describe("信源分类，可用 list_categories 查看；all=全部"),
+      category: z.string().optional().describe("信源分类；industry=品牌/商业/广告/媒体组合，可用 list_categories 查看；all=全部"),
       keyword: z.string().optional().describe("按关键词过滤标题/摘要"),
       limit: z.number().min(5).max(100).optional(),
     },
