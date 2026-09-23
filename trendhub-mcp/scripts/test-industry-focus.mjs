@@ -9,6 +9,7 @@ import {
   INDUSTRY_DEFAULT_VERTICALS,
   INDUSTRY_FOCUS_LABEL,
 } from "../dist/src/sources/industry-focus.js";
+import { buildAdvertiserIntelligenceFromItems, extractCommercialSubjects } from "../dist/src/sources/advertiser-intelligence.js";
 
 assert.deepEqual(INDUSTRY_DEFAULT_VERTICALS, [
   "business-corporate",
@@ -42,6 +43,18 @@ assert.equal(fallback.mode, "industry-public-evidence");
 assert.equal(fallback.itemCount, 2);
 assert.equal(fallback.items[0].title, "最新证据");
 assert.match(fallback.reason, /平台受限/);
+
+const podcast = { id: "podcast", label: "播客", family: "podcast-audio", dataQuality: "ok", capturedAt: "2026-09-21T00:00:00.000Z", query: "品牌营销", itemCount: 1, note: "音频证据", items: [{ id: "podcast-1", channel: "podcast", source: "Podcast", family: "podcast-audio", title: "营销访谈", url: "https://example.com/podcast", publishedAt: null, author: null, summary: null, evidenceKind: "podcast" }] };
+const advertiser = buildAdvertiserIntelligenceFromItems([
+  { id: "brand-1", channel: "industry-rss", source: "Industry News", family: "news-authority", title: "Nike launches summer campaign", url: "https://example.com/nike", publishedAt: "2026-09-21T00:00:00.000Z", author: null, summary: null, evidenceKind: "article" },
+  { id: "generic-1", channel: "industry-rss", source: "Industry News", family: "news-authority", title: "How to improve marketing strategy", url: "https://example.com/generic", publishedAt: null, author: null, summary: null, evidenceKind: "article" },
+], "品牌营销", [podcast]);
+assert.deepEqual(advertiser.subjects.map((subject) => subject.name), ["Nike"]);
+assert.equal(advertiser.subjects[0].confidence, "inferred");
+assert.equal(advertiser.rejectedItemCount, 1);
+assert.equal(advertiser.supportingChannels[0].items[0].evidenceKind, "podcast");
+assert.ok(!extractCommercialSubjects("Beats taps multiple Kendall Jenners to promote customizable headphones").some((subject) => subject.role === "agency"));
+assert.ok(extractCommercialSubjects("Everlab appoints OUTSIDE IN as creative partner for brand campaign").some((subject) => subject.name === "OUTSIDE IN" && subject.role === "agency"));
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const sources = JSON.parse(readFileSync(resolve(root, "data/future-sources.json"), "utf8")).sources;

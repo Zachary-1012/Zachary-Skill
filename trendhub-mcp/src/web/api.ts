@@ -18,6 +18,7 @@ import { fetchXiaohongshu, fetchXiaohongshuHotlist } from "../sources/xiaohongsh
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
 import { collectPublicQueryEvidence } from "../sources/query-evidence.js";
+import { collectAdvertiserIntelligence } from "../sources/advertiser-intelligence.js";
 import {
   buildUsefulIndustryFallback,
   filterIndustryItems,
@@ -336,16 +337,14 @@ export async function handleApi(pathname: string, url: URL, method: string, body
           if (toStore.length) updateFromResults(toStore);
         }
         let usefulFallback = null;
+        let advertiserIntelligence = null;
         if (!focusedItems.length) {
-          const channels = await collectPublicQueryEvidence(
-            focus || INDUSTRY_FOCUS_QUERY,
-            focus ? [] : INDUSTRY_FOCUS_ALIASES,
-            10,
-          );
+          advertiserIntelligence = await collectAdvertiserIntelligence(focusText, 30);
+          const channels = advertiserIntelligence.supportingChannels;
           usefulFallback = buildUsefulIndustryFallback(
             channels,
             focusText,
-            "小红书游客/当前会话未返回相关内容，改用行业媒体、新闻、公开社交与播客证据；这些结果不冒充小红书热榜。",
+            "播客与公开讨论继续保留为支撑证据，但不进入广告主主体名单，也不冒充小红书热榜。",
           );
         }
         return {
@@ -356,6 +355,7 @@ export async function handleApi(pathname: string, url: URL, method: string, body
           feed,
           derivedTopics,
           officialHotlist,
+          advertiserIntelligence,
           usefulFallback,
         };
       });
