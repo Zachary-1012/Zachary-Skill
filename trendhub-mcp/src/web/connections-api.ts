@@ -5,6 +5,7 @@
  * data, browser storage, logs, snapshots, or the public remote gateway.
  */
 import { xhsClient } from "../sources/xhs/guest.js";
+import { JEV_MODEL, JevRequestError, reviewSourceTitles, verifyJevKey } from "./jev-evidence.js";
 
 export interface ConnectionsApiResponse {
   status: number;
@@ -40,6 +41,12 @@ const PROVIDERS: Record<Provider, { label: string; endpoint: string; model: stri
 };
 
 let aiRuntime: AiRuntime | null = null;
+let jevApiKey = "";
+let jevConfiguredAt: string | null = null;
+
+function activeJevKey(): string {
+  return jevApiKey || process.env.TYPESAFE_API_KEY?.trim() || "";
+}
 
 function error(message: string, status = 400): ConnectionsApiResponse {
   return { status, data: { error: message } };
@@ -98,6 +105,13 @@ function publicStatus() {
           configuredAt: aiRuntime.configuredAt,
         }
       : { configured: false },
+    jev: {
+      configured: Boolean(activeJevKey()),
+      model: JEV_MODEL,
+      purpose: "public-source-title-review",
+      source: jevApiKey ? "session" : process.env.TYPESAFE_API_KEY?.trim() ? "environment" : null,
+      configuredAt: jevApiKey ? jevConfiguredAt : null,
+    },
     xhs: {
       configured: xhsClient.hasLoginCookie(),
       mode: xhsClient.hasLoginCookie() ? "cookie" : "guest",
@@ -109,6 +123,37 @@ function publicStatus() {
       suggestedModel: value.model,
     })),
   };
+}
+
+async function configureJev(input: Record<string, unknown>): Promise<ConnectionsApiResponse> {
+  const apiKey = text(input.apiKey, 12000);
+  if (!apiKey) return error("请填写 TypeSafe API Key");
+  try {
+    await verifyJevKey(apiKey);
+  } catch (cause) {
+    if (cause instanceof JevRequestError) return error(cause.message, cause.status);
+    return error("Jev 连接验证失败", 502);
+  }
+  jevApiKey = apiKey;
+  jevConfiguredAt = new Date().toISOString();
+  return { status: 200, data: { ok: true, ...publicStatus() } };
+}
+
+async function reviewJev(input: Record<string, unknown>): Promise<ConnectionsApiResponse> {
+  const key = activeJevKey();
+  if (!key) return error("尚未连接 Jev；请在本地设置 TypeSafe API Key", 409);
+  const topic = text(input.topic, 201);
+  const titles = input.titles;
+  if (!Array.isArray(titles) || titles.length < 1 || titles.length > 8 || titles.some((value) => typeof value !== "string")) {
+    return error("请提供公开来源标题列表");
+  }
+  try {
+    const result = await reviewSourceTitles(topic, titles.map((value) => value.trim()), key);
+    return { status: 200, data: result };
+  } catch (cause) {
+    if (cause instanceof JevRequestError) return error(cause.message, cause.status);
+    return error("Jev 复核暂不可用", 502);
+  }
 }
 
 async function configureAi(input: Record<string, unknown>): Promise<ConnectionsApiResponse> {
@@ -191,6 +236,17 @@ export async function handleConnectionsApi(
     }
     if (pathname === "/api/connections/ai/generate" && method === "POST") {
       return await generate(bodyObject(body));
+    }
+    if (pathname === "/api/connections/jev" && method === "POST") {
+      return await configureJev(bodyObject(body));
+    }
+    if (pathname === "/api/connections/jev/clear" && method === "POST") {
+      jevApiKey = "";
+      jevConfiguredAt = null;
+      return { status: 200, data: { ok: true, ...publicStatus() } };
+    }
+    if (pathname === "/api/connections/jev/review" && method === "POST") {
+      return await reviewJev(bodyObject(body));
     }
     if (pathname === "/api/connections/xhs" && method === "POST") {
       const cookie = text(bodyObject(body).cookie, 64000);

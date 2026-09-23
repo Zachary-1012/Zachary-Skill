@@ -119,6 +119,7 @@ VIEWS.settings = async function (content) {
     try { runtimeStatus = await connections.status(); } catch { /* 本地服务暂不可用时继续渲染设置。 */ }
   }
   const aiConnected = Boolean(runtimeStatus?.ai?.configured);
+  const jevConnected = Boolean(runtimeStatus?.jev?.configured);
   const xhsConnected = Boolean(runtimeStatus?.xhs?.configured);
   content.innerHTML = `
     <div class="settings-page">
@@ -137,6 +138,14 @@ VIEWS.settings = async function (content) {
           <label><span>API 端点</span><input id="settingsAiEndpoint" value="${esc(prefs.endpoint)}" placeholder="本地端点只允许 localhost / 127.0.0.1"></label>
           <label class="wide"><span>API Key</span><input id="settingsAiKey" type="password" autocomplete="new-password" placeholder="不写入浏览器、项目或磁盘"></label>
           <div class="connection-actions wide"><button class="maple-button" id="saveAiConnection" type="submit" ${window.TRENHUB_IS_REMOTE ? "disabled" : ""}>保存并自动连接</button><button class="quiet-button" id="clearAiConnection" type="button" ${!aiConnected ? "disabled" : ""}>断开</button><span id="aiConnectionMessage">${window.TRENHUB_IS_REMOTE ? "公网托管页不接收私人密钥，请运行本地 TrendHub。" : "不填写不影响其他能力；填写后自动用于内容创作。"}</span></div>
+        </form>
+      </section>
+
+      <section class="settings-section connection-section">
+        <div class="settings-section-head"><div><h2>Jev 来源复核</h2><p>TypeSafe Jev 1.13 只判断本次研究主题与公开来源标题是否直接相关。它不生成文案、不验证正文事实，也不会自动修改研究结论。</p></div><span class="connection-state ${jevConnected ? "connected" : ""}">${jevConnected ? "已连接" : "可选"}</span></div>
+        <form class="connection-form" id="jevConnectionForm">
+          <label class="wide"><span>TypeSafe API Key</span><input id="settingsJevKey" type="password" autocomplete="new-password" placeholder="仅驻留本机进程内存" ${window.TRENHUB_IS_REMOTE ? "disabled" : ""}></label>
+          <div class="connection-actions wide"><button class="maple-button" type="submit" ${window.TRENHUB_IS_REMOTE ? "disabled" : ""}>连接 Jev</button><button class="quiet-button" id="clearJevConnection" type="button" ${runtimeStatus?.jev?.source !== "session" ? "disabled" : ""}>断开</button><span id="jevConnectionMessage">${window.TRENHUB_IS_REMOTE ? "公网托管页不接收私人密钥，请运行本地 TrendHub。" : "仅在你点击来源复核时向 TypeSafe 发送主题和最多 8 条公开标题；不会发送 Cookie 或草稿，密钥不写入浏览器存储。"}</span></div>
         </form>
       </section>
 
@@ -228,6 +237,26 @@ VIEWS.settings = async function (content) {
     await connections.clearAi();
     connections.savePreferences({ ...connections.getPreferences(), mode: "auto", model: "" });
     toast("AI 私有连接已清除");
+    VIEWS.settings(content);
+  });
+
+  $("#jevConnectionForm", content)?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const message = $("#jevConnectionMessage", content);
+    try {
+      await connections.saveJev($("#settingsJevKey", content).value);
+      $("#settingsJevKey", content).value = "";
+      message.textContent = "Jev 已连接，本地研究页可按需复核公开来源标题。";
+      toast("Jev 已连接");
+      setTimeout(() => VIEWS.settings(content), 450);
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  });
+
+  $("#clearJevConnection", content)?.addEventListener("click", async () => {
+    await connections.clearJev();
+    toast("Jev 进程内密钥已清除");
     VIEWS.settings(content);
   });
 

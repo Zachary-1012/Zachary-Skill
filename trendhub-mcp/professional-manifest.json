@@ -1,9 +1,9 @@
 {
   "schemaVersion": "professional-intelligence-v3-rc",
   "releaseStatus": "release-ready",
-  "stableBase": "2.0.0",
-  "targetStableVersion": "2.0.1",
-  "candidateVersion": "2.0.1",
+  "stableBase": "2.0.1",
+  "targetStableVersion": "2.0.2",
+  "candidateVersion": "2.0.2",
   "stableToolCount": 21,
   "professionalTools": [
     "professional_intelligence",
@@ -14,7 +14,7 @@
     "command": "npm run release:promote -- <stable-version>",
     "preflight": "npm run release:preflight",
     "rule": "v2.0 promotes TrendHub from a research surface to an evidence-backed AI content workspace while preserving the 21-tool and Evidence contracts.",
-    "versionPolicy": "v2.0.0 is the previous stable release and rollback base; v2.0.1 adds advertiser evidence to the content platform.",
+    "versionPolicy": "v2.0.1 is the previous stable release and rollback base; v2.0.2 adds optional local Jev source-title review.",
     "prepared": true
   },
   "capabilities": {

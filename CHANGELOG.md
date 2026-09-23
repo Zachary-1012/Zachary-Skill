@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.2 — Optional Jev source-title review
+
+- Add a local-only TypeSafe Jev 1.13 connection with a pinned decision model and verified API key.
+- Let a user review up to eight public source titles against a research topic on demand. Show the model's yes probability beside each original source without changing evidence or research conclusions.
+- Keep private keys out of browser storage and the public gateway. Missing credentials or provider failures leave research available.
+
 ## v2.0.1 — Advertiser evidence and creation handoff
 
 - Show advertiser, brand, Campaign, agency, and media-platform leads from public article headlines with source links and explicit verification status.
