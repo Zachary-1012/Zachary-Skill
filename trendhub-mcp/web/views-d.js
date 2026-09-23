@@ -119,6 +119,11 @@ VIEWS.settings = async function (content) {
     try { runtimeStatus = await connections.status(); } catch { /* 本地服务暂不可用时继续渲染设置。 */ }
   }
   const aiConnected = Boolean(runtimeStatus?.ai?.configured);
+  let jevConnected = Boolean(runtimeStatus?.jev?.configured);
+  if (window.TRENHUB_IS_REMOTE) {
+    try { jevConnected = Boolean((await fetch("/api/jev/status").then((response) => response.json())).configured); }
+    catch { jevConnected = false; }
+  }
   const xhsConnected = Boolean(runtimeStatus?.xhs?.configured);
   content.innerHTML = `
     <div class="settings-page">
@@ -138,6 +143,11 @@ VIEWS.settings = async function (content) {
           <label class="wide"><span>API Key</span><input id="settingsAiKey" type="password" autocomplete="new-password" placeholder="不写入浏览器、项目或磁盘"></label>
           <div class="connection-actions wide"><button class="maple-button" id="saveAiConnection" type="submit" ${window.TRENHUB_IS_REMOTE ? "disabled" : ""}>保存并自动连接</button><button class="quiet-button" id="clearAiConnection" type="button" ${!aiConnected ? "disabled" : ""}>断开</button><span id="aiConnectionMessage">${window.TRENHUB_IS_REMOTE ? "公网托管页不接收私人密钥，请运行本地 TrendHub。" : "不填写不影响其他能力；填写后自动用于内容创作。"}</span></div>
         </form>
+      </section>
+
+      <section class="settings-section connection-section">
+        <div class="settings-section-head"><div><h2>Jev 来源复核</h2><p>TrendHub 统一提供 TypeSafe Jev 1.13，使用者无需密钥。只在主动点击来源复核时发送研究主题和最多 8 条公开标题；不会发送 Cookie、草稿或来源 URL。</p></div><span class="connection-state ${jevConnected ? "connected" : ""}">${jevConnected ? "平台已配置" : "平台暂未启用"}</span></div>
+        <p>Jev 只判断标题与主题是否直接相关；不生成文案、不验证正文事实，也不会自动修改研究结论。中文判断仍需人工复核。</p>
       </section>
 
       <section class="settings-section connection-section">

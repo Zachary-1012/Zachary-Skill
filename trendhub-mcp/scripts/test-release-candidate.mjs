@@ -11,13 +11,13 @@ const REPO = path.join(ROOT, "..");
 const professional = JSON.parse(fs.readFileSync(path.join(ROOT, "professional-manifest.json"), "utf8"));
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
 assert.ok(["release-candidate-ready", "release-ready"].includes(professional.releaseStatus));
-assert.equal(professional.stableBase, "2.0.0");
-assert.equal(professional.targetStableVersion, "2.0.1");
+assert.equal(professional.stableBase, "2.0.1");
+assert.equal(professional.targetStableVersion, "2.0.2");
 assert.equal(professional.expectedToolCount, 21);
-assert.equal(professional.candidateVersion, "2.0.1");
-assert.equal(pkg.version, "2.0.1");
+assert.equal(professional.candidateVersion, "2.0.2");
+assert.equal(pkg.version, "2.0.2");
 assert.notEqual(professional.targetStableVersion, "1.4.5");
-const dry = buildPromotionPlan("2.0.1", { dryRun: true });
+const dry = buildPromotionPlan("2.0.2", { dryRun: true });
 assert.equal(dry.ok, true); assert.equal(dry.expectedTools, 21); assert.equal(dry.dryRun, true); assert.equal(dry.files.length, 8);
 assert.throws(() => buildPromotionPlan("1.4.5", { dryRun: true }), /1\.4\.5 is forbidden/);
 for (const doc of ["RELEASE_CANDIDATE.md", "V1_6_0_AGENT_NATIVE_FOUNDATION.md", "V1_7_0_INTELLIGENCE_WORKSPACE.md", "V2_0_0_CONTENT_STUDIO.md"]) {

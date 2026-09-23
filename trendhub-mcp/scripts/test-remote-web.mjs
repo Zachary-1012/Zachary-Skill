@@ -33,6 +33,11 @@ if (!gateway.includes('transport: { type: "streamable-http"')) fail("MCP discove
 if (!gateway.includes('"/api/platforms"') || !gateway.includes('"/api/trending"') || !gateway.includes('"/api/brief"')) fail("safe public query API allowlist is incomplete");
 if (!gateway.includes('"/api/professional"') || !gateway.includes('"/api/professional/report"')) fail("professional read/query APIs must be public-ready");
 if (!gateway.includes('"/api/review"')) fail("ordinary-user decision view API /api/review must be public-ready");
+if (!gateway.includes('url.pathname === "/api/jev/status"') || !gateway.includes('url.pathname === "/api/jev/review"')) fail("platform Jev status/review routes missing");
+if (!gateway.includes("reserveJev(req)") || !gateway.includes("requestsJev(body)")) fail("public Jev requests must be rate bounded across web and MCP");
+if (!gateway.includes("TYPESAFE_API_KEY") || !gateway.includes("TypeSafe AI")) fail("Jev credential and third-party processing must be declared server-side");
+if (viewsD.includes('id="settingsJevKey"') || viewsD.includes("saveJev")) fail("Skill users must never be asked to provide TypeSafe credentials");
+if (!viewsE.includes('id="rvJevReview"')) fail("Jev review must be available in the public research view");
 if (!gateway.includes('"/api/professional/sources"') || !gateway.includes('"/api/professional/entities"')) fail("source universe and entity read APIs must be public-ready");
 
 const allowlistMatch = gateway.match(/const PUBLIC_API_PATHS = new Set\(\[([\s\S]*?)\]\);/);

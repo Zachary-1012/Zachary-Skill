@@ -1,7 +1,7 @@
 export const TRENDHUB_SKILL_CONTRACT = {
   schema: "trendhub-skill-v2",
   skillVersion: "2.0",
-  productVersion: "2.0.1",
+  productVersion: "2.0.2",
   name: "trendhub",
   progressiveDisclosure: true,
   compatibilityTools: 21,

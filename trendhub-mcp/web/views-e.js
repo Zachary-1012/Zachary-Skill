@@ -269,9 +269,10 @@ function renderDecision(root, keyword, view, params, updating = false) {
     <section class="research-flow">
       <div class="flow-heading">
         <h2>哪些平台支持这个判断</h2>
-        <button type="button" class="text-action" id="rvAllSources">查看全部来源</button>
+        <div class="research-source-actions"><button type="button" class="text-action" id="rvAllSources">查看全部来源</button>${!updating ? '<button type="button" class="text-action" id="rvJevReview">用 Jev 复核标题</button>' : ""}</div>
       </div>
       ${platformBlock}
+      <div id="rvJevResult" aria-live="polite"></div>
     </section>
 
     <section class="research-flow next-step">
@@ -354,6 +355,44 @@ function bindResearchInteractions(root, keyword, view, params) {
       }
     }
     openEvidenceDrawer(root, "全部来源", all, "仅展示本次研究实际取得的公开来源；缺失平台不会被补成 0。");
+  });
+
+  $("#rvJevReview", root)?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const result = $("#rvJevResult", root);
+    const sources = [];
+    const seen = new Set();
+    for (const platform of (view.platforms || [])) {
+      for (const item of (platform.evidence || [])) {
+        const title = String(item.title || "").trim();
+        if (!title) continue;
+        const key = item.url || `${item.source || platform.name}|${title}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        sources.push({ title: title.slice(0, 300), source: item.source || platform.name, url: item.url });
+        if (sources.length === 8) break;
+      }
+      if (sources.length === 8) break;
+    }
+    if (!sources.length) {
+      result.textContent = "本次没有可复核的公开来源标题。";
+      return;
+    }
+    button.disabled = true;
+    result.textContent = "正在将主题与公开标题送往 Jev 判断…";
+    try {
+      const review = await window.TrendHubConnections.reviewJev(keyword, sources.map((item) => item.title));
+      if (review.scope !== "public-title-topic-match" || review.items?.length !== sources.length) throw new Error("Jev 返回了不完整的复核结果");
+      result.innerHTML = `<section class="jev-review"><h3>Jev 标题复核</h3><p>仅判断标题与“${esc(keyword)}”是否直接相关。数值是模型对“相关”的判断概率，不是来源可信度或事实证明。</p>${review.items.map((item, index) => {
+        if (item.index !== index || !Number.isFinite(item.topicMatchProbability)) throw new Error("Jev 返回了无效判断");
+        const source = sources[index];
+        return `<div class="jev-review-row"><span>${esc(source.source)}</span><strong>${linkOrText(source.title, source.url)}</strong><b>${Math.round(item.topicMatchProbability * 100)}%</b></div>`;
+      }).join("")}<small>${esc(review.note || "中文判断仍需人工复核。")}</small></section>`;
+    } catch (error) {
+      result.textContent = error.message || "Jev 复核暂不可用";
+    } finally {
+      button.disabled = false;
+    }
   });
 
   $("#evidenceClose", root)?.addEventListener("click", () => closeEvidenceDrawer(root));
