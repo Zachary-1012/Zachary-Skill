@@ -269,7 +269,7 @@ function renderDecision(root, keyword, view, params, updating = false) {
     <section class="research-flow">
       <div class="flow-heading">
         <h2>哪些平台支持这个判断</h2>
-        <div class="research-source-actions"><button type="button" class="text-action" id="rvAllSources">查看全部来源</button>${!window.TRENHUB_IS_REMOTE && !updating ? '<button type="button" class="text-action" id="rvJevReview">用 Jev 复核标题</button>' : ""}</div>
+        <div class="research-source-actions"><button type="button" class="text-action" id="rvAllSources">查看全部来源</button>${!updating ? '<button type="button" class="text-action" id="rvJevReview">用 Jev 复核标题</button>' : ""}</div>
       </div>
       ${platformBlock}
       <div id="rvJevResult" aria-live="polite"></div>

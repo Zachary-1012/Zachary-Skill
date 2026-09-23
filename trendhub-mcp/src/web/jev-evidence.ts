@@ -1,34 +1,10 @@
 /** Optional, local-only Jev review of public source titles. */
 export const JEV_MODEL = "jev-1.13.0";
 const JEV_URL = "https://api.typesafe.ai/v1/systemone";
-const MODELS_URL = "https://api.typesafe.ai/v1/models";
 
 export class JevRequestError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
-  }
-}
-
-export async function verifyJevKey(apiKey: string, transport: typeof fetch = fetch): Promise<void> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-  let response: Response;
-  try {
-    response = await transport(MODELS_URL, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: controller.signal,
-    });
-  } catch {
-    throw new JevRequestError("无法连接 TypeSafe，请稍后重试", 502);
-  } finally {
-    clearTimeout(timeout);
-  }
-  if (response.status === 401 || response.status === 403) throw new JevRequestError("TypeSafe API Key 无效或无权使用 Jev", 401);
-  if (response.status === 429 || response.status === 529) throw new JevRequestError("TypeSafe 暂时限流或繁忙，请稍后重试", 503);
-  if (!response.ok) throw new JevRequestError(`TypeSafe 服务暂不可用（HTTP ${response.status}）`, 502);
-  const payload = await response.json().catch(() => null) as { models?: unknown } | null;
-  if (!Array.isArray(payload?.models) || !payload.models.some((model) => model?.name === "jev-latest")) {
-    throw new JevRequestError("此 TypeSafe 账户尚未开放 Jev", 403);
   }
 }
 

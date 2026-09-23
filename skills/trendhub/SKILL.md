@@ -9,6 +9,8 @@ Use TrendHub when a request needs current or historical trend evidence, cross-so
 
 Core discipline: **Missing is not zero.** Keep the existing 21-tool compatibility contract, disclose source limitations, and never present planned or credentialed coverage as live zero-config evidence.
 
+When the person explicitly requests Jev review, call `get_content_brief` with `jev_review_public_titles: true`. TrendHub supplies Jev centrally; never ask Skill users for their own TypeSafe key. Jev judges only whether up to eight public source titles directly discuss the research topic. Its probability is not evidence of factual accuracy, popularity, or source reliability. If the platform reports Jev unavailable, state that clearly and continue the evidence-backed research without inventing a score. Do not send private draft text or a confidential topic to Jev.
+
 Default product focus is brand marketing, business operations, advertising,
 media, retail and adjacent commercial industries. Do not use a broad guest
 homepage feed as the primary answer for these requests. Prefer subject-specific

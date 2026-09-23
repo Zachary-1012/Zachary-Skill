@@ -2,7 +2,7 @@
 
 ## v2.0.2 — Optional Jev source-title review
 
-- Add a local-only TypeSafe Jev 1.13 connection with a pinned decision model and verified API key.
+- Add platform-managed TypeSafe Jev 1.13 review for public source titles in the web and Skill/MCP flows; visitors need no API key.
 - Let a user review up to eight public source titles against a research topic on demand. Show the model's yes probability beside each original source without changing evidence or research conclusions.
 - Keep private keys out of browser storage and the public gateway. Missing credentials or provider failures leave research available.
 

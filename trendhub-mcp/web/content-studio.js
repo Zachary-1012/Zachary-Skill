@@ -365,9 +365,7 @@
     status: () => api("/api/connections/status"),
     saveAi: (value) => post("/api/connections/ai", value),
     clearAi: () => post("/api/connections/ai/clear"),
-    saveJev: (apiKey) => post("/api/connections/jev", { apiKey }),
-    clearJev: () => post("/api/connections/jev/clear"),
-    reviewJev: (topic, titles) => post("/api/connections/jev/review", { topic, titles }),
+    reviewJev: (topic, titles) => post(window.TRENHUB_IS_REMOTE ? "/api/jev/review" : "/api/connections/jev/review", { topic, titles }),
     saveXhs: (cookie) => post("/api/connections/xhs", { cookie }),
     clearXhs: () => post("/api/connections/xhs/clear"),
   };
