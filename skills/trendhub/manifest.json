@@ -2,7 +2,7 @@
   "schema": "trendhub-skill-v2",
   "name": "trendhub",
   "skillVersion": "2.0",
-  "productVersion": "2.0.2",
+  "productVersion": "2.0.3",
   "description": "Evidence-backed AI content workspace with persistent projects, user-controlled AI, editable artifacts, review stages, 21 stable MCP tools and protocol-native Resources.",
   "namespace": {
     "capabilityPrefix": "trendhub.",

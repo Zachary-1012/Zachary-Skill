@@ -10,7 +10,7 @@ import { listCapabilities } from "../dist/src/agent-native/capability-registry.j
 
 const ns = namespaceContract();
 assert.equal(ns.schema, "trendhub-namespace-v1");
-assert.equal(ns.productVersion, "2.0.2");
+assert.equal(ns.productVersion, "2.0.3");
 assert.equal(ns.toolCompatibility.count, 21);
 assert.equal(ns.resourceScheme, "trendhub://");
 assert.ok(ns.staticResources.includes("trendhub://contracts/evidence"));
@@ -19,7 +19,7 @@ assert.equal(isTrendHubCapabilityId("trendhub.intelligence.lifecycle"), true);
 
 const skill = skillContract();
 assert.equal(skill.schema, "trendhub-skill-v2");
-assert.equal(skill.productVersion, "2.0.2");
+assert.equal(skill.productVersion, "2.0.3");
 assert.equal(skill.compatibilityTools, 21);
 assert.equal(skill.progressiveDisclosure, true);
 
@@ -38,6 +38,6 @@ for (const id of ["trendhub.resources.namespace","trendhub.resources.evidence_co
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const portable = JSON.parse(await readFile(join(root, "..", "skills", "trendhub", "manifest.json"), "utf8"));
-assert.equal(portable.productVersion, "2.0.2");
+assert.equal(portable.productVersion, "2.0.3");
 assert.equal(portable.compatibility.toolCount, 21);
 console.log("V1.6 FOUNDATION OK namespace=v1 evidence=v1 skill=2.0 tools=21");

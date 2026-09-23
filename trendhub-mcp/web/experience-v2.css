@@ -964,20 +964,20 @@ body.experience-v2 .card {
 }
 
 .research-source-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.jev-review { margin-top: 18px; padding: 18px; border: 1px solid var(--th-line); border-radius: 12px; background: var(--th-surface-2); }
-.jev-review h3 { margin: 0 0 6px; font-size: 15px; }
-.jev-review p, .jev-review small { color: var(--th-muted); font-size: 12px; line-height: 1.6; }
-.jev-review p { margin: 0 0 12px; }
-.jev-review-row { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 0; border-top: 1px solid var(--th-line-soft); font-size: 12px; }
-.jev-review-row span { color: var(--th-muted); }
-.jev-review-row strong { min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
-.jev-review-row a { color: var(--th-ink); }
-.jev-review-row b { color: var(--th-accent); font-variant-numeric: tabular-nums; }
-.jev-review small { display: block; margin-top: 8px; }
+.model-review { margin-top: 18px; padding: 18px; border: 1px solid var(--th-line); border-radius: 12px; background: var(--th-surface-2); }
+.model-review h3 { margin: 0 0 6px; font-size: 15px; }
+.model-review p, .model-review small { color: var(--th-muted); font-size: 12px; line-height: 1.6; }
+.model-review p { margin: 0 0 12px; }
+.model-review-row { display: grid; grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 10px 0; border-top: 1px solid var(--th-line-soft); font-size: 12px; }
+.model-review-row span { color: var(--th-muted); }
+.model-review-row strong { min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.model-review-row a { color: var(--th-ink); }
+.model-review-row b { color: var(--th-accent); font-variant-numeric: tabular-nums; }
+.model-review small { display: block; margin-top: 8px; }
 
 @media (max-width: 600px) {
-  .jev-review-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .jev-review-row span { grid-column: 1 / -1; }
+  .model-review-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .model-review-row span { grid-column: 1 / -1; }
 }
 
 .evidence-title a:hover { text-decoration: underline; }

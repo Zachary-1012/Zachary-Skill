@@ -104,7 +104,7 @@
   function persistHostState(project) {
     try {
       window.openai?.setWidgetState?.({
-        trendhubVersion: "2.0.2", projectId: project.id, title: project.title, stage: project.stage,
+        trendhubVersion: "2.0.3", projectId: project.id, title: project.title, stage: project.stage,
         topic: project.topic, platform: project.platform, format: project.format,
         evidenceState: project.evidenceState, updatedAt: project.updatedAt,
       });
@@ -365,7 +365,7 @@
     status: () => api("/api/connections/status"),
     saveAi: (value) => post("/api/connections/ai", value),
     clearAi: () => post("/api/connections/ai/clear"),
-    reviewJev: (topic, titles) => post(window.TRENHUB_IS_REMOTE ? "/api/jev/review" : "/api/connections/jev/review", { topic, titles }),
+    reviewOpenModel: (topic, titles) => post(window.TRENHUB_IS_REMOTE ? "/api/model-review/review" : "/api/connections/model-review/review", { topic, titles }),
     saveXhs: (cookie) => post("/api/connections/xhs", { cookie }),
     clearXhs: () => post("/api/connections/xhs/clear"),
   };

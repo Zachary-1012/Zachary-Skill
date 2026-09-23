@@ -119,10 +119,11 @@ VIEWS.settings = async function (content) {
     try { runtimeStatus = await connections.status(); } catch { /* 本地服务暂不可用时继续渲染设置。 */ }
   }
   const aiConnected = Boolean(runtimeStatus?.ai?.configured);
-  let jevConnected = Boolean(runtimeStatus?.jev?.configured);
+  let modelReviewConnected = Boolean(runtimeStatus?.modelReview?.configured);
+  let modelReviewReady = Boolean(runtimeStatus?.modelReview?.ready);
   if (window.TRENHUB_IS_REMOTE) {
-    try { jevConnected = Boolean((await fetch("/api/jev/status").then((response) => response.json())).configured); }
-    catch { jevConnected = false; }
+    try { const status = await fetch("/api/model-review/status").then((response) => response.json()); modelReviewConnected = Boolean(status.configured); modelReviewReady = Boolean(status.ready); }
+    catch { modelReviewConnected = false; }
   }
   const xhsConnected = Boolean(runtimeStatus?.xhs?.configured);
   content.innerHTML = `
@@ -146,8 +147,8 @@ VIEWS.settings = async function (content) {
       </section>
 
       <section class="settings-section connection-section">
-        <div class="settings-section-head"><div><h2>Jev 来源复核</h2><p>TrendHub 统一提供 TypeSafe Jev 1.13，使用者无需密钥。只在主动点击来源复核时发送研究主题和最多 8 条公开标题；不会发送 Cookie、草稿或来源 URL。</p></div><span class="connection-state ${jevConnected ? "connected" : ""}">${jevConnected ? "平台已配置" : "平台暂未启用"}</span></div>
-        <p>Jev 只判断标题与主题是否直接相关；不生成文案、不验证正文事实，也不会自动修改研究结论。中文判断仍需人工复核。</p>
+        <div class="settings-section-head"><div><h2>开源模型来源复核</h2><p>TrendHub 自托管 Apache-2.0 多语言模型。所有使用者都不需要注册或提供模型密钥；只有主动点击时才在 TrendHub 服务端处理主题和最多 8 条公开标题。</p></div><span class="connection-state ${modelReviewConnected ? "connected" : ""}">${modelReviewConnected ? (modelReviewReady ? "已加载" : "首次使用时载入") : "暂不可用"}</span></div>
+        <p>模型给出标题与主题的语义相似度，不生成文案、不验证事实，也不会自动修改研究结论。模型调用没有按次 API 费用；服务器运行仍会消耗托管资源。</p>
       </section>
 
       <section class="settings-section connection-section">
