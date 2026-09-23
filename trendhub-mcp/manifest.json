@@ -1,7 +1,7 @@
 {
   "name": "trendhub-mcp",
   "displayName": "TrendHub · AI Content Studio",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "证据驱动的 AI 内容创作平台：真实趋势研究、持久创作项目、使用者 AI、可编辑成稿、审核与复盘，保留 21 个稳定 MCP 工具。",
   "publisher": "Zachary",
   "license": "LicenseRef-TrendHub-Free-Use-1.0",

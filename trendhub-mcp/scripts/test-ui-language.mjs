@@ -83,7 +83,7 @@ assert.match(viewsD, /高级功能/);
 assert.match(viewsD, /这些能力仍然存在，但不会占据主导航/);
 
 /* 资源版本随候选版本。 */
-assert.match(index, /experience-v2\.css\?v=2\.0\.0/);
-assert.match(index, /app\.js\?v=2\.0\.0/);
+assert.match(index, /experience-v2\.css\?v=2\.0\.1/);
+assert.match(index, /app\.js\?v=2\.0\.1/);
 
 console.log("UI LANGUAGE TEST OK nav=user-tasks research=continuous evidence=on-demand no-internal-terms");
