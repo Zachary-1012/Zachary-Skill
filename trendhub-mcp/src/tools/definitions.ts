@@ -28,7 +28,7 @@ import {
   INDUSTRY_FOCUS_QUERY,
 } from "../sources/industry-focus.js";
 import { CONTENT_STUDIO_URI } from "../agent-native/content-studio-widget.js";
-import { reviewSourceTitles } from "../web/jev-evidence.js";
+import { reviewSourceTitles } from "../web/open-model-review.js";
 
 const DEFAULT_PLATFORMS = ["weibo", "zhihu", "baidu", "toutiao", "thepaper", "36kr", "huxiu", "sspai", "ifanr", "social-media-today"];
 
@@ -359,30 +359,28 @@ export function registerTools(server: McpServer): void {
       goal: z.string().optional().describe("目标，如 涨粉/带货转化/品牌曝光/线索收集"),
       audience: z.string().optional().describe("目标人群画像"),
       geo: z.string().optional().describe("搜索趋势地区"),
-      jev_review_public_titles: z.boolean().optional().describe("仅在使用者明确要求 Jev 复核时设为 true；由 TrendHub 平台提供服务，无需使用者密钥。只发送主题和本次简报中的公开标题。"),
+      open_model_review_public_titles: z.boolean().optional().describe("仅在使用者要求开源模型复核时设为 true；TrendHub 自托管开放权重模型，无需使用者密钥。只处理主题和本次简报中的公开标题。"),
     },
     annotations: WEB_READ,
     _meta: { ui: { resourceUri: CONTENT_STUDIO_URI }, "openai/outputTemplate": CONTENT_STUDIO_URI },
-  }, async ({ topic, template_id, platform, goal, audience, geo, jev_review_public_titles }) => {
+  }, async ({ topic, template_id, platform, goal, audience, geo, open_model_review_public_titles }) => {
     const brief = await getContentBrief(topic, { templateId: template_id, platform, goal, audience, geo });
-    let jevReview: unknown = { status: "not_requested" };
-    if (jev_review_public_titles === true) {
-      const key = process.env.TYPESAFE_API_KEY?.trim();
+    let modelReview: unknown = { status: "not_requested" };
+    if (open_model_review_public_titles === true) {
       const mentions = ("topMentions" in brief.evidence.crossPlatform ? brief.evidence.crossPlatform.topMentions : []) ?? [];
       const titles = [...mentions.map((item) => item.title),
         ...brief.evidence.publicIndustryEvidence.flatMap((channel) => channel.items.map((item) => item.title))]
         .filter((title): title is string => typeof title === "string" && Boolean(title.trim()))
         .map((title) => title.trim().slice(0, 300));
       const uniqueTitles = [...new Set(titles)].slice(0, 8);
-      if (!key) jevReview = { status: "unavailable", reason: "platform_not_configured" };
-      else if (!uniqueTitles.length) jevReview = { status: "unavailable", reason: "no_public_titles" };
+      if (!uniqueTitles.length) modelReview = { status: "unavailable", reason: "no_public_titles" };
       else {
-        try { jevReview = { status: "reviewed", titles: uniqueTitles, ...await reviewSourceTitles(topic, uniqueTitles, key) }; }
-        catch { jevReview = { status: "unavailable", reason: "provider_error" }; }
+        try { modelReview = { status: "reviewed", titles: uniqueTitles, ...await reviewSourceTitles(topic, uniqueTitles) }; }
+        catch { modelReview = { status: "unavailable", reason: "model_error" }; }
       }
     }
     return {
-      structuredContent: { brief, jevReview },
+      structuredContent: { brief, modelReview },
       content: [{ type: "text" as const, text: `已生成“${topic}”的证据简报。请在 TrendHub 内容工作台中调用你的当前 AI 继续生成可编辑成稿。` }],
       _meta: { "openai/outputTemplate": CONTENT_STUDIO_URI },
     };

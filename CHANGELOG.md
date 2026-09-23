@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.3 — Self-hosted open-model title review
+
+- Replace optional paid TypeSafe Jev with pinned Apache-2.0 multilingual ONNX embeddings served by TrendHub. No model API key or registration is needed by Skill users.
+- Report semantic similarity rather than probability, keep source evidence and content conclusions unchanged, and document hosting resource costs.
+
 ## v2.0.2 — Optional Jev source-title review
 
 - Add platform-managed TypeSafe Jev 1.13 review for public source titles in the web and Skill/MCP flows; visitors need no API key.

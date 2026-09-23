@@ -3,13 +3,13 @@ name: trendhub
 description: Evidence-backed AI content creation and agent-native trend intelligence. Use the user's AI to produce editable artifacts, not steps-only guidance.
 ---
 
-# TrendHub Skill 2.0 · TrendHub v2.0.2
+# TrendHub Skill 2.0 · TrendHub v2.0.3
 
 Use TrendHub when a request needs current or historical trend evidence, cross-source validation, brand/topic research, or a real content project that proceeds from evidence to an editable artifact, review, publishing preparation, and evaluation.
 
 Core discipline: **Missing is not zero.** Keep the existing 21-tool compatibility contract, disclose source limitations, and never present planned or credentialed coverage as live zero-config evidence.
 
-When the person explicitly requests Jev review, call `get_content_brief` with `jev_review_public_titles: true`. TrendHub supplies Jev centrally; never ask Skill users for their own TypeSafe key. Jev judges only whether up to eight public source titles directly discuss the research topic. Its probability is not evidence of factual accuracy, popularity, or source reliability. If the platform reports Jev unavailable, state that clearly and continue the evidence-backed research without inventing a score. Do not send private draft text or a confidential topic to Jev.
+When the person explicitly requests source-title model review, call `get_content_brief` with `open_model_review_public_titles: true`. TrendHub runs a pinned, commercially usable Apache-2.0 multilingual open-weight model on its own runtime; never ask Skill users to register or provide an API key. The output is a semantic similarity score for up to eight public titles, not a probability or evidence of factual accuracy, popularity, or source reliability. If the model is unavailable, state that clearly and continue the evidence-backed research without inventing a score. Do not submit private draft text or a confidential topic to the hosted review service.
 
 Default product focus is brand marketing, business operations, advertising,
 media, retail and adjacent commercial industries. Do not use a broad guest

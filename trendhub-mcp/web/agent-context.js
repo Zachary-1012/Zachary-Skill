@@ -7,10 +7,10 @@
     return Object.fromEntries(Object.entries(value).filter(([key, v]) => !/cookie|secret|token|password/i.test(key) && ["string", "number", "boolean"].includes(typeof v)));
   };
   window.TRENDHUB_WEBMCP = {
-    version: "2.0.2",
+    version: "2.0.3",
     mode: "content-workspace",
     listTools: () => [...tools],
-    getContext: () => ({ version: "2.0.2", route: location.hash || "#/studio", title: document.title, localFirst: true }),
+    getContext: () => ({ version: "2.0.3", route: location.hash || "#/studio", title: document.title, localFirst: true }),
     call: async (name, args) => {
       if (!tools.includes(name)) throw new Error("unsupported page capability");
       if (name === "create_content_project") {

@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "../dist/src/web/static.js";
 import { createSnapshotScheduler } from "../dist/src/runtime/snapshot-scheduler.js";
-import { JEV_MODEL, JevRequestError, reviewSourceTitles } from "../dist/src/web/jev-evidence.js";
+import { ModelReviewError, modelReviewStatus, reviewSourceTitles } from "../dist/src/web/open-model-review.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -28,7 +28,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "2.0.2";
+const VERSION = "2.0.3";
 const TOOL_COUNT = 21;
 const OPENAI_APPS_CHALLENGE_TOKEN = String(process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
 
@@ -55,33 +55,32 @@ const snapshotScheduler = createSnapshotScheduler({
 
 let activeRequests = 0;
 let shuttingDown = false;
-let jevWindowStarted = Date.now();
-let jevWindowCount = 0;
-const jevClientCounts = new Map();
-const JEV_DAILY_LIMIT = Math.min(1000, Math.max(1, envNumber("TRENHUB_JEV_DAILY_LIMIT", 100)));
-const JEV_CLIENT_DAILY_LIMIT = Math.min(100, Math.max(1, envNumber("TRENHUB_JEV_CLIENT_DAILY_LIMIT", 20)));
+let reviewWindowStarted = Date.now();
+let reviewWindowCount = 0;
+const reviewClientCounts = new Map();
+const REVIEW_DAILY_LIMIT = Math.min(1000, Math.max(1, envNumber("TRENHUB_MODEL_REVIEW_DAILY_LIMIT", 100)));
+const REVIEW_CLIENT_DAILY_LIMIT = Math.min(100, Math.max(1, envNumber("TRENHUB_MODEL_REVIEW_CLIENT_DAILY_LIMIT", 20)));
 
-function jevEnabled() { return Boolean(process.env.TYPESAFE_API_KEY?.trim()); }
-function jevClient(req) { return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim(); }
-function reserveJev(req) {
-  if (Date.now() - jevWindowStarted >= 86_400_000) {
-    jevWindowStarted = Date.now();
-    jevWindowCount = 0;
-    jevClientCounts.clear();
+function reviewClient(req) { return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim(); }
+function reserveReview(req) {
+  if (Date.now() - reviewWindowStarted >= 86_400_000) {
+    reviewWindowStarted = Date.now();
+    reviewWindowCount = 0;
+    reviewClientCounts.clear();
   }
-  const client = jevClient(req);
-  const count = jevClientCounts.get(client) || 0;
-  if (jevWindowCount >= JEV_DAILY_LIMIT || count >= JEV_CLIENT_DAILY_LIMIT) return false;
-  jevWindowCount += 1;
-  jevClientCounts.set(client, count + 1);
+  const client = reviewClient(req);
+  const count = reviewClientCounts.get(client) || 0;
+  if (reviewWindowCount >= REVIEW_DAILY_LIMIT || count >= REVIEW_CLIENT_DAILY_LIMIT) return false;
+  reviewWindowCount += 1;
+  reviewClientCounts.set(client, count + 1);
   return true;
 }
 
-function requestsJev(body) {
+function requestsReview(body) {
   try {
     const messages = JSON.parse(body.toString("utf8"));
     return (Array.isArray(messages) ? messages : [messages]).some((item) =>
-      item?.method === "tools/call" && item?.params?.name === "get_content_brief" && item?.params?.arguments?.jev_review_public_titles === true);
+      item?.method === "tools/call" && item?.params?.name === "get_content_brief" && item?.params?.arguments?.open_model_review_public_titles === true);
   } catch { return false; }
 }
 
@@ -112,7 +111,7 @@ const PUBLIC_API_PATHS = new Set([
   "/api/professional/entities",
 ]);
 
-const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-23\n\nTrendHub Remote provides a public MCP endpoint and a responsive read/query web console for trend intelligence. The service does not require a TrendHub account and does not intentionally store analytics identifiers, advertising identifiers, model prompts, usernames, or account identifiers. Public web-console queries and MCP tool arguments are processed only as needed to answer the request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a query retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. If a visitor explicitly requests Jev review, TrendHub sends the research topic and up to eight public source titles to TypeSafe AI for a title-topic judgment; no Cookie, draft, source URL, or account identity is included. TypeSafe's own privacy terms govern that processing. The public hosted edition does not use a visitor's private Xiaohongshu cookie. Local installation remains available for users who prefer local-only operation.\n\nFor source code, security reporting, and the local edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
+const privacyText = `TrendHub Remote Privacy Notice\n\nLast updated: 2026-09-23\n\nTrendHub Remote provides a public MCP endpoint and a responsive read/query web console for trend intelligence. The service does not require a TrendHub account and does not intentionally store analytics identifiers, advertising identifiers, model prompts, usernames, or account identifiers. Public web-console queries and MCP tool arguments are processed only as needed to answer the request. Trend history stored by the service consists of public-source trend evidence and operational source-reliability metadata, not user profiles.\n\nThe hosted service runs on third-party cloud infrastructure. The hosting provider and network intermediaries may process connection metadata such as IP address, timestamps, and request metadata under their own infrastructure policies. TrendHub does not use that infrastructure data for advertising or user profiling.\n\nWhen a query retrieves a public source, TrendHub makes the outbound request from the hosted service. Source availability, rate limits, and source terms remain controlled by the respective third-party services. If a visitor explicitly requests open-model review, TrendHub runs a pinned Apache-2.0 multilingual model on its own hosted runtime. The topic and up to eight public titles are not sent to an external inference API. The runtime may download model weights from Hugging Face. No Cookie, draft, source URL, or account identity is included in inference. The public hosted edition does not use a visitor's private Xiaohongshu cookie. Local installation remains available for users who prefer local-only operation.\n\nFor source code, security reporting, and the local edition, see https://github.com/Zachary-1012/Zachary-Skill.`;
 
 const termsText = `TrendHub Remote Terms of Use\n\nLast updated: 2026-09-17\n\nTrendHub provides evidence-oriented access to public trend sources and deterministic trend-analysis helpers through MCP and the public web console. It is not affiliated with or endorsed by the third-party platforms it reads. Source data may be incomplete, delayed, rate-limited, unavailable, or changed by the source platform at any time. TrendHub marks missing/degraded evidence rather than guaranteeing continuous source availability.\n\nTrend lifecycle, confidence, sentiment, anomaly, forecast, and 24h/72h benchmark outputs are analytical indicators, not factual guarantees, investment advice, legal advice, medical advice, or predictions of future outcomes. Forecasts are conditional extrapolations of captured evidence and include holdout validation and uncertainty when sufficient history exists. Users remain responsible for verifying important decisions against primary sources and for complying with applicable law and third-party platform terms.\n\nDo not use the service to access private data, evade access controls, harass people, or perform unlawful activity. The hosted endpoint may apply capacity limits or be changed or withdrawn to protect reliability and security.\n\nTrendHub v1.4.3 and later TrendHub-authored code is source-available under the TrendHub Free Use License 1.0. Personal and internal company/business use of unmodified copies is permitted; modification, derivative works, redistribution, republication, sublicensing, resale, and third-party hosted access to the software itself are prohibited unless separately authorized. TrendHub v1.4.2 and earlier retain the rights granted when those releases were published. Third-party components remain under their own licenses.`;
 
@@ -393,20 +392,20 @@ const server = createServer(async (req, res) => {
       if (req.method !== "POST") return json(res, 405, { error: "method_not_allowed", allowed: ["POST", "OPTIONS"] }, cors);
       if (activeRequests >= MAX_CONCURRENCY) return json(res, 429, { error: "busy", retryAfterSeconds: 2 }, { ...cors, "Retry-After": "2" });
       const body = await readBody(req);
-      if (requestsJev(body) && (!jevEnabled() || !reserveJev(req))) {
-        return json(res, jevEnabled() ? 429 : 503, { error: jevEnabled() ? "jev_capacity_reached" : "jev_unavailable" }, cors);
+      if (requestsReview(body) && !reserveReview(req)) {
+        return json(res, 429, { error: "model_review_capacity_reached" }, cors);
       }
       activeRequests += 1;
       try { await proxyMcp(req, res, body); } finally { activeRequests -= 1; }
       return;
     }
 
-    if (url.pathname === "/api/jev/status") {
+    if (url.pathname === "/api/model-review/status") {
       if (req.method !== "GET") return json(res, 405, { error: "method_not_allowed" });
-      return json(res, 200, { configured: jevEnabled(), model: JEV_MODEL, scope: "public-title-topic-match" });
+      return json(res, 200, modelReviewStatus());
     }
 
-    if (url.pathname === "/api/jev/review") {
+    if (url.pathname === "/api/model-review/review") {
       if (req.method !== "POST") return json(res, 405, { error: "method_not_allowed" });
       const origin = req.headers.origin;
       if (origin) {
@@ -415,20 +414,19 @@ const server = createServer(async (req, res) => {
         if (originHost !== req.headers.host) return json(res, 403, { error: "cross_origin_review_disallowed" });
       }
       if (!String(req.headers["content-type"] || "").startsWith("application/json")) return json(res, 415, { error: "json_required" });
-      if (!jevEnabled()) return json(res, 503, { error: "TrendHub 尚未启用平台 Jev 服务" });
       const raw = await readBody(req);
-      if (raw.length > 4096) return json(res, 413, { error: "jev_request_too_large" });
+      if (raw.length > 4096) return json(res, 413, { error: "model_review_request_too_large" });
       let input;
       try { input = JSON.parse(raw.toString("utf8")); } catch { return json(res, 400, { error: "invalid_json" }); }
       if (!input || typeof input !== "object" || Array.isArray(input) || typeof input.topic !== "string" ||
           !Array.isArray(input.titles) || input.titles.some((title) => typeof title !== "string")) {
-        return json(res, 400, { error: "invalid_jev_request" });
+        return json(res, 400, { error: "invalid_model_review_request" });
       }
       if (!input.topic.trim() || input.topic.length > 200 || input.titles.length < 1 || input.titles.length > 8 ||
-          input.titles.some((title) => !title.trim() || title.length > 300)) return json(res, 400, { error: "invalid_jev_request" });
-      if (!reserveJev(req)) return json(res, 429, { error: "Jev 今日公共额度已用完，请稍后重试" }, { "Retry-After": "3600" });
-      try { return json(res, 200, await reviewSourceTitles(input.topic.trim(), input.titles.map((title) => title.trim()), process.env.TYPESAFE_API_KEY.trim())); }
-      catch (cause) { return json(res, cause instanceof JevRequestError ? cause.status : 502, { error: cause instanceof JevRequestError ? cause.message : "Jev 复核暂不可用" }); }
+          input.titles.some((title) => !title.trim() || title.length > 300)) return json(res, 400, { error: "invalid_model_review_request" });
+      if (!reserveReview(req)) return json(res, 429, { error: "开源模型今日公共额度已用完，请稍后重试" }, { "Retry-After": "3600" });
+      try { return json(res, 200, await reviewSourceTitles(input.topic.trim(), input.titles.map((title) => title.trim()))); }
+      catch (cause) { return json(res, cause instanceof ModelReviewError ? cause.status : 503, { error: cause instanceof ModelReviewError ? cause.message : "开源模型暂不可用" }); }
     }
 
     if (url.pathname.startsWith("/api/")) {

@@ -35,9 +35,20 @@ RUNTIME DEPENDENCIES
    Purpose: runtime schema validation for MCP tool inputs.
    Upstream: https://github.com/colinhacks/zod
 
+6. @huggingface/transformers
+   License: Apache-2.0
+   Purpose: local ONNX inference for optional source-title semantic review.
+   Upstream: https://github.com/huggingface/transformers.js
+
+7. onnx-community/paraphrase-multilingual-MiniLM-L12-v2-ONNX
+   License: Apache-2.0
+   Purpose: pinned multilingual embedding checkpoint for source-title review.
+   Upstream: https://huggingface.co/onnx-community/paraphrase-multilingual-MiniLM-L12-v2-ONNX
+   Revision: d4c06bf0d7680171ac30042a1387e1fdb7a90021
+
 VENDED CODE (copied into src/sources/xhs/, MIT-licensed)
 --------------------------------------------------------
-6. Xiaohongshu web request signing (x-s / x-s-common / x-t / trace headers).
+8. Xiaohongshu web request signing (x-s / x-s-common / x-t / trace headers).
    Files: src/sources/xhs/signing.ts, src/sources/xhs/fingerprint-data.ts
    License: MIT
    Derived from (both MIT):
