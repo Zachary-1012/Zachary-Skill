@@ -7,7 +7,7 @@ description: 专业级全网趋势情报 Skill，以小红书为深度主打。�
 
 本 Skill 背后是一个本地 MCP 服务（`trendhub-mcp`），提供 **21 个稳定兼容工具**，并从 v1.6.0 起正式提供 MCP Resources、`trendhub.* / trendhub://` canonical namespace、Unified Evidence Contract v1 与 Skill 2.0。覆盖实时趋势、话题雷达、品牌市场与专业信源宇宙。模型负责理解需求、调用工具、读取最小必要 Resources、解释证据与成文；**数据、稳定性指标和确定性趋势分析由工具提供**。插件不内置模型 Key、不做第三方遥测、不把使用数据回传到 TrendHub 中央服务。
 
-当使用者明确要求复核公开来源标题时，`get_content_brief` 可设置 `open_model_review_public_titles: true`。TrendHub 自托管 Apache-2.0 多语言开放权重模型；使用者无需注册或提供模型密钥。输出是标题与主题的语义相似度，不是相关概率、来源可信度或事实证明。模型不可用时如实说明，保留证据简报。详情见 `docs/open-model-review.md`。
+当使用者明确要求复核公开来源标题时，`get_content_brief` 可设置 `open_model_review_public_titles: true`。TrendHub 自托管 MIT 许可、中文优先的开放权重模型；使用者无需注册或提供模型密钥。输出是标题与主题的语义相似度，不是相关概率、来源可信度或事实证明；英文和跨语言标题须额外人工复核。模型不可用时如实说明，保留证据简报。详情见 `docs/open-model-review.md`。
 
 ## Creator Ops（本地运行与交付）
 

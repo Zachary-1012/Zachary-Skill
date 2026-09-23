@@ -1,7 +1,7 @@
 /** Local inference for optional semantic review of public source titles. */
-export const REVIEW_MODEL = "onnx-community/paraphrase-multilingual-MiniLM-L12-v2-ONNX";
-export const REVIEW_REVISION = "d4c06bf0d7680171ac30042a1387e1fdb7a90021";
-export const REVIEW_LICENSE = "Apache-2.0";
+export const REVIEW_MODEL = "Xenova/bge-small-zh-v1.5";
+export const REVIEW_REVISION = "75c43b069aac4d136ba6bc1122f995fedcfd2781";
+export const REVIEW_LICENSE = "MIT";
 
 export class ModelReviewError extends Error {
   constructor(message: string, readonly status: number) {
@@ -35,6 +35,7 @@ export function modelReviewStatus() {
     license: REVIEW_LICENSE,
     inference: "self-hosted",
     requiresUserKey: false,
+    language: "Chinese-first; English scores need human review",
     scope: "public-title-topic-similarity",
   };
 }
@@ -67,7 +68,7 @@ export async function reviewSourceTitles(topic: string, titles: string[]) {
       ...modelReviewStatus(),
       reviewedAt: new Date().toISOString(),
       items,
-      note: "余弦相似度仅用于人工比较标题与主题，不是相关概率、来源可信度、热度或事实证明；不得自动据此采信或拒绝证据。",
+      note: "余弦相似度仅用于人工比较标题与主题，不是相关概率、来源可信度、热度或事实证明；模型以中文为主，英文和跨语言标题尤其需要人工复核。不得自动据此采信或拒绝证据。",
     };
   } catch (cause) {
     if (cause instanceof ModelReviewError) throw cause;

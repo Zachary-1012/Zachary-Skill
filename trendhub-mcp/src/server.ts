@@ -4,7 +4,7 @@ import { registerProfessionalTools } from "./tools/professional.js";
 import { registerAgentResources } from "./agent-native/resources.js";
 
 export const SERVER_NAME = "trendhub-mcp";
-export const SERVER_VERSION = "2.0.3";
+export const SERVER_VERSION = "2.0.4";
 
 /** 创建一个 MCP server 实例并注册全部工具（stateless HTTP 模式下每请求新建） */
 export function createMcpServer(): McpServer {

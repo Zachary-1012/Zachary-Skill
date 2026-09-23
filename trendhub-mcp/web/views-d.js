@@ -147,7 +147,7 @@ VIEWS.settings = async function (content) {
       </section>
 
       <section class="settings-section connection-section">
-        <div class="settings-section-head"><div><h2>开源模型来源复核</h2><p>TrendHub 自托管 Apache-2.0 多语言模型。所有使用者都不需要注册或提供模型密钥；只有主动点击时才在 TrendHub 服务端处理主题和最多 8 条公开标题。</p></div><span class="connection-state ${modelReviewConnected ? "connected" : ""}">${modelReviewConnected ? (modelReviewReady ? "已加载" : "首次使用时载入") : "暂不可用"}</span></div>
+        <div class="settings-section-head"><div><h2>开源模型来源复核</h2><p>TrendHub 自托管 MIT 许可的中文优先模型。所有使用者都不需要注册或提供模型密钥；只有主动点击时才在 TrendHub 服务端处理主题和最多 8 条公开标题。英文和跨语言标题需要额外人工复核。</p></div><span class="connection-state ${modelReviewConnected ? "connected" : ""}">${modelReviewConnected ? (modelReviewReady ? "已加载" : "首次使用时载入") : "暂不可用"}</span></div>
         <p>模型给出标题与主题的语义相似度，不生成文案、不验证事实，也不会自动修改研究结论。模型调用没有按次 API 费用；服务器运行仍会消耗托管资源。</p>
       </section>
 

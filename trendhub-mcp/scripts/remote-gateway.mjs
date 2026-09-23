@@ -28,7 +28,7 @@ const MAX_CONCURRENCY = Number(process.env.TRENHUB_REMOTE_MAX_CONCURRENCY || 24)
 const REQUEST_TIMEOUT_MS = Number(process.env.TRENHUB_REMOTE_TIMEOUT_MS || 90_000);
 const CORE_ENTRY = join(ROOT, "dist", "src", "index.js");
 const INTERNAL_TOKEN = randomBytes(32).toString("hex");
-const VERSION = "2.0.3";
+const VERSION = "2.0.4";
 const TOOL_COUNT = 21;
 const OPENAI_APPS_CHALLENGE_TOKEN = String(process.env.OPENAI_APPS_CHALLENGE_TOKEN || "").trim();
 
