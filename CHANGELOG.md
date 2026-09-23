@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.4 — Smaller open model for hosted review
+
+- Replace the 118 MB multilingual title-review checkpoint with a pinned 24 MB MIT Chinese-first checkpoint after Railway killed and restarted the v2.0.3 container under model load.
+- Keep anonymous web and MCP review keyless; mark English and cross-language scores as requiring extra human review.
+
 ## v2.0.3 — Self-hosted open-model title review
 
 - Replace optional paid TypeSafe Jev with pinned Apache-2.0 multilingual ONNX embeddings served by TrendHub. No model API key or registration is needed by Skill users.

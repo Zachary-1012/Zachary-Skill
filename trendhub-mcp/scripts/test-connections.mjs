@@ -19,7 +19,7 @@ assert.equal(JSON.stringify(deepseek.data).includes("test-only"), false);
 const reviewStatus = await handleConnectionsApi("/api/connections/status", "GET", "");
 assert.equal(reviewStatus.data.modelReview.requiresUserKey, false);
 assert.equal(reviewStatus.data.modelReview.inference, "self-hosted");
-assert.equal(reviewStatus.data.modelReview.license, "Apache-2.0");
+assert.equal(reviewStatus.data.modelReview.license, "MIT");
 assert.equal((await handleConnectionsApi("/api/connections/jev/review", "POST", "{}" )).status, 404);
 const tooMany = await handleConnectionsApi("/api/connections/model-review/review", "POST", JSON.stringify({
   topic: "品牌营销", titles: Array(9).fill("公开标题"),

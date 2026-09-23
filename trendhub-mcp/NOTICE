@@ -40,11 +40,12 @@ RUNTIME DEPENDENCIES
    Purpose: local ONNX inference for optional source-title semantic review.
    Upstream: https://github.com/huggingface/transformers.js
 
-7. onnx-community/paraphrase-multilingual-MiniLM-L12-v2-ONNX
-   License: Apache-2.0
-   Purpose: pinned multilingual embedding checkpoint for source-title review.
-   Upstream: https://huggingface.co/onnx-community/paraphrase-multilingual-MiniLM-L12-v2-ONNX
-   Revision: d4c06bf0d7680171ac30042a1387e1fdb7a90021
+7. Xenova/bge-small-zh-v1.5
+   License: MIT (underlying BAAI/bge-small-zh-v1.5 model)
+   Purpose: pinned, quantized Chinese-first embedding checkpoint for source-title review.
+   Upstream: https://huggingface.co/Xenova/bge-small-zh-v1.5
+   Base model: https://huggingface.co/BAAI/bge-small-zh-v1.5
+   Revision: 75c43b069aac4d136ba6bc1122f995fedcfd2781
 
 VENDED CODE (copied into src/sources/xhs/, MIT-licensed)
 --------------------------------------------------------
