@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.0.1 — Advertiser evidence and creation handoff
+
+- Show advertiser, brand, Campaign, agency, and media-platform leads from public article headlines with source links and explicit verification status.
+- Keep news, social discussion, and podcasts as supporting evidence when Xiaohongshu has no matching platform content; never label that fallback as a platform hotlist.
+- Let a user start a content project from a subject lead, and keep copied creation material honest about missing platform evidence.
+- Preserve the 21-tool MCP contract and update release metadata and browser asset versions.
+
 ## v2.0.0 — Evidence-backed AI Content Studio
 
 - Promote TrendHub from a trend-research surface to a persistent content creation platform.

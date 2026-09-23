@@ -19,6 +19,7 @@ import { XHS_PLATFORM, XHS_HOTLIST_PLATFORM, searchXhsNotes } from "../sources/x
 import { extractXhsTopics } from "../analysis/xhsTopics.js";
 import { xhsClient } from "../sources/xhs/guest.js";
 import { collectPublicQueryEvidence } from "../sources/query-evidence.js";
+import { collectAdvertiserIntelligence } from "../sources/advertiser-intelligence.js";
 import {
   buildUsefulIndustryFallback,
   filterIndustryItems,
@@ -125,16 +126,14 @@ export function registerTools(server: McpServer): void {
       if (with_hotlist !== false && loggedIn) officialHotlist = await getHot(XHS_HOTLIST_PLATFORM, 20);
       updateFromResults([rawFeed, ...(officialHotlist ? [officialHotlist] : [])]);
       let usefulFallback = null;
+      let advertiserIntelligence = null;
       if (!focusedItems.length && !(keywordMatches?.length)) {
-        const channels = await collectPublicQueryEvidence(
-          focus?.trim() || INDUSTRY_FOCUS_QUERY,
-          focus?.trim() ? [] : INDUSTRY_FOCUS_ALIASES,
-          10,
-        );
+        advertiserIntelligence = await collectAdvertiserIntelligence(focusText, 30);
+        const channels = advertiserIntelligence.supportingChannels;
         usefulFallback = buildUsefulIndustryFallback(
           channels,
           focusText,
-          "小红书游客/当前会话未返回相关内容，改用行业媒体、新闻、公开社交与播客证据；这些结果不冒充小红书热榜。",
+          "播客与公开讨论继续保留为支撑证据，但不进入广告主主体名单，也不冒充小红书热榜。",
         );
       }
       return json({
@@ -146,6 +145,7 @@ export function registerTools(server: McpServer): void {
         derivedTopics,
         keywordMatches,
         officialHotlist,
+        advertiserIntelligence,
         usefulFallback,
         hints: loggedIn
           ? ["已使用本地登录态：优先返回与研究主题相关的关键词结果、推荐流和官方热搜词榜。"]

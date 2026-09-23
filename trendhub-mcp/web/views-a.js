@@ -160,8 +160,11 @@ VIEWS.xhs = function (content) {
     const items = feed.items || [];
     const topics = (d.derivedTopics && d.derivedTopics.topics) || [];
     const hot = d.officialHotlist;
+    const intelligence = d.advertiserIntelligence || null;
+    const subjects = Array.isArray(intelligence?.subjects) ? intelligence.subjects : [];
     const fallback = d.usefulFallback || null;
     const fallbackItems = fallback && Array.isArray(fallback.items) ? fallback.items : [];
+    const evidenceFamily = { "news-authority": "新闻 / 行业媒体", "social-attention": "公开社媒讨论", "community-discussion": "社区讨论", "podcast-audio": "播客音频", "web-domain": "公开网页" };
     $("#mode").innerHTML = d.loggedIn ? `<span class="badge ok">登录态 · 全能力</span>` : `<span class="badge neutral">游客模式 · 行业聚焦</span>`;
     const modeNote = d.loggedIn
       ? note("info", "已使用本地授权会话；优先返回主题相关平台证据。")
@@ -178,11 +181,26 @@ VIEWS.xhs = function (content) {
       ? `<div class="card xhs-side-card"><h3>官方热搜词榜 <span class="badge ok">登录</span></h3>${hotItems.map((h, i) => `<div class="xhs-word"><span class="xhs-w-text"><span class="xhs-rank">${i + 1}</span>${linkOrText(h.title, h.url)}</span><span class="xhs-w-freq">${esc(h.hotText || "")}</span></div>`).join("")}</div>`
       : `<div class="card xhs-side-card"><h3>官方热搜词榜</h3>${note("info", "官方词榜仅登录态开放；游客结果由行业公开证据补足，不伪装成官方词榜。")}</div>`;
     const fallbackBlock = fallbackItems.length
-      ? `<div class="card" style="margin:14px 0"><div class="section-title">${esc(fallback.label || "行业公开证据替代层")} <span class="badge neutral">非小红书热榜</span></div><p class="sub">${esc(fallback.reason || "")}</p>${fallbackItems.slice(0, 18).map((item) => `<div class="discover-row"><div><strong>${linkOrText(item.title, item.url)}</strong><div class="meta">${esc(item.source || "公开来源")} · ${item.publishedAt ? esc(fmtTime(item.publishedAt)) : "时间未提供"}</div></div><span class="discover-platform">${esc(item.family || "evidence")}</span></div>`).join("")}</div>`
+      ? `<div class="card" style="margin:14px 0"><div class="section-title">${esc(fallback.label || "行业公开证据替代层")} <span class="badge neutral">非小红书热榜</span></div><p class="sub">${esc(fallback.reason || "")}</p>${fallbackItems.slice(0, 18).map((item) => `<div class="discover-row"><div><strong>${linkOrText(item.title, item.url)}</strong><div class="meta">${esc(item.source || "公开来源")} · ${item.publishedAt ? esc(fmtTime(item.publishedAt)) : "时间未提供"}</div></div><span class="discover-platform">${esc(evidenceFamily[item.family] || "公开证据")}</span></div>`).join("")}</div>`
       : "";
+    const roleLabel = { "advertiser-brand": "广告主 / 品牌", campaign: "Campaign", agency: "代理商", "media-platform": "媒体平台" };
+    const advertiserBlock = intelligence ? `
+      <section class="card advertiser-intelligence" aria-labelledby="advertiser-title">
+        <div class="section-title" id="advertiser-title">广告主与商业主体 <span class="badge neutral">公开报道推断</span></div>
+        <p class="sub">${esc(intelligence.note || "点击原始来源核实主体与商业关系。")}</p>
+        ${subjects.length ? subjects.slice(0, 18).map((subject, index) => `
+          <div class="advertiser-row">
+            <div class="advertiser-identity"><strong>${esc(subject.name)}</strong><span class="discover-platform">${esc(roleLabel[subject.role] || subject.role)}</span></div>
+            <div class="meta">${esc(subject.evidenceCount)} 条标题证据 · 待核实</div>
+            <div class="advertiser-evidence">${linkOrText(subject.headlines?.[0] || "查看原始来源", subject.urls?.[0])}</div>
+            <button class="btn sm" type="button" data-advertiser-create="${index}">以此创作</button>
+          </div>`).join("") : `<p class="sub">这次没有从公开报道中识别出可核实的商业主体。请换具体品牌或 Campaign 搜索。</p>`}
+        <div class="advertiser-libraries">官方广告透明库：${(intelligence.transparencyLibraries || []).map((library) => linkOrText(library.label, library.url)).join(" · ")}</div>
+      </section>` : "";
     $("#out").innerHTML =
       modeNote +
-      `<div class="grid cols-3" style="margin-bottom:14px">${statCard(items.length, "行业相关平台内容")}${statCard(fallbackItems.length, "替代公开证据")}${statCard(d.loggedIn ? "已解锁" : "游客聚焦", "平台模式")}</div>` +
+      `<div class="grid cols-3" style="margin-bottom:14px">${statCard(items.length, "行业相关平台内容")}${statCard(subjects.length, "待核实商业主体")}${statCard(fallbackItems.length, "支撑证据")}</div>` +
+      advertiserBlock +
       fallbackBlock +
       `<div class="xhs-layout">
         <div class="xhs-main">
@@ -195,6 +213,11 @@ VIEWS.xhs = function (content) {
           ${hotBlock}
         </div>
       </div>`;
+    $("#out").querySelectorAll("[data-advertiser-create]").forEach((button) => button.addEventListener("click", () => {
+      const subject = subjects[Number(button.dataset.advertiserCreate)];
+      if (!subject) return;
+      window.startTrendHubCreation(`围绕${subject.name}创作小红书内容；先核实报道：${subject.headlines?.[0] || ""} ${subject.urls?.[0] || ""}`, "xiaohongshu");
+    }));
   };
   const run = async (sourceMode = "live") => {
     $("#out").innerHTML = loading();
@@ -240,9 +263,13 @@ function xhsBriefText(d) {
   const feed = d.feed || {}, items = feed.items || [], topics = (d.derivedTopics && d.derivedTopics.topics) || [];
   const hot = (d.officialHotlist && d.officialHotlist.items) || [];
   const fallback = (d.usefulFallback && d.usefulFallback.items) || [];
+  const subjects = (d.advertiserIntelligence && d.advertiserIntelligence.subjects) || [];
   const L = [];
-  L.push("【小红书当下热点 · 选题素材】");
-  L.push(`采集时间：${feed.capturedAt || ""}；口径：官方首页热门推荐流（平台推荐序，非官方热搜词榜），点赞为展示近似值。`);
+  const hasPlatformEvidence = items.length > 0 || hot.length > 0;
+  L.push(hasPlatformEvidence ? "【小红书平台内容 · 选题素材】" : "【行业公开证据 · 选题素材（非小红书热榜）】");
+  L.push(hasPlatformEvidence
+    ? `采集时间：${feed.capturedAt || ""}；口径：平台推荐流（非官方热搜词榜），点赞为展示近似值。`
+    : `查询时间：${d.advertiserIntelligence?.capturedAt || d.usefulFallback?.capturedAt || ""}；平台内容未取到，以下仅为公开来源线索，不代表社媒热度。`);
   L.push("");
   L.push(`一、热门笔记 TOP ${items.length}：`);
   items.forEach((it, i) => L.push(`${i + 1}. ${it.title} — @${it.author || ""} — 赞${it.hotText || "—"} ${it.url || ""}`));
@@ -264,8 +291,13 @@ function xhsBriefText(d) {
     L.push("四、行业公开证据替代层（非小红书热榜）：");
     fallback.slice(0, 18).forEach((item, i) => L.push(`${i + 1}. ${item.title} — ${item.source || "公开来源"} — ${item.url || ""}`));
   }
+  if (subjects.length) {
+    L.push("");
+    L.push("商业主体线索（报道标题抽取，均需核实角色与关系）：");
+    subjects.slice(0, 12).forEach((subject, i) => L.push(`${i + 1}. ${subject.name} [${subject.role}] — ${subject.headlines?.[0] || ""} — ${subject.urls?.[0] || ""}`));
+  }
   L.push("");
-  L.push("请基于以上真实热点，按 xiaohongshu-note 模板产出 3 个选题方向、5 个标题钩子与一篇笔记正文框架；数据不得编造，缺失标注[待补充]。");
+  L.push(`请基于以上${hasPlatformEvidence ? "平台内容与公开证据" : "公开证据线索"}，按 xiaohongshu-note 模板产出 3 个选题方向、5 个标题钩子与一篇笔记正文框架；不得把非平台证据称为社媒热点，不得编造数据，缺失标注[待补充]。`);
   return L.join("\n");
 }
 

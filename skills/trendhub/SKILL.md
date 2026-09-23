@@ -3,7 +3,7 @@ name: trendhub
 description: Evidence-backed AI content creation and agent-native trend intelligence. Use the user's AI to produce editable artifacts, not steps-only guidance.
 ---
 
-# TrendHub Skill 2.0 · TrendHub v2.0.0
+# TrendHub Skill 2.0 · TrendHub v2.0.1
 
 Use TrendHub when a request needs current or historical trend evidence, cross-source validation, brand/topic research, or a real content project that proceeds from evidence to an editable artifact, review, publishing preparation, and evaluation.
 

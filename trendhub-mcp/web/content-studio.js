@@ -104,7 +104,7 @@
   function persistHostState(project) {
     try {
       window.openai?.setWidgetState?.({
-        trendhubVersion: "2.0.0", projectId: project.id, title: project.title, stage: project.stage,
+        trendhubVersion: "2.0.1", projectId: project.id, title: project.title, stage: project.stage,
         topic: project.topic, platform: project.platform, format: project.format,
         evidenceState: project.evidenceState, updatedAt: project.updatedAt,
       });
