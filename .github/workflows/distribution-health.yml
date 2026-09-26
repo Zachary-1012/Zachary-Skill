@@ -1,23 +1,7 @@
 name: Distribution Health
 
 on:
-  pull_request:
-    branches: ["main"]
-    paths:
-      - "README.md"
-      - "DISTRIBUTION.md"
-      - ".github/workflows/distribution-health.yml"
-      - ".github/scripts/distribution-health.mjs"
-  push:
-    branches: ["main"]
-    paths:
-      - "README.md"
-      - "DISTRIBUTION.md"
-      - ".github/workflows/distribution-health.yml"
-      - ".github/scripts/distribution-health.mjs"
   workflow_dispatch:
-  schedule:
-    - cron: "53 */6 * * *"
 
 permissions:
   contents: read
