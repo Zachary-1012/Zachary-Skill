@@ -1,11 +1,6 @@
 name: Publish MCP Registry
 
 on:
-  # Railway Wait for CI watches every workflow attached to a commit. Starting
-  # Registry publication before Railway finishes creates a cycle: Railway waits
-  # for this workflow while this workflow waits for Railway. Publish only after
-  # Railway reports a successful production deployment instead.
-  deployment_status:
   workflow_dispatch:
 
 permissions:
